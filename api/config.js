@@ -10,6 +10,7 @@ export default function handler(request, response) {
   response.status(200).json({
     publicKey: process.env.MP_PUBLIC_KEY || '',
     paymentEnabled: Boolean(process.env.MP_PUBLIC_KEY && process.env.MP_ACCESS_TOKEN),
+    caktoApiEnabled: Boolean(process.env.CAKTO_CLIENT_ID && process.env.CAKTO_CLIENT_SECRET),
     metaCapiEnabled: Boolean(process.env.META_PIXEL_ID && process.env.META_ACCESS_TOKEN),
     product
   });
