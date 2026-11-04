@@ -109,7 +109,7 @@ http.createServer(async (req, res) => {
     try { const body = await readBody(req); if (!validWebhook(req, url, body)) return reply(res, 401, { error: 'Assinatura de webhook inválida.' }); return reply(res, 200, { received: true }); } catch { return reply(res, 400, { error: 'Corpo inválido.' }); }
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') return reply(res, 405, { error: 'Método não permitido.' });
-  const requestedPath = url.pathname === '/' ? '/motorscent.html' : url.pathname === '/admin' ? '/admin.html' : url.pathname === '/motorscent' ? '/motorscent.html' : url.pathname;
+  const requestedPath = url.pathname === '/' ? '/index.html' : url.pathname === '/admin' ? '/admin.html' : url.pathname === '/motorscent' ? '/motorscent.html' : url.pathname;
   const pathname = decodeURIComponent(requestedPath);
   const file = path.resolve(root, `.${pathname}`);
   if (!file.startsWith(root)) return reply(res, 403, { error: 'Acesso negado.' });
