@@ -1,6 +1,7 @@
 {
   "cleanUrls": true,
   "rewrites": [
+    { "source": "/", "destination": "/motorscent.html" },
     { "source": "/motorscent", "destination": "/motorscent.html" }
   ],
   "redirects": [
