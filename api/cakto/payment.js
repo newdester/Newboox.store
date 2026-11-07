@@ -13,7 +13,7 @@ export default async function handler(request, response) {
   const body = request.body || {};
   const country = required(body.country, 2).toUpperCase();
   const offerId = offerForCountry(country);
-  if (!offerId) return response.status(503).json({ error: country === 'BR' ? 'Oferta BRL ainda não configurada.' : 'Oferta internacional em USD ainda não configurada.' });
+  if (!offerId) return response.status(503).json({ error: 'Oferta internacional em USD ainda não configurada.' });
   const customer = body.customer || {};
   const address = body.address || {};
   const cardToken = required(body.cardToken, 220);

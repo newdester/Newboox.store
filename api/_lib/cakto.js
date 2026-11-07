@@ -34,9 +34,9 @@ export async function caktoRequest(path, options = {}) {
 }
 
 export function offerForCountry(country) {
-  return String(country || '').toUpperCase() === 'BR'
-    ? process.env.CAKTO_OFFER_ID_BRL
-    : process.env.CAKTO_OFFER_ID_USD;
+  // A loja opera exclusivamente com a oferta internacional em USD.
+  // O país continua sendo enviado no endereço para cálculo, antifraude e entrega.
+  return process.env.CAKTO_OFFER_ID_USD;
 }
 
 export function idempotencyKey(value) {
