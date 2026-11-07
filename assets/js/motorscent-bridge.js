@@ -1,7 +1,8 @@
 (() => {
-  const priceFor = quantity => quantity === 1 ? 139.90 : quantity === 2 ? 129.90 : 99.90;
-  const brl = value => Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const analyticsProduct = { id: 'motor-scent', title: 'Motor Scent — Umidificador Automotivo', price: 139.90 };
+  const priceFor = quantity => quantity === 1 ? 69 : quantity === 2 ? 59 : 49;
+  let displayLocale = 'en-US', displayCurrency = 'USD', displayRate = 1;
+  const brl = value => Number(value * displayRate).toLocaleString(displayLocale, { style: 'currency', currency: displayCurrency });
+  const analyticsProduct = { id: 'motor-scent', title: 'Motor Scent — Automotive Diffuser', price: 69, currency: 'USD' };
   const withPixel = callback => {
     if (window.MetaPixel) { callback(); return; }
     if (!document.querySelector('script[src="assets/js/meta-pixel.js"]')) { const script = document.createElement('script'); script.src = 'assets/js/meta-pixel.js'; document.head.append(script); }
@@ -86,7 +87,7 @@
   ]);
   const translate = root => {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: node => /^(SCRIPT|STYLE)$/i.test(node.parentElement?.tagName) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
-    const localize = value => { translations.forEach((to, from) => { value = value.replaceAll(from, to); }); return value.replace(/\$99\.95/g, 'R$ 139,90').replace(/1-3 business days/g, '1 a 3 dias úteis').replace(/7-12 business days \(varies by location\)/g, '7 a 12 dias úteis (varia conforme a região)').replace(/Open media (\d+) in modal/g, 'Abrir mídia $1 no modal').replace(/Opens in a new window\./g, 'Abre em uma nova janela.').replace(/Model: /g, 'Modelo: '); };
+    const localize = value => { translations.forEach((to, from) => { value = value.replaceAll(from, to); }); return value.replace(/\$99\.95/g, '$69.00').replace(/1-3 business days/g, '7–9 calendar days').replace(/7-12 business days \(varies by location\)/g, '7–9 calendar days').replace(/Open media (\d+) in modal/g, 'Open media $1 in modal').replace(/Model: /g, 'Model: '); };
     for (let node; node = walker.nextNode();) node.nodeValue = localize(node.nodeValue);
     root.querySelectorAll('[aria-label],[title],[alt],[placeholder]').forEach(element => ['aria-label','title','alt','placeholder'].forEach(attribute => { if (element.hasAttribute(attribute)) element.setAttribute(attribute, localize(element.getAttribute(attribute))); }));
   };
@@ -111,7 +112,7 @@
     document.querySelectorAll('[data-handle="shipping-protection"] .upsell__title, [data-handle="shipping-protection"] h3, [data-handle="shipping-protection"] h4').forEach(element => { element.textContent = 'Proteção de envio'; });
     let note = document.querySelector('#motorscent-local-offer');
     if (!note) { note = document.createElement('p'); note.id = 'motorscent-local-offer'; note.style.cssText = 'font-weight:700;margin:12px 0;color:#111'; const anchor = document.querySelector('form[action*="cart/add"], form.shopify-product-form'); anchor?.prepend(note); }
-    if (note) note.textContent = quantity === 1 ? '1 unidade por R$ 139,90' : quantity === 2 ? '2 unidades por R$ 129,90 cada' : `${quantity} unidades por R$ 99,90 cada`;
+    if (note) note.textContent = quantity === 1 ? '1 unit for $69.00' : quantity === 2 ? '2 units for $59.00 each' : `${quantity} units for $49.00 each`;
   };
   const goToCheckout = (event, destination = '/carrinho') => {
     const target = event.target instanceof Element ? event.target : null;
@@ -153,7 +154,7 @@
     const toggle = lavender.querySelector('.upsell-toggle-btn, .upsell__toggle-switch');
     if (title) title.textContent = 'Óleo de lavanda para Motor Scent';
     if (description) description.textContent = 'Adicione algumas gotas ao reservatório para perfumar a névoa.';
-    if (price) price.textContent = 'R$ 20,00';
+    if (price) price.textContent = '$20.00';
     if (compare) compare.style.display = 'none';
     lavender.dataset.selected = 'false';
     toggle?.setAttribute('aria-pressed', 'false');
@@ -218,7 +219,7 @@
     };
     try { const saved = JSON.parse(localStorage.getItem('motorscent_shipping_v1') || 'null'); if (saved?.zip) { input.value = saved.zip.replace(/(\d{5})(\d)/, '$1-$2'); calculate(); } else detectLocation(); } catch { detectLocation(); }
   };
-  document.addEventListener('DOMContentLoaded', () => { const locale = window.NewbooxI18n?.config?.(window.NewbooxI18n.detectCountry?.()).locale || 'en-US'; document.documentElement.lang = locale; if (locale.startsWith('pt')) translate(document.body); optimizeImages(); trackMotor('ViewContent'); syncSelectedModel(); configureLavenderUpsell(); addPaymentNote(); addShippingEstimator(); updateOffer(); document.querySelectorAll('[name="quantity"]').forEach(input => input.addEventListener('change', updateOffer)); document.querySelectorAll('input[name="Model"]').forEach(input => input.addEventListener('change', syncSelectedModel)); }, { once: true });
+  document.addEventListener('DOMContentLoaded', async () => { const country = window.NewbooxI18n?.detectCountry?.() || 'US'; const cfg = window.NewbooxI18n?.config?.(country); displayLocale = cfg?.locale || 'en-US'; displayCurrency = cfg?.currency || 'USD'; document.documentElement.lang = displayLocale; if (displayLocale.startsWith('pt')) translate(document.body); try { const rates = await fetch('/api/exchange-rates').then(response => response.json()); displayRate = Number(rates.rates?.[displayCurrency] || 1); } catch {} optimizeImages(); trackMotor('ViewContent'); syncSelectedModel(); configureLavenderUpsell(); addPaymentNote(); addShippingEstimator(); updateOffer(); document.querySelectorAll('[name="quantity"]').forEach(input => input.addEventListener('change', updateOffer)); document.querySelectorAll('input[name="Model"]').forEach(input => input.addEventListener('change', syncSelectedModel)); }, { once: true });
   document.addEventListener('submit', goToCheckout, true);
   document.addEventListener('click', event => {
     const button = event.target instanceof Element && event.target.closest('#ProductSubmitButton-template--30990084735359__main, [id^="SectionAtcBtn-"], [id^="ProductSubmitButton-"], .shopify-payment-button button, [data-shopify="payment-button"]');
