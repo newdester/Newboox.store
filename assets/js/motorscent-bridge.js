@@ -140,7 +140,7 @@
     if (!form) return;
     const note = document.createElement('p');
     note.id = 'motorscent-payment-note';
-    note.textContent = 'Pagamento seguro via Mercado Pago: Pix, cartão e saldo da carteira. As opções de parcelamento e eventuais juros aparecem antes da confirmação.';
+    note.textContent = 'Secure payment via Cakto. The final charge is processed in USD; your local currency amount is shown as an estimate.';
     form.append(note);
   };
   const configureLavenderUpsell = () => {
@@ -175,7 +175,7 @@
     const section = document.createElement('section');
     section.id = 'motorscent-shipping-estimator';
     section.className = 'motorscent-shipping-estimator';
-    section.innerHTML = `<h2>Calcule o envio e o prazo de entrega</h2><div class="motorscent-shipping-form"><label class="visually-hidden" for="motorscent-zip">CEP</label><input id="motorscent-zip" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="Digite seu CEP"><button type="button">Calcular</button></div><p class="motorscent-shipping-message" aria-live="polite"></p><div class="motorscent-shipping-results" hidden><table><thead><tr><th>Entrega</th><th>Prazo</th><th>Valor</th></tr></thead><tbody><tr><td><strong>Frete padrão</strong></td><td>5 a 7 dias úteis</td><td><strong>R$ 0,00</strong></td></tr></tbody></table><p>Frete grátis aplicado automaticamente no checkout.</p></div><div class="motorscent-delivery-card"><span class="motorscent-delivery-icon" aria-hidden="true">🚚</span><p><strong>Frete grátis</strong> <span data-shipping-location>para sua região</span><br><span>Entrega estimada em 5 a 7 dias úteis</span></p></div><div class="motorscent-delivery-card"><span class="motorscent-delivery-icon motorscent-delivery-icon--return" aria-hidden="true">▣</span><p><strong>Devolução garantida</strong><br><span>Dinheiro de volta em até 7 dias</span></p></div>`;
+    section.innerHTML = `<h2>Check shipping and delivery</h2><div class="motorscent-shipping-form"><label class="visually-hidden" for="motorscent-zip">Postal code</label><input id="motorscent-zip" autocomplete="postal-code" maxlength="16" placeholder="Enter your postal code"><button type="button">Check</button></div><p class="motorscent-shipping-message" aria-live="polite"></p><div class="motorscent-shipping-results" hidden><table><thead><tr><th>Delivery</th><th>Time</th><th>Price</th></tr></thead><tbody><tr><td><strong>Worldwide standard</strong></td><td>7–9 calendar days</td><td><strong>FREE</strong></td></tr></tbody></table><p>Free shipping is applied automatically at checkout.</p></div><div class="motorscent-delivery-card"><span class="motorscent-delivery-icon" aria-hidden="true">🚚</span><p><strong>Free worldwide shipping</strong> <span data-shipping-location>to your region</span><br><span>Estimated delivery in 7–9 calendar days</span></p></div><div class="motorscent-delivery-card"><span class="motorscent-delivery-icon motorscent-delivery-icon--return" aria-hidden="true">▣</span><p><strong>Guaranteed returns</strong><br><span>Money back within 7 days</span></p></div>`;
     const timeline = document.querySelector('dynamic-dates.shipping-checkpoints');
     if (timeline) timeline.replaceWith(section); else form.after(section);
     [...document.querySelectorAll('.product__accordion')].filter(accordion => /shipping|envio/i.test(accordion.textContent)).forEach(accordion => accordion.remove());
@@ -218,7 +218,7 @@
     };
     try { const saved = JSON.parse(localStorage.getItem('motorscent_shipping_v1') || 'null'); if (saved?.zip) { input.value = saved.zip.replace(/(\d{5})(\d)/, '$1-$2'); calculate(); } else detectLocation(); } catch { detectLocation(); }
   };
-  document.addEventListener('DOMContentLoaded', () => { document.documentElement.lang = 'pt-BR'; translate(document.body); optimizeImages(); trackMotor('ViewContent'); syncSelectedModel(); configureLavenderUpsell(); addPaymentNote(); addShippingEstimator(); updateOffer(); document.querySelectorAll('[name="quantity"]').forEach(input => input.addEventListener('change', updateOffer)); document.querySelectorAll('input[name="Model"]').forEach(input => input.addEventListener('change', syncSelectedModel)); }, { once: true });
+  document.addEventListener('DOMContentLoaded', () => { const locale = window.NewbooxI18n?.config?.(window.NewbooxI18n.detectCountry?.()).locale || 'en-US'; document.documentElement.lang = locale; if (locale.startsWith('pt')) translate(document.body); optimizeImages(); trackMotor('ViewContent'); syncSelectedModel(); configureLavenderUpsell(); addPaymentNote(); addShippingEstimator(); updateOffer(); document.querySelectorAll('[name="quantity"]').forEach(input => input.addEventListener('change', updateOffer)); document.querySelectorAll('input[name="Model"]').forEach(input => input.addEventListener('change', syncSelectedModel)); }, { once: true });
   document.addEventListener('submit', goToCheckout, true);
   document.addEventListener('click', event => {
     const button = event.target instanceof Element && event.target.closest('#ProductSubmitButton-template--30990084735359__main, [id^="SectionAtcBtn-"], [id^="ProductSubmitButton-"], .shopify-payment-button button, [data-shopify="payment-button"]');
