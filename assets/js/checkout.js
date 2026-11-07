@@ -2,11 +2,13 @@
   const cart = Storefront.getCart();
   if (!cart) { location.replace('carrinho.html'); return; }
   const $ = id => document.getElementById(id);
-  const totalUsd = 69 * Math.max(1, Number(cart.quantity) || 1);
+  const quantity = Math.max(1, Number(cart.quantity) || 1);
+  const unitUsd = quantity === 1 ? 69 : quantity === 2 ? 59 : 49;
+  const totalUsd = unitUsd * quantity;
   const state = { country: NewbooxI18n.detectCountry(), locale: 'en-US', currency: 'USD', rates: {}, customer: null };
   const text = key => NewbooxI18n.text(key, state.locale);
   Storefront.applyBrand?.(cart);
-  $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="${String(cart.title || 'Product').replace(/"/g, '&quot;')}"><div><p class="cart-name">${cart.title || 'Product'}</p><span class="cart-meta">${text('quantity')}: ${cart.quantity}</span></div><b class="cart-price">${NewbooxI18n.money(totalUsd, 'USD', 'en-US')}</b></div>`;
+  $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="${String(cart.title || 'Product').replace(/"/g, '&quot;')}"><div><p class="cart-name">${cart.title || 'Product'}</p><span class="cart-meta">${text('quantity')}: ${quantity}</span><span class="cart-meta">${NewbooxI18n.money(unitUsd, 'USD', 'en-US')} / unit</span></div><b class="cart-price">${NewbooxI18n.money(totalUsd, 'USD', 'en-US')}</b></div>`;
   function applyCopy() {
     document.documentElement.lang = state.locale;
     const fields = { backLink:'back', homeLink:'home', cartLink:'cart', pageTitle:'title', deliveryTitle:'delivery', nameLabel:'name', emailLabel:'email', phoneLabel:'phone', taxLabel:'tax', postalLabel:'postal', addressLabel:'address', numberLabel:'number', complementLabel:'complement', districtLabel:'district', cityLabel:'city', continueButton:'continue', paymentTitle:'payment', cardTitle:'card', cardNameLabel:'cardName', cardNumberLabel:'cardNumber', expiryLabel:'expiry', cvvLabel:'cvv', installmentsLabel:'installments', payButton:'pay', summaryTitle:'summary', totalLabel:'total', secureNote:'secure', secureLabel:'secure' };
