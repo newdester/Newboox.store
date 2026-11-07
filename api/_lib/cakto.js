@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-const API_BASE = 'https://api.cakto.com.br/public_api';
+const API_BASE = String(process.env.CAKTO_API_URL || 'https://api.cakto.com.br/public_api').replace(/\/$/, '');
 let tokenCache = { value: '', expiresAt: 0 };
 
 export function caktoConfigured() {
