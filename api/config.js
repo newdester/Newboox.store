@@ -13,7 +13,7 @@ export default function handler(request, response) {
     caktoApiEnabled: Boolean(process.env.CAKTO_CLIENT_ID && process.env.CAKTO_CLIENT_SECRET),
     caktoOffersConfigured: Boolean(process.env.CAKTO_OFFER_ID_USD),
     caktoInternationalOfferConfigured: Boolean(process.env.CAKTO_OFFER_ID_USD),
-    caktoClientId: process.env.CAKTO_CLIENT_ID || '',
+    caktoClientId: String(process.env.CAKTO_CLIENT_ID || '').trim(),
     metaCapiEnabled: Boolean(process.env.META_PIXEL_ID && process.env.META_ACCESS_TOKEN),
     product
   });

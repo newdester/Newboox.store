@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-const API_BASE = String(process.env.CAKTO_API_URL || 'https://api.cakto.com.br/public_api').replace(/\/$/, '');
+const API_BASE = String(process.env.CAKTO_API_URL || 'https://api.cakto.com.br/public_api').trim().replace(/\/$/, '');
 let tokenCache = { value: '', expiresAt: 0 };
 
 export function caktoConfigured() {
@@ -11,8 +11,8 @@ export async function getCaktoToken() {
   if (!caktoConfigured()) throw new Error('Cakto não configurada no servidor.');
   if (tokenCache.value && tokenCache.expiresAt > Date.now() + 60_000) return tokenCache.value;
   const body = new URLSearchParams({
-    client_id: process.env.CAKTO_CLIENT_ID,
-    client_secret: process.env.CAKTO_CLIENT_SECRET,
+    client_id: String(process.env.CAKTO_CLIENT_ID).trim(),
+    client_secret: String(process.env.CAKTO_CLIENT_SECRET).trim(),
     grant_type: 'client_credentials'
   });
   const result = await fetch(`${API_BASE}/token/`, {
