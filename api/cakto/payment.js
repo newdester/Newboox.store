@@ -18,14 +18,13 @@ export default async function handler(request, response) {
   const address = body.address || {};
   const cardToken = required(body.cardToken, 220);
   const email = required(customer.email, 160);
-  if (!cardToken || !/^\S+@\S+\.\S+$/.test(email)) return response.status(422).json({ error: 'Dados do cliente ou cartão incompletos.' });
+  if (!cardToken || !/^\S+@\S+\.\S+$/.test(email) || !required(customer.fingerprint, 160) || !body.threeDSecure?.referenceId) return response.status(422).json({ error: 'Dados do cliente, antifraude ou autenticação 3DS incompletos.' });
   const installments = Math.min(12, Math.max(1, Number.parseInt(body.installments, 10) || 1));
   const payload = {
-    paymentMethod: 'credit_card',
+    paymentMethod: 'threeDs',
     customer: {
       name: required(customer.name, 120), email,
-      phone: required(customer.phone, 32),
-      docType: required(customer.docType || 'CPF', 10), docNumber: required(customer.docNumber, 32)
+      phone: required(customer.phone, 32), fingerprint: required(customer.fingerprint, 160)
     },
     items: [{ offerId, quantity: Math.min(10, Math.max(1, Number.parseInt(body.quantity, 10) || 1)), offerType: 'main' }],
     card: { token: cardToken },
@@ -37,6 +36,17 @@ export default async function handler(request, response) {
     },
     externalReference: `NB-${Date.now()}-${randomUUID().slice(0, 8)}`
   };
+  if (required(customer.docType, 10) && required(customer.docNumber, 32)) {
+    payload.customer.docType = required(customer.docType, 10).toLowerCase();
+    payload.customer.docNumber = required(customer.docNumber, 32).replace(/\D/g, '');
+  }
+  if (body.threeDSecure && typeof body.threeDSecure === 'object') {
+    payload.threeDSecure = {
+      cavv: required(body.threeDSecure.cavv, 500), eci: required(body.threeDSecure.eci, 20),
+      xid: required(body.threeDSecure.xid, 500), referenceId: required(body.threeDSecure.referenceId, 500),
+      version: required(body.threeDSecure.version, 40)
+    };
+  }
   try {
     const caktoResponse = await caktoRequest('/payments/', {
       method: 'POST',
