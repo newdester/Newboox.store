@@ -114,7 +114,7 @@
     if (!note) { note = document.createElement('p'); note.id = 'motorscent-local-offer'; note.style.cssText = 'font-weight:700;margin:12px 0;color:#111'; const anchor = document.querySelector('form[action*="cart/add"], form.shopify-product-form'); anchor?.prepend(note); }
     if (note) note.textContent = quantity === 1 ? '1 unit for $69.00' : quantity === 2 ? '2 units for $59.00 each' : `${quantity} units for $49.00 each`;
   };
-  const goToCheckout = (event, destination = '/carrinho') => {
+  const goToCheckout = (event, destination = '/cart') => {
     const target = event.target instanceof Element ? event.target : null;
     const form = target?.closest('form[action*="cart/add"], form.shopify-product-form') || target?.form || (target?.getAttribute('form') && document.getElementById(target.getAttribute('form')));
     if (!form) return;
@@ -219,14 +219,14 @@
     };
     try { const saved = JSON.parse(localStorage.getItem('motorscent_shipping_v1') || 'null'); if (saved?.zip) { input.value = saved.zip.replace(/(\d{5})(\d)/, '$1-$2'); calculate(); } else detectLocation(); } catch { detectLocation(); }
   };
-  document.addEventListener('DOMContentLoaded', async () => { const country = await window.NewbooxI18n?.resolveCountry?.() || 'US'; const cfg = window.NewbooxI18n?.config?.(country); displayLocale = cfg?.locale || 'en-US'; displayCurrency = cfg?.currency || 'USD'; document.documentElement.lang = displayLocale; if (displayLocale.startsWith('pt')) translate(document.body); try { const rates = await fetch('/api/exchange-rates').then(response => response.json()); displayRate = Number(rates.rates?.[displayCurrency] || 1); } catch {} optimizeImages(); trackMotor('ViewContent'); syncSelectedModel(); configureLavenderUpsell(); addPaymentNote(); addShippingEstimator(); updateOffer(); document.querySelectorAll('[name="quantity"]').forEach(input => input.addEventListener('change', updateOffer)); document.querySelectorAll('input[name="Model"]').forEach(input => input.addEventListener('change', syncSelectedModel)); }, { once: true });
+  document.addEventListener('DOMContentLoaded', async () => { displayLocale = 'en-US'; displayCurrency = 'USD'; displayRate = 1; document.documentElement.lang = displayLocale; optimizeImages(); trackMotor('ViewContent'); syncSelectedModel(); configureLavenderUpsell(); addPaymentNote(); addShippingEstimator(); updateOffer(); document.querySelectorAll('[name="quantity"]').forEach(input => input.addEventListener('change', updateOffer)); document.querySelectorAll('input[name="Model"]').forEach(input => input.addEventListener('change', syncSelectedModel)); }, { once: true });
   document.addEventListener('submit', goToCheckout, true);
   document.addEventListener('click', event => {
     const button = event.target instanceof Element && event.target.closest('#ProductSubmitButton-template--30990084735359__main, [id^="SectionAtcBtn-"], [id^="ProductSubmitButton-"], .shopify-payment-button button, [data-shopify="payment-button"]');
     if (!button) return;
     event.preventDefault(); event.stopImmediatePropagation();
     const isBuyNow = /buy it now|comprar agora/i.test(button.textContent || '') || button.matches('.shopify-payment-button button, [data-shopify="payment-button"]');
-    goToCheckout({ target: button, preventDefault() {}, stopImmediatePropagation() {} }, isBuyNow ? '/checkout' : '/carrinho');
+    goToCheckout({ target: button, preventDefault() {}, stopImmediatePropagation() {} }, isBuyNow ? '/checkout' : '/cart');
   }, true);
   document.addEventListener('click', event => { const anchor = event.target instanceof Element && event.target.closest('a[href]'); if (anchor?.href) withPixel(() => window.MetaPixel?.trackCustom('LinkClick', { link_url: anchor.href, link_text: anchor.textContent.trim().slice(0, 120) })); const link = anchor?.matches('a[href*="/cart"], a[href*="/checkout"]') && anchor; if (!link) return; event.preventDefault(); const form = document.querySelector('form[action*="cart/add"], form.shopify-product-form'); if (form) goToCheckout({ target: form, preventDefault() {}, stopImmediatePropagation() {} }); }, true);
 })();

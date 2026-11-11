@@ -14,6 +14,6 @@
   document.querySelector('#buyButton').addEventListener('click', () => {
     const unit = priceFor(quantity);
     localStorage.setItem('chefpro_cart_v1', JSON.stringify({ ...product, quantity, price: unit }));
-    location.assign('/carrinho');
+    location.assign('/cart');
   });
 })();

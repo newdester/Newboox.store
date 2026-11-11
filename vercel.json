@@ -1,11 +1,16 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/motorscent", "destination": "/motorscent.html" }
+    { "source": "/motorscent", "destination": "/motorscent.html" },
+    { "source": "/cart", "destination": "/carrinho.html" },
+    { "source": "/checkout", "destination": "/checkout.html" },
+    { "source": "/thank-you", "destination": "/obrigado.html" }
   ],
   "redirects": [
-    { "source": "/cart", "destination": "/carrinho", "permanent": false },
-    { "source": "/cart/(.*)", "destination": "/carrinho", "permanent": false },
+    { "source": "/carrinho", "destination": "/cart", "permanent": true },
+    { "source": "/carrinho.html", "destination": "/cart", "permanent": true },
+    { "source": "/obrigado", "destination": "/thank-you", "permanent": true },
+    { "source": "/obrigado.html", "destination": "/thank-you", "permanent": true },
     { "source": "/a/checkout", "destination": "/checkout", "permanent": false },
     { "source": "/collections/(.*)", "destination": "/", "permanent": false },
     { "source": "/products/(.*)", "destination": "/", "permanent": false },

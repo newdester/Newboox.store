@@ -40,7 +40,7 @@
   };
   document.addEventListener('DOMContentLoaded', updateLandingDetails);
   const saveCart = quantity => localStorage.setItem(CART_KEY, JSON.stringify({ ...product, quantity: Math.min(10, Math.max(1, Number(quantity) || 1)) }));
-  const goToCart = quantity => { const units = Math.min(10, Math.max(1, Number(quantity) || 1)); saveCart(units); loadPixel(() => window.MetaPixel.track('AddToCart', { ...window.MetaPixel.content(product), contents: [{ id: product.id, quantity: units }] })); window.location.assign('carrinho.html'); };
+  const goToCart = quantity => { const units = Math.min(10, Math.max(1, Number(quantity) || 1)); saveCart(units); loadPixel(() => window.MetaPixel.track('AddToCart', { ...window.MetaPixel.content(product), contents: [{ id: product.id, quantity: units }] })); window.location.assign('/cart'); };
   document.addEventListener('submit', event => { const form = event.target instanceof Element ? event.target.closest('form.shopify-product-form') : null; if (!form) return; event.preventDefault(); event.stopImmediatePropagation(); goToCart(form.querySelector('[name="quantity"]')?.value); }, true);
   document.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
