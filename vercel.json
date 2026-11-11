@@ -4,6 +4,7 @@
     { "source": "/motorscent", "destination": "/motorscent.html" }
   ],
   "redirects": [
+    { "source": "/checkout", "destination": "https://pay.cakto.com.br/ypg9xmq_1279594", "permanent": false },
     { "source": "/carrinho", "destination": "/cart", "permanent": true },
     { "source": "/carrinho.html", "destination": "/cart", "permanent": true },
     { "source": "/obrigado", "destination": "/thank-you", "permanent": true },

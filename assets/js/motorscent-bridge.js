@@ -1,4 +1,5 @@
 (() => {
+  const PAYMENT_URL = 'https://pay.cakto.com.br/ypg9xmq_1279594';
   const priceFor = quantity => quantity === 1 ? 69 : quantity === 2 ? 59 : 49;
   let displayLocale = 'en-US', displayCurrency = 'USD', displayRate = 1;
   const brl = value => Number(value * displayRate).toLocaleString(displayLocale, { style: 'currency', currency: displayCurrency });
@@ -226,7 +227,7 @@
     if (!button) return;
     event.preventDefault(); event.stopImmediatePropagation();
     const isBuyNow = /buy it now|comprar agora/i.test(button.textContent || '') || button.matches('.shopify-payment-button button, [data-shopify="payment-button"]');
-    goToCheckout({ target: button, preventDefault() {}, stopImmediatePropagation() {} }, isBuyNow ? '/checkout' : '/cart');
+    goToCheckout({ target: button, preventDefault() {}, stopImmediatePropagation() {} }, isBuyNow ? PAYMENT_URL : '/cart');
   }, true);
-  document.addEventListener('click', event => { const anchor = event.target instanceof Element && event.target.closest('a[href]'); if (anchor?.href) withPixel(() => window.MetaPixel?.trackCustom('LinkClick', { link_url: anchor.href, link_text: anchor.textContent.trim().slice(0, 120) })); const link = anchor?.matches('a[href*="/cart"], a[href*="/checkout"]') && anchor; if (!link) return; event.preventDefault(); const form = document.querySelector('form[action*="cart/add"], form.shopify-product-form'); if (form) goToCheckout({ target: form, preventDefault() {}, stopImmediatePropagation() {} }); }, true);
+  document.addEventListener('click', event => { const anchor = event.target instanceof Element && event.target.closest('a[href]'); if (anchor?.href) withPixel(() => window.MetaPixel?.trackCustom('LinkClick', { link_url: anchor.href, link_text: anchor.textContent.trim().slice(0, 120) })); const link = anchor?.matches('a[href*="/cart"], a[href*="/checkout"]') && anchor; if (!link) return; event.preventDefault(); const form = document.querySelector('form[action*="cart/add"], form.shopify-product-form'); if (form) goToCheckout({ target: form, preventDefault() {}, stopImmediatePropagation() {} }, link.href.includes('/checkout') ? PAYMENT_URL : '/cart'); }, true);
 })();
