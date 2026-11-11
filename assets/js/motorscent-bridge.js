@@ -142,7 +142,7 @@
     if (!form) return;
     const note = document.createElement('p');
     note.id = 'motorscent-payment-note';
-    note.textContent = 'Secure payment via Cakto. The final charge is processed in USD; your local currency amount is shown as an estimate.';
+    note.textContent = 'You’ll be redirected to Cakto’s secure checkout to complete payment. The final charge is processed in USD; any local currency amount is an estimate.';
     form.append(note);
   };
   const configureLavenderUpsell = () => {
