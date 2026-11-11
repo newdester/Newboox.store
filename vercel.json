@@ -1,10 +1,7 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/motorscent", "destination": "/motorscent.html" },
-    { "source": "/cart", "destination": "/carrinho.html" },
-    { "source": "/checkout", "destination": "/checkout.html" },
-    { "source": "/thank-you", "destination": "/obrigado.html" }
+    { "source": "/motorscent", "destination": "/motorscent.html" }
   ],
   "redirects": [
     { "source": "/carrinho", "destination": "/cart", "permanent": true },
