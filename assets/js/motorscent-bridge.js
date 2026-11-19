@@ -29,7 +29,7 @@
     ['18 MODELS · LIGHTS & EXHAUST MIST', '18 MODELOS · LUZES E NÉVOA NO ESCAPAMENTO'], ['18 Models', '18 modelos'],
     ['17 detailed models to choose from', '17 modelos detalhados para escolher'], ['limited holiday stock', 'estoque limitado'],
     ['SELLING FAST · LIMITED HOLIDAY STOCK', 'VENDENDO RÁPIDO · ESTOQUE LIMITADO'], ['Selling fast', 'Vendendo rápido'],
-    ['50% OFF LAUNCH SALE', 'OFERTA DE LANÇAMENTO: 50% OFF'], ['SAVE 50%', 'ECONOMIZE 50%'], ['BUNDLE & SAVE', 'COMBO E ECONOMIA'],
+    ['50% OFF LAUNCH SALE', 'BLACK FRIDAY · ATÉ 54% OFF'], ['SAVE 50%', 'ECONOMIZE ATÉ 54%'], ['BUNDLE & SAVE', 'COMBO E ECONOMIA'],
     ['Buy 1', 'Compre 1'], ['Buy 2', 'Compre 2'], ['Buy 3', 'Compre 3'], ['BEST VALUE', 'MELHOR OFERTA'], ['MOST POPULAR', 'MAIS POPULAR'],
     ['Built For Car Lovers', 'Feito para quem ama carros'], ['Not Just Another Model On A Shelf', 'Não é apenas mais uma miniatura na estante'],
     ['Complete your setup', 'Complete seu setup'],
@@ -115,7 +115,11 @@
     document.querySelectorAll('[data-handle="shipping-protection"] .upsell__title, [data-handle="shipping-protection"] h3, [data-handle="shipping-protection"] h4').forEach(element => { element.textContent = storefrontLanguage === 'pt' ? 'Proteção de envio' : 'Shipping protection'; });
     let note = document.querySelector('#motorscent-local-offer');
     if (!note) { note = document.createElement('p'); note.id = 'motorscent-local-offer'; note.style.cssText = 'font-weight:700;margin:12px 0;color:#111'; const anchor = document.querySelector('form[action*="cart/add"], form.shopify-product-form'); anchor?.prepend(note); }
-    if (note) note.innerHTML = `<del style="color:#777">${brl(catalogOriginalPrice * quantity)}</del> <strong>${brl(total)} no cartão</strong> · 12x de ${brl(total / 12)} sem juros<br><strong>${brl(catalogCashPrice * quantity)} à vista no Pix</strong>`;
+    if (note) {
+      const cardDiscount = Math.round((1 - catalogUnitPrice / catalogOriginalPrice) * 100);
+      const cashDiscount = Math.round((1 - catalogCashPrice / catalogOriginalPrice) * 100);
+      note.innerHTML = `<del style="color:#777">${brl(catalogOriginalPrice * quantity)}</del> <strong>${brl(total)} no cartão</strong> · ${cardDiscount}% OFF · 12x de ${brl(total / 12)} sem juros<br><strong>${brl(catalogCashPrice * quantity)} à vista no Pix · ${cashDiscount}% OFF</strong>`;
+    }
   };
   const goToCheckout = (event, destination = '/cart') => {
     const target = event.target instanceof Element ? event.target : null;
