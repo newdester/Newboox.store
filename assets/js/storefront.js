@@ -28,7 +28,7 @@ const Storefront = (() => {
   const applyBrand = cart => { if (!cart || cart.id !== 'motor-scent') return; document.title = document.title.replace(/MaxLar|ChefPro/g, 'Motor Scent'); document.querySelectorAll('.logo img, .footer img').forEach(image => { image.src = 'assets/images/motorscent/logo.png'; image.alt = 'Motor Scent'; }); };
   const renderCart = async () => {
     const cart = getCart(), root = document.querySelector('#cartItem'); applyBrand(cart); const context = localeContext();
-    try { const config = await fetch('/api/config', { cache: 'no-store' }).then(response => response.json()); const price = Number(config.offer?.price || config.product?.unitPrice); if (config.caktoCheckoutReady && price > 0) catalogUnitPrice = price; } catch {}
+    try { const config = await fetch('/api/config', { cache: 'no-store' }).then(response => response.json()); const price = Number(config.displayUnitPrice || config.product?.unitPrice); if (config.caktoCheckoutReady && price > 0) catalogUnitPrice = price; } catch {}
     const set = (id, value) => { const node = document.querySelector(id); if (node) node.textContent = value; };
     if (!cart || !root) { document.querySelector('#empty')?.classList.remove('hidden'); document.querySelector('#checkoutLink')?.classList.add('hidden'); set('#cartCount', '0'); return; }
     set('#cartCount', String(cart.quantity)); set('#deliveryWindow', copy(context, 'estimated')); set('#chargedNote', copy(context, 'charged')); set('#footerCurrency', `${copy(context, 'charged')} · ${context.currency}`);

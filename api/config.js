@@ -1,5 +1,7 @@
 import { internationalCatalog, internationalProductId } from './_lib/cakto.js';
 
+const DISPLAY_UNIT_PRICE_USD = 69;
+
 export default async function handler(request, response) {
   response.setHeader('Cache-Control', 'no-store');
   const base = {
@@ -8,7 +10,9 @@ export default async function handler(request, response) {
     caktoApiEnabled: Boolean(process.env.CAKTO_CLIENT_ID && process.env.CAKTO_CLIENT_SECRET),
     caktoClientId: String(process.env.CAKTO_CLIENT_ID || '').trim(),
     metaCapiEnabled: Boolean(process.env.META_PIXEL_ID && process.env.META_ACCESS_TOKEN),
-    product: { id: internationalProductId(), title: 'Motor Scent', unitPrice: 69, currency: 'USD' }
+    displayUnitPrice: DISPLAY_UNIT_PRICE_USD,
+    processingFee: 0.99,
+    product: { id: internationalProductId(), title: 'Motor Scent', unitPrice: DISPLAY_UNIT_PRICE_USD, currency: 'USD' }
   };
   if (!base.caktoApiEnabled) return response.status(200).json({ ...base, caktoCheckoutReady: false, caktoOffersConfigured: false, caktoInternationalOfferConfigured: false });
   try {
@@ -18,7 +22,7 @@ export default async function handler(request, response) {
       caktoCheckoutReady: true,
       caktoOffersConfigured: true,
       caktoInternationalOfferConfigured: true,
-      product: { id: catalog.product.id, title: catalog.product.name, unitPrice: catalog.offer.price, currency: catalog.offer.currency },
+      product: { id: catalog.product.id, title: catalog.product.name, unitPrice: DISPLAY_UNIT_PRICE_USD, currency: catalog.offer.currency },
       offer: catalog.offer
     });
   } catch (error) {

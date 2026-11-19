@@ -88,7 +88,7 @@
     const rates = await ratesResponse.json().catch(() => ({ rates: { USD: 1 } }));
     state.rates = rates.rates || { USD: 1 };
     if (!state.config.caktoCheckoutReady || !state.config.caktoClientId) throw new Error(state.config.caktoConfigurationError || 'International checkout is temporarily unavailable.');
-    state.unitUsd = Number(state.config.offer?.price || state.config.product?.unitPrice || 69);
+    state.unitUsd = Number(state.config.displayUnitPrice || state.config.product?.unitPrice || 69);
     renderSummary();
     await loadCaktoSdk();
     state.sdk = new window.Cakto.CaktoSDK({ client_id: state.config.caktoClientId, environment: 'production' });
