@@ -15,12 +15,13 @@ function validSignature(request, raw) {
   const secret = String(process.env.CAKTO_WEBHOOK_SECRET || '');
   const timestamp = String(request.headers['x-cakto-timestamp'] || '');
   const header = String(request.headers['x-cakto-signature'] || '');
-  const received = header.replace(/^v1=/, '').trim();
+  const received = header.split(',').map(value => value.trim()).find(value => value.startsWith('v1=')) || '';
   if (!secret || !timestamp || !received || !/^\d+$/.test(timestamp)) return false;
   if (Math.abs(Date.now() - Number(timestamp) * 1000) > 5 * 60 * 1000) return false;
-  const expected = createHmac('sha256', secret).update(`${timestamp}.${raw.toString('utf8')}`).digest('hex');
+  const expected = `v1=${createHmac('sha256', secret).update(`${timestamp}.${raw.toString('utf8')}`).digest('hex')}`;
   try {
-    return timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(received, 'hex'));
+    const expectedBuffer = Buffer.from(expected); const receivedBuffer = Buffer.from(received);
+    return expectedBuffer.length === receivedBuffer.length && timingSafeEqual(expectedBuffer, receivedBuffer);
   } catch {
     return false;
   }
@@ -33,8 +34,10 @@ export default async function handler(request, response) {
   if (!quota.allowed) return response.status(429).json({ error: 'Limite de notificações excedido.' });
   try {
     const raw = await rawBody(request);
-    if (!validSignature(request, raw)) return response.status(401).json({ error: 'Assinatura de webhook inválida.' });
     const event = JSON.parse(raw.toString('utf8'));
+    const bodySecret = String(event.secret || ''); const expectedSecret = String(process.env.CAKTO_WEBHOOK_SECRET || '');
+    const secretMatches = bodySecret && expectedSecret && Buffer.byteLength(bodySecret) === Buffer.byteLength(expectedSecret) && timingSafeEqual(Buffer.from(bodySecret), Buffer.from(expectedSecret));
+    if (!validSignature(request, raw) && !secretMatches) return response.status(401).json({ error: 'Assinatura de webhook inválida.' });
     const type = String(event.event || event.type || event.name || 'unknown');
     // O processamento financeiro definitivo deve consultar a Cakto pelo ID do pedido.
     // O endpoint responde rapidamente para evitar reentregas; dados sensíveis não são registrados.

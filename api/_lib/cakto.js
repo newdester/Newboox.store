@@ -1,7 +1,9 @@
 import { randomUUID } from 'node:crypto';
 
 const API_BASE = String(process.env.CAKTO_API_URL || 'https://api.cakto.com.br/public_api').trim().replace(/\/$/, '');
+const DEFAULT_PRODUCT_ID_USD = 'dabef23e-c8f4-4eba-ab9d-0b6d95aaf6e4';
 let tokenCache = { value: '', expiresAt: 0 };
+let catalogCache = { value: null, expiresAt: 0 };
 
 export function caktoConfigured() {
   return Boolean(process.env.CAKTO_CLIENT_ID && process.env.CAKTO_CLIENT_SECRET);
@@ -33,10 +35,38 @@ export async function caktoRequest(path, options = {}) {
   return fetch(`${API_BASE}${path}`, { ...options, headers });
 }
 
-export function offerForCountry(country) {
-  // A loja opera exclusivamente com a oferta internacional em USD.
-  // O país continua sendo enviado no endereço para cálculo, antifraude e entrega.
-  return process.env.CAKTO_OFFER_ID_USD;
+export function internationalProductId() {
+  return String(process.env.CAKTO_PRODUCT_ID_USD || DEFAULT_PRODUCT_ID_USD).trim();
+}
+
+export async function internationalCatalog() {
+  if (catalogCache.value && catalogCache.expiresAt > Date.now()) return catalogCache.value;
+  const productId = internationalProductId();
+  const result = await caktoRequest(`/products/${encodeURIComponent(productId)}/`);
+  const product = await result.json().catch(() => ({}));
+  if (!result.ok) throw new Error(product.detail || product.message || 'Produto internacional não encontrado na Cakto.');
+  if (String(product.status || '').toLowerCase() !== 'active') throw new Error('O produto internacional está inativo na Cakto.');
+  const offers = Array.isArray(product.offers) ? product.offers : [];
+  const configuredId = String(process.env.CAKTO_OFFER_ID_USD || '').trim();
+  const configuredOffer = configuredId ? offers.find(item => String(item.id) === configuredId && String(item.status).toLowerCase() === 'active') : null;
+  const offer = configuredOffer
+    || offers.find(item => item.default && String(item.status).toLowerCase() === 'active')
+    || offers.find(item => String(item.status).toLowerCase() === 'active');
+  if (!offer) throw new Error('O produto internacional não possui oferta ativa.');
+  if (String(offer.status || '').toLowerCase() !== 'active') throw new Error('A oferta internacional está inativa na Cakto.');
+  const currency = String(offer.currency || product.currency || 'USD').toUpperCase();
+  if (currency !== 'USD') throw new Error('A oferta vinculada ao checkout não está configurada em USD.');
+  const value = {
+    product: { id: String(product.id || productId), name: String(product.name || 'Motor Scent'), status: String(product.status), currency },
+    offer: { id: String(offer.id), name: String(offer.name || product.name || 'Motor Scent'), status: String(offer.status), price: Number(offer.price || product.price || 0), currency }
+  };
+  if (!Number.isFinite(value.offer.price) || value.offer.price <= 0) throw new Error('A oferta internacional não possui um preço válido.');
+  catalogCache = { value, expiresAt: Date.now() + 5 * 60_000 };
+  return value;
+}
+
+export async function offerForCountry() {
+  return (await internationalCatalog()).offer.id;
 }
 
 export function idempotencyKey(value) {

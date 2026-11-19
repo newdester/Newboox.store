@@ -18,7 +18,7 @@
           <div class="field full"><label for="country">Country / region</label><select id="country" required></select></div>
           <div class="field full"><label for="name" id="nameLabel">Full name</label><input id="name" name="name" required autocomplete="name"></div>
           <div class="field"><label for="phone" id="phoneLabel">Phone</label><input id="phone" name="phone" required inputmode="tel" autocomplete="tel" placeholder="+1 555 000 0000"></div>
-          <div class="field"><label for="tax" id="taxLabel">Tax ID / document</label><input id="tax" name="tax" autocomplete="off"></div>
+          <div class="field" id="taxField"><label for="tax" id="taxLabel">Tax ID / document</label><input id="tax" name="tax" autocomplete="off"></div>
           <div class="field full"><label for="zip" id="postalLabel">Postal code</label><input id="zip" name="zip" required autocomplete="postal-code"></div>
           <div class="field full"><label for="address" id="addressLabel">Street address</label><input id="address" name="address" required autocomplete="street-address"></div>
           <div class="field"><label for="number" id="numberLabel">Building number</label><input id="number" name="number" required></div>
@@ -29,7 +29,7 @@
         <p class="field-feedback" id="zipFeedback" aria-live="polite"></p>
       </section>
       <section class="assurance"><b>Secure checkout</b><p>Encrypted payment, order tracking and support included with every order.</p></section>
-      <button class="button" id="continueButton" type="submit">Continue to payment</button>
+      <button class="button" id="continueButton" type="submit">Continue to payment</button><div id="checkoutStatus" class="status" aria-live="polite"></div>
     </form>
     <section id="paymentArea" class="checkout-form hidden"><section class="checkout-section"><div class="section-heading"><h2 id="paymentTitle">Payment</h2><span>Card protected by 3DS</span></div>
       <div class="payment-intro"><strong id="cardTitle">Credit or debit card</strong><span id="chargedNote">The final charge will be processed in USD. Local amount is an estimate.</span></div>
@@ -45,5 +45,5 @@
   </section><aside class="order-panel"><div class="order-panel__inner"><h2 id="summaryTitle">Order summary</h2><div id="checkoutItem"></div><div class="order-divider"></div><div class="summary-row"><span id="subtotalLabel">Subtotal</span><strong id="checkoutTotal">$69.00</strong></div><div class="summary-row shipping"><span>Worldwide shipping</span><strong>FREE</strong></div><div class="summary-row summary-total"><span id="totalLabel">Total</span><strong id="checkoutTotalBottom">$69.00</strong></div><p class="currency-note" id="footerCurrency">Charged in USD</p></div></aside>
   </main>
   <footer class="checkout-footer"><a href="/" id="homeLink">Home</a><span>© 2026 Motor Scent</span><span>Privacy · Terms</span></footer>
-  <script src="https://cakto-sdk.pages.dev/cakto-sdk.min.js"></script><script src="assets/js/i18n.js?v=20261111-checkout"></script><script src="assets/js/storefront.js?v=20261111-checkout"></script><script src="assets/js/checkout.js?v=20261111-layout"></script>
+  <script src="assets/js/i18n.js?v=20261119-checkout"></script><script src="assets/js/storefront.js?v=20261119-checkout"></script><script src="assets/js/checkout-v2.js?v=20261119-cakto"></script>
 </body></html>

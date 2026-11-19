@@ -1,6 +1,7 @@
 (() => {
-  const PAYMENT_URL = 'https://pay.cakto.com.br/ypg9xmq_1279594';
-  const priceFor = quantity => quantity === 1 ? 69 : quantity === 2 ? 59 : 49;
+  const PAYMENT_URL = '/checkout';
+  let catalogUnitPrice = 69;
+  const priceFor = () => catalogUnitPrice;
   let displayLocale = 'en-US', displayCurrency = 'USD', displayRate = 1;
   const brl = value => Number(value * displayRate).toLocaleString(displayLocale, { style: 'currency', currency: displayCurrency });
   const analyticsProduct = { id: 'motor-scent', title: 'Motor Scent — Automotive Diffuser', price: 69, currency: 'USD' };
@@ -104,16 +105,16 @@
     document.querySelectorAll('.price__compare-price, .price__badge-sale').forEach(element => { element.style.display = 'none'; });
     document.querySelectorAll('.quantity-break').forEach(card => {
       const units = Number(card.dataset.quantity || 1), tier = priceFor(units), cardTotal = tier * units;
-      const label = card.querySelector('.quantity-break__label-text'); if (label) label.textContent = units === 1 ? '1 unidade' : units === 2 ? '2 unidades' : '3 unidades ou mais';
+      const label = card.querySelector('.quantity-break__label-text'); if (label) label.textContent = units === 1 ? '1 unit' : `${units} units`;
       const caption = card.querySelector('.quantity-break__caption'); if (caption) caption.textContent = `${brl(tier)} por unidade`;
       const price = card.querySelector('.quantity-break__price'); if (price) price.textContent = brl(cardTotal);
       const compare = card.querySelector('.quantity-break__compare-price'); if (compare) compare.style.display = 'none';
-      const benefit = card.querySelector('.quantity-break__benefit'); if (benefit) benefit.textContent = 'Frete grátis';
+      const benefit = card.querySelector('.quantity-break__benefit'); if (benefit) benefit.textContent = 'Free worldwide shipping';
     });
     document.querySelectorAll('[data-handle="shipping-protection"] .upsell__title, [data-handle="shipping-protection"] h3, [data-handle="shipping-protection"] h4').forEach(element => { element.textContent = 'Proteção de envio'; });
     let note = document.querySelector('#motorscent-local-offer');
     if (!note) { note = document.createElement('p'); note.id = 'motorscent-local-offer'; note.style.cssText = 'font-weight:700;margin:12px 0;color:#111'; const anchor = document.querySelector('form[action*="cart/add"], form.shopify-product-form'); anchor?.prepend(note); }
-    if (note) note.textContent = quantity === 1 ? '1 unit for $69.00' : quantity === 2 ? '2 units for $59.00 each' : `${quantity} units for $49.00 each`;
+    if (note) note.textContent = `${quantity} ${quantity === 1 ? 'unit' : 'units'} · ${brl(catalogUnitPrice)} each`;
   };
   const goToCheckout = (event, destination = '/cart') => {
     const target = event.target instanceof Element ? event.target : null;
@@ -122,9 +123,8 @@
     event.preventDefault(); event.stopImmediatePropagation();
     const quantity = Math.min(10, Math.max(1, Number(form.querySelector('[name="quantity"]')?.value || 1)));
     const unit = priceFor(quantity);
-    const lavenderOil = document.querySelector('[data-handle="lavender-oil"]')?.dataset.selected === 'true';
-    localStorage.setItem('chefpro_cart_v1', JSON.stringify({ id: 'motor-scent', title: `Motor Scent — ${selectedVariant()}`, image: selectedImage(), quantity, price: unit, extras: { lavenderOil } }));
-    trackMotor('AddToCart', { value: Number((unit * quantity + (lavenderOil ? 20 : 0)).toFixed(2)), contents: [{ id: 'motor-scent', quantity }] });
+    localStorage.setItem('chefpro_cart_v1', JSON.stringify({ id: 'motor-scent', title: `Motor Scent — ${selectedVariant()}`, image: selectedImage(), quantity, price: unit }));
+    trackMotor('AddToCart', { value: Number((unit * quantity).toFixed(2)), contents: [{ id: 'motor-scent', quantity }] });
     location.assign(destination);
   };
   const optimizeImages = () => {
@@ -142,32 +142,11 @@
     if (!form) return;
     const note = document.createElement('p');
     note.id = 'motorscent-payment-note';
-    note.textContent = 'You’ll be redirected to Cakto’s secure checkout to complete payment. The final charge is processed in USD; any local currency amount is an estimate.';
+    note.textContent = 'Secure checkout powered by Cakto. Card details are tokenized and protected by 3D Secure. The final charge is processed in USD.';
     form.append(note);
   };
   const configureLavenderUpsell = () => {
-    const lavender = document.querySelector('[data-handle="lavender-oil"]');
-    if (!lavender) return;
-    const price = lavender.querySelector('.regular-price');
-    const compare = lavender.querySelector('.compare-price');
-    const title = lavender.querySelector('.upsell__title h3');
-    const description = lavender.querySelector('.upsell__desc');
-    const toggle = lavender.querySelector('.upsell-toggle-btn, .upsell__toggle-switch');
-    if (title) title.textContent = 'Óleo de lavanda para Motor Scent';
-    if (description) description.textContent = 'Adicione algumas gotas ao reservatório para perfumar a névoa.';
-    if (price) price.textContent = '$20.00';
-    if (compare) compare.style.display = 'none';
-    lavender.dataset.selected = 'false';
-    toggle?.setAttribute('aria-pressed', 'false');
-    document.addEventListener('click', event => {
-      const button = event.target instanceof Element && event.target.closest('[data-handle="lavender-oil"] .upsell-toggle-btn, [data-handle="lavender-oil"] .upsell__toggle-switch');
-      if (!button) return;
-      event.preventDefault(); event.stopImmediatePropagation();
-      const selected = lavender.dataset.selected !== 'true';
-      lavender.dataset.selected = String(selected);
-      lavender.classList.toggle('is-selected', selected);
-      button.setAttribute('aria-pressed', String(selected));
-    }, true);
+    document.querySelector('[data-handle="lavender-oil"]')?.remove();
     document.querySelector('[data-handle="shipping-protection"]')?.remove();
   };
   const addShippingEstimator = () => {
@@ -186,27 +165,17 @@
     const message = section.querySelector('.motorscent-shipping-message');
     const results = section.querySelector('.motorscent-shipping-results');
     const locationLabel = section.querySelector('[data-shipping-location]');
-    const setLocation = (city, state) => { locationLabel.textContent = city ? `para ${city}${state ? `, ${state}` : ''} e região` : 'para sua região'; };
+    const setLocation = (city, state) => { locationLabel.textContent = city ? `to ${city}${state ? `, ${state}` : ''}` : 'to your region'; };
     const calculate = async () => {
-      const zip = input.value.replace(/\D/g, '');
-      input.value = zip.replace(/(\d{5})(\d)/, '$1-$2');
+      const zip = input.value.trim().toUpperCase().replace(/[^A-Z0-9 -]/g, '').slice(0, 16);
+      input.value = zip;
       results.hidden = true;
-      if (zip.length !== 8) { message.textContent = 'Informe um CEP válido com 8 números.'; return; }
-      button.disabled = true; message.textContent = 'Calculando opções de entrega…';
-      try {
-        const response = await fetch(`https://viacep.com.br/ws/${zip}/json/`);
-        const address = await response.json();
-        if (!response.ok || address.erro) throw new Error('CEP inválido');
-        const location = [address.localidade, address.uf].filter(Boolean).join(' / ');
-        message.textContent = `Entrega para ${location}.`;
-        setLocation(address.localidade, address.uf);
-        results.hidden = false;
-        localStorage.setItem('motorscent_shipping_v1', JSON.stringify({ zip, city: address.localidade || '', state: address.uf || '', method: 'standard' }));
-      } catch {
-        message.textContent = 'Não encontramos esse CEP. Revise e tente novamente.';
-      } finally { button.disabled = false; }
+      if (zip.replace(/[ -]/g, '').length < 3) { message.textContent = 'Enter a valid postal code.'; return; }
+      message.textContent = `Free worldwide delivery is available for postal code ${zip}.`;
+      results.hidden = false;
+      localStorage.setItem('motorscent_shipping_v1', JSON.stringify({ zip, method: 'worldwide-standard' }));
     };
-    input.addEventListener('input', () => { input.value = input.value.replace(/\D/g, '').slice(0, 8).replace(/(\d{5})(\d)/, '$1-$2'); if (input.value.replace(/\D/g, '').length === 8) calculate(); });
+    input.addEventListener('input', () => { input.value = input.value.toUpperCase().replace(/[^A-Z0-9 -]/g, '').slice(0, 16); });
     button.addEventListener('click', calculate);
     const stateCodes = { 'Acre':'AC', 'Alagoas':'AL', 'Amapá':'AP', 'Amazonas':'AM', 'Bahia':'BA', 'Ceará':'CE', 'Distrito Federal':'DF', 'Espírito Santo':'ES', 'Goiás':'GO', 'Maranhão':'MA', 'Mato Grosso':'MT', 'Mato Grosso do Sul':'MS', 'Minas Gerais':'MG', 'Pará':'PA', 'Paraíba':'PB', 'Paraná':'PR', 'Pernambuco':'PE', 'Piauí':'PI', 'Rio de Janeiro':'RJ', 'Rio Grande do Norte':'RN', 'Rio Grande do Sul':'RS', 'Rondônia':'RO', 'Roraima':'RR', 'Santa Catarina':'SC', 'São Paulo':'SP', 'Sergipe':'SE', 'Tocantins':'TO' };
     const detectLocation = async () => {
@@ -218,9 +187,9 @@
         if (response.ok && location.success !== false && location.country_code === 'BR') setLocation(location.city, stateCodes[location.region] || location.region);
       } catch {} finally { clearTimeout(timeout); }
     };
-    try { const saved = JSON.parse(localStorage.getItem('motorscent_shipping_v1') || 'null'); if (saved?.zip) { input.value = saved.zip.replace(/(\d{5})(\d)/, '$1-$2'); calculate(); } else detectLocation(); } catch { detectLocation(); }
+    try { const saved = JSON.parse(localStorage.getItem('motorscent_shipping_v1') || 'null'); if (saved?.zip) { input.value = saved.zip; calculate(); } else detectLocation(); } catch { detectLocation(); }
   };
-  document.addEventListener('DOMContentLoaded', async () => { displayLocale = 'en-US'; displayCurrency = 'USD'; displayRate = 1; document.documentElement.lang = displayLocale; optimizeImages(); trackMotor('ViewContent'); syncSelectedModel(); configureLavenderUpsell(); addPaymentNote(); addShippingEstimator(); updateOffer(); document.querySelectorAll('[name="quantity"]').forEach(input => input.addEventListener('change', updateOffer)); document.querySelectorAll('input[name="Model"]').forEach(input => input.addEventListener('change', syncSelectedModel)); }, { once: true });
+  document.addEventListener('DOMContentLoaded', async () => { displayLocale = 'en-US'; displayCurrency = 'USD'; displayRate = 1; document.documentElement.lang = displayLocale; try { const config = await fetch('/api/config', { cache: 'no-store' }).then(response => response.json()); const price = Number(config.offer?.price || config.product?.unitPrice); if (config.caktoCheckoutReady && price > 0) catalogUnitPrice = price; } catch {} optimizeImages(); trackMotor('ViewContent'); syncSelectedModel(); configureLavenderUpsell(); addPaymentNote(); addShippingEstimator(); updateOffer(); document.querySelectorAll('[name="quantity"]').forEach(input => input.addEventListener('change', updateOffer)); document.querySelectorAll('input[name="Model"]').forEach(input => input.addEventListener('change', syncSelectedModel)); }, { once: true });
   document.addEventListener('submit', goToCheckout, true);
   document.addEventListener('click', event => {
     const button = event.target instanceof Element && event.target.closest('#ProductSubmitButton-template--30990084735359__main, [id^="SectionAtcBtn-"], [id^="ProductSubmitButton-"], .shopify-payment-button button, [data-shopify="payment-button"]');
