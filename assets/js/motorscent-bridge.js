@@ -190,7 +190,37 @@
     };
     try { const saved = JSON.parse(localStorage.getItem('motorscent_shipping_v1') || 'null'); if (saved?.zip) { input.value = saved.zip; calculate(); } else detectLocation(); } catch { detectLocation(); }
   };
-  document.addEventListener('DOMContentLoaded', async () => { displayLocale = 'en-US'; displayCurrency = 'USD'; displayRate = 1; const country = await window.NewbooxI18n?.resolveCountry?.().catch?.(() => 'US') || 'US'; storefrontLanguage = window.NewbooxI18n?.config?.(country)?.language === 'pt' ? 'pt' : 'en'; document.documentElement.lang = storefrontLanguage === 'pt' ? 'pt-BR' : 'en-US'; try { const config = await fetch('/api/config', { cache: 'no-store' }).then(response => response.json()); const price = Number(config.displayUnitPrice || config.product?.unitPrice); if (config.caktoCheckoutReady && price > 0) { catalogUnitPrice = price; analyticsProduct.price = price; } } catch {} optimizeImages(); trackMotor('ViewContent'); configureLavenderUpsell(); addPaymentNote(); addShippingEstimator(); if (storefrontLanguage === 'pt') translate(document.body); syncSelectedModel(); updateOffer(); document.querySelectorAll('[name="quantity"]').forEach(input => input.addEventListener('change', updateOffer)); document.querySelectorAll('input[name="Model"]').forEach(input => input.addEventListener('change', syncSelectedModel)); }, { once: true });
+  document.addEventListener('DOMContentLoaded', () => {
+    // Render the complete USD offer immediately. Geolocation and remote configuration
+    // must never hold up the product, images or US$ 69 price.
+    displayLocale = 'en-US'; displayCurrency = 'USD'; displayRate = 1;
+    const initialCountry = window.NewbooxI18n?.detectCountry?.() || 'US';
+    storefrontLanguage = window.NewbooxI18n?.config?.(initialCountry)?.language === 'pt' ? 'pt' : 'en';
+    document.documentElement.lang = storefrontLanguage === 'pt' ? 'pt-BR' : 'en-US';
+    optimizeImages(); configureLavenderUpsell(); addPaymentNote(); addShippingEstimator();
+    if (storefrontLanguage === 'pt') translate(document.body);
+    syncSelectedModel(); updateOffer(); trackMotor('ViewContent');
+    document.querySelectorAll('[name="quantity"]').forEach(input => input.addEventListener('change', updateOffer));
+    document.querySelectorAll('input[name="Model"]').forEach(input => input.addEventListener('change', syncSelectedModel));
+
+    Promise.allSettled([
+      window.NewbooxI18n?.resolveCountry?.() || Promise.resolve(initialCountry),
+      fetch('/api/config', { cache: 'no-store' }).then(response => response.json())
+    ]).then(([countryResult, configResult]) => {
+      const country = countryResult.status === 'fulfilled' ? countryResult.value : initialCountry;
+      const nextLanguage = window.NewbooxI18n?.config?.(country)?.language === 'pt' ? 'pt' : 'en';
+      const config = configResult.status === 'fulfilled' ? configResult.value : null;
+      const price = Number(config?.displayUnitPrice || config?.product?.unitPrice);
+      if (config?.caktoCheckoutReady && price > 0) { catalogUnitPrice = price; analyticsProduct.price = price; }
+      if (nextLanguage !== storefrontLanguage) {
+        storefrontLanguage = nextLanguage;
+        document.documentElement.lang = storefrontLanguage === 'pt' ? 'pt-BR' : 'en-US';
+        if (storefrontLanguage === 'pt') translate(document.body);
+        syncSelectedModel();
+      }
+      updateOffer();
+    });
+  }, { once: true });
   document.addEventListener('submit', goToCheckout, true);
   document.addEventListener('click', event => {
     const button = event.target instanceof Element && event.target.closest('#ProductSubmitButton-template--30990084735359__main, [id^="SectionAtcBtn-"], [id^="ProductSubmitButton-"], .shopify-payment-button button, [data-shopify="payment-button"]');
