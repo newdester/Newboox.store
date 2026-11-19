@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { rateLimit, sendRateHeaders } from '../_lib/rate-limit.js';
 
-const PRODUCT_ID = 'motor-scent';
+const PRODUCT_ID = 'toque-duplo';
 const MAX_PAYMENTS = 500;
 const MAX_SCANNED_PAYMENTS = 500;
 const DAY = 86_400_000;
@@ -47,13 +47,13 @@ function periodFrom(query) {
 function belongsToStore(payment) {
   const reference = String(payment.external_reference || '');
   const fingerprint = [reference, payment.description, payment.metadata?.product_id].join(' ').toLowerCase();
-  return reference.startsWith('NB-') || fingerprint.includes(PRODUCT_ID) || fingerprint.includes('motor-scent');
+  return reference.startsWith('NB-') || fingerprint.includes(PRODUCT_ID) || fingerprint.includes('toque duplo');
 }
 
 function productFor(payment) {
   const value = String(payment.metadata?.product_id || '').toLowerCase();
-  if (value === 'motor-scent' || /motor scent/i.test(String(payment.description || ''))) return { id: 'motor-scent', name: 'Motor Scent' };
-  return { id: 'motor-scent', name: 'Motor Scent' };
+  if (value === 'toque-duplo' || /toque duplo/i.test(String(payment.description || ''))) return { id: 'toque-duplo', name: 'Toque Duplo' };
+  return { id: 'toque-duplo', name: 'Toque Duplo' };
 }
 
 function contactFor(payment) {
@@ -124,7 +124,7 @@ function aggregate(payments, range) {
     days.set(isoDate(day), { date: isoDate(day), revenue: 0, approved: 0, attempts: 0 });
   }
   const methods = { pix: { orders: 0, revenue: 0 }, cartao: { orders: 0, revenue: 0 }, saldo_mercado_pago: { orders: 0, revenue: 0 }, outro: { orders: 0, revenue: 0 } };
-  const products = { 'motor-scent': { id: 'motor-scent', name: 'Motor Scent', attempts: 0, approved: 0, pending: 0, failed: 0, revenue: 0 } };
+  const products = { 'toque-duplo': { id: 'toque-duplo', name: 'Toque Duplo', attempts: 0, approved: 0, pending: 0, failed: 0, revenue: 0 } };
   const installments = Array.from({ length: 12 }, (_, index) => ({ installments: index + 1, orders: 0 }));
   const totals = { attempts: 0, approved: 0, pending: 0, failed: 0, other: 0, revenue: 0, refunded: 0, pendingValue: 0 };
   const safePayments = payments.sort((left, right) => new Date(right.date_created) - new Date(left.date_created));

@@ -1,4 +1,4 @@
-# E-commerce Motor Scent
+# E-commerce Toque Duplo
 
 ## Fluxo implementado
 
@@ -36,7 +36,7 @@ O painel fica em `/admin`. Ele consulta o Mercado Pago no servidor, resume venda
 
 Para incorporar desempenho de anúncios por campanha, configure também `META_AD_ACCOUNT_ID`, `META_ADS_ACCESS_TOKEN` (com permissões `ads_read` e `read_insights`) e `META_GRAPH_API_VERSION`. O token da Conversions API não deve ser reutilizado para esse fim.
 
-Limites atuais: a API do Mercado Pago fornece até doze meses de pagamentos, e o painel filtra as transações pelo prefixo `NB-` e pelo produto Motor Scent. Os eventos de navegação já são enviados ao Pixel, mas ainda não são persistidos em um banco próprio.
+Limites atuais: a API do Mercado Pago fornece até doze meses de pagamentos, e o painel filtra as transações pelo prefixo `NB-` e pelo produto Toque Duplo. Os eventos de navegação já são enviados ao Pixel, mas ainda não são persistidos em um banco próprio.
 
 ## Verificações realizadas
 

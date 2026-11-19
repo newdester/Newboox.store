@@ -107,7 +107,9 @@ http.createServer(async (req, res) => {
   const routeFiles = {
     '/': '/index.html',
     '/admin': '/admin.html',
-    '/motorscent': '/motorscent.html',
+    '/motorscent': '/index.html',
+    '/privacy': '/privacy/index.html',
+    '/terms': '/terms/index.html',
     '/cart': '/cart/index.html',
     '/cart/': '/cart/index.html',
     '/checkout': '/checkout.html',

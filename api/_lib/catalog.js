@@ -5,8 +5,8 @@ const numberFrom = (value, fallback) => {
 
 export function storeProduct() {
   return {
-    id: String(process.env.STORE_PRODUCT_ID || 'motor-scent').trim(),
-    title: String(process.env.STORE_PRODUCT_NAME || 'Motor Scent').trim(),
+    id: String(process.env.STORE_PRODUCT_ID || 'toque-duplo').trim(),
+    title: String(process.env.STORE_PRODUCT_NAME || 'Toque Duplo').trim(),
     currency: 'BRL',
     originalPrice: numberFrom(process.env.STORE_ORIGINAL_PRICE, 279.90),
     cardPrice: numberFrom(process.env.STORE_CARD_PRICE, 149.90),
