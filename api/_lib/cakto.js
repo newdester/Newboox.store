@@ -51,7 +51,12 @@ export async function internationalCatalog() {
   if (String(product.status || '').toLowerCase() !== 'active') throw new Error('O produto internacional está inativo na Cakto.');
   const offers = Array.isArray(product.offers) ? product.offers : [];
   const configuredId = String(process.env.CAKTO_OFFER_ID_USD || '').trim();
-  const configuredOffer = configuredId ? offers.find(item => String(item.id) === configuredId && String(item.status).toLowerCase() === 'active') : null;
+  let configuredOffer = configuredId ? offers.find(item => String(item.id) === configuredId && String(item.status).toLowerCase() === 'active') : null;
+  if (configuredId && !configuredOffer) {
+    const offerResult = await caktoRequest(`/offers/${encodeURIComponent(configuredId)}/`);
+    const offerData = await offerResult.json().catch(() => ({}));
+    if (offerResult.ok && String(offerData.product || '') === String(product.id || productId)) configuredOffer = offerData;
+  }
   const offer = configuredOffer
     || offers.find(item => item.default && String(item.status).toLowerCase() === 'active')
     || offers.find(item => String(item.status).toLowerCase() === 'active');
