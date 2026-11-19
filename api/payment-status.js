@@ -11,7 +11,7 @@ export default async function handler(request, response) {
   try {
     const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(paymentId)}`, { headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` } });
     const payment = await mpResponse.json();
-    if (!mpResponse.ok || !String(payment.external_reference || '').startsWith('CP-')) return response.status(404).json({ error: 'Pagamento não encontrado.' });
+    if (!mpResponse.ok || !String(payment.external_reference || '').startsWith('NB-')) return response.status(404).json({ error: 'Pagamento não encontrado.' });
     return response.status(200).json({ paymentId: payment.id, status: payment.status, statusDetail: payment.status_detail, amount: payment.transaction_amount, pix: payment.point_of_interaction?.transaction_data || null });
   } catch { return response.status(502).json({ error: 'Não foi possível consultar o pagamento.' }); }
 }

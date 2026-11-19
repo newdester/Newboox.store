@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { rateLimit, sendRateHeaders } from '../_lib/rate-limit.js';
 
-const PRODUCT_ID = 'chefpro-2l';
+const PRODUCT_ID = 'motor-scent';
 const MAX_PAYMENTS = 500;
 const MAX_SCANNED_PAYMENTS = 500;
 const DAY = 86_400_000;
@@ -47,13 +47,13 @@ function periodFrom(query) {
 function belongsToStore(payment) {
   const reference = String(payment.external_reference || '');
   const fingerprint = [reference, payment.description, payment.metadata?.product_id].join(' ').toLowerCase();
-  return reference.startsWith('CP-') || fingerprint.includes(PRODUCT_ID) || fingerprint.includes('chefpro') || fingerprint.includes('motor-scent');
+  return reference.startsWith('NB-') || fingerprint.includes(PRODUCT_ID) || fingerprint.includes('motor-scent');
 }
 
 function productFor(payment) {
   const value = String(payment.metadata?.product_id || '').toLowerCase();
   if (value === 'motor-scent' || /motor scent/i.test(String(payment.description || ''))) return { id: 'motor-scent', name: 'Motor Scent' };
-  return { id: 'chefpro-2l', name: 'Triturador ChefPro 2L' };
+  return { id: 'motor-scent', name: 'Motor Scent' };
 }
 
 function contactFor(payment) {
@@ -124,7 +124,7 @@ function aggregate(payments, range) {
     days.set(isoDate(day), { date: isoDate(day), revenue: 0, approved: 0, attempts: 0 });
   }
   const methods = { pix: { orders: 0, revenue: 0 }, cartao: { orders: 0, revenue: 0 }, saldo_mercado_pago: { orders: 0, revenue: 0 }, outro: { orders: 0, revenue: 0 } };
-  const products = { 'chefpro-2l': { id: 'chefpro-2l', name: 'Triturador ChefPro 2L', attempts: 0, approved: 0, pending: 0, failed: 0, revenue: 0 }, 'motor-scent': { id: 'motor-scent', name: 'Motor Scent', attempts: 0, approved: 0, pending: 0, failed: 0, revenue: 0 } };
+  const products = { 'motor-scent': { id: 'motor-scent', name: 'Motor Scent', attempts: 0, approved: 0, pending: 0, failed: 0, revenue: 0 } };
   const installments = Array.from({ length: 12 }, (_, index) => ({ installments: index + 1, orders: 0 }));
   const totals = { attempts: 0, approved: 0, pending: 0, failed: 0, other: 0, revenue: 0, refunded: 0, pendingValue: 0 };
   const safePayments = payments.sort((left, right) => new Date(right.date_created) - new Date(left.date_created));
@@ -265,7 +265,7 @@ export default async function handler(request, response) {
       campaigns: { current: currentCampaigns, previous: previousCampaigns }, integrations,
       funnel: { available: false, trackedEvents: ['PageView', 'ViewContent', 'AddToCart', 'InitiateCheckout', 'AddPaymentInfo', 'Purchase'] },
       contacts: contacts(currentPayments, canViewContacts(request)),
-      recommendations: recommendations(current, integrations), limitations: ['As duas ofertas são agrupadas por produto e consultadas diretamente no Mercado Pago.', 'A API de pagamentos retorna até 12 meses de histórico.', 'Nome, e-mail e telefone só ficam disponíveis após autenticação do administrador. CPF, endereço, cartão e chaves não são exibidos.']
+      recommendations: recommendations(current, integrations), limitations: ['Os pagamentos são consultados diretamente no Mercado Pago.', 'A API de pagamentos retorna até 12 meses de histórico.', 'Nome, e-mail e telefone só ficam disponíveis após autenticação do administrador. CPF, endereço, cartão e chaves não são exibidos.']
     });
   } catch (error) {
     return response.status(502).json({ error: error.message || 'Não foi possível carregar os dados do painel.' });

@@ -1,10 +1,10 @@
 (() => {
   const PAYMENT_URL = '/checkout';
-  let catalogUnitPrice = 69;
+  let catalogUnitPrice = 149.90, catalogCashPrice = 129.90, catalogOriginalPrice = 279.90;
   const priceFor = () => catalogUnitPrice;
-  let displayLocale = 'en-US', displayCurrency = 'USD', displayRate = 1;
+  let displayLocale = 'pt-BR', displayCurrency = 'BRL', displayRate = 1;
   const brl = value => Number(value * displayRate).toLocaleString(displayLocale, { style: 'currency', currency: displayCurrency });
-  const analyticsProduct = { id: 'motor-scent', title: 'Motor Scent — Automotive Diffuser', price: 69, currency: 'USD' };
+  const analyticsProduct = { id: 'motor-scent', title: 'Motor Scent — Automotive Diffuser', price: 149.90, currency: 'BRL' };
   const withPixel = callback => {
     if (window.MetaPixel) { callback(); return; }
     if (!document.querySelector('script[src="assets/js/meta-pixel.js"]')) { const script = document.createElement('script'); script.src = 'assets/js/meta-pixel.js'; document.head.append(script); }
@@ -89,7 +89,7 @@
   ]);
   const translate = root => {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: node => /^(SCRIPT|STYLE)$/i.test(node.parentElement?.tagName) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
-    const localize = value => { translations.forEach((to, from) => { value = value.replaceAll(from, to); }); return value.replace(/\$99\.95/g, '$69.00').replace(/1-3 business days/g, '7–9 calendar days').replace(/7-12 business days \(varies by location\)/g, '7–9 calendar days').replace(/Open media (\d+) in modal/g, 'Open media $1 in modal').replace(/Model: /g, 'Model: '); };
+    const localize = value => { translations.forEach((to, from) => { value = value.replaceAll(from, to); }); return value.replace(/\$99\.95/g, 'R$ 149,90').replace(/1-3 business days/g, '7 a 9 dias corridos').replace(/7-12 business days \(varies by location\)/g, '7 a 9 dias corridos').replace(/Open media (\d+) in modal/g, 'Abrir mídia $1').replace(/Model: /g, 'Modelo: '); };
     for (let node; node = walker.nextNode();) node.nodeValue = localize(node.nodeValue);
     root.querySelectorAll('[aria-label],[title],[alt],[placeholder]').forEach(element => ['aria-label','title','alt','placeholder'].forEach(attribute => { if (element.hasAttribute(attribute)) element.setAttribute(attribute, localize(element.getAttribute(attribute))); }));
   };
@@ -115,7 +115,7 @@
     document.querySelectorAll('[data-handle="shipping-protection"] .upsell__title, [data-handle="shipping-protection"] h3, [data-handle="shipping-protection"] h4').forEach(element => { element.textContent = storefrontLanguage === 'pt' ? 'Proteção de envio' : 'Shipping protection'; });
     let note = document.querySelector('#motorscent-local-offer');
     if (!note) { note = document.createElement('p'); note.id = 'motorscent-local-offer'; note.style.cssText = 'font-weight:700;margin:12px 0;color:#111'; const anchor = document.querySelector('form[action*="cart/add"], form.shopify-product-form'); anchor?.prepend(note); }
-    if (note) note.textContent = storefrontLanguage === 'pt' ? `${quantity} ${quantity === 1 ? 'unidade' : 'unidades'} · ${brl(catalogUnitPrice)} cada` : `${quantity} ${quantity === 1 ? 'unit' : 'units'} · ${brl(catalogUnitPrice)} each`;
+    if (note) note.innerHTML = `<del style="color:#777">${brl(catalogOriginalPrice * quantity)}</del> <strong>${brl(total)} no cartão</strong> · 12x de ${brl(total / 12)} sem juros<br><strong>${brl(catalogCashPrice * quantity)} à vista no Pix</strong>`;
   };
   const goToCheckout = (event, destination = '/cart') => {
     const target = event.target instanceof Element ? event.target : null;
@@ -143,12 +143,15 @@
     if (!form) return;
     const note = document.createElement('p');
     note.id = 'motorscent-payment-note';
-    note.textContent = storefrontLanguage === 'pt' ? 'Checkout seguro processado pela Cakto. Os dados do cartão são tokenizados e protegidos pelo 3D Secure. A cobrança final é processada em USD.' : 'Secure checkout powered by Cakto. Card details are tokenized and protected by 3D Secure. The final charge is processed in USD.';
+    note.textContent = 'Pagamento seguro processado pelo Mercado Pago. Pague com cartão em até 12x sem juros, Pix ou saldo Mercado Pago.';
     form.append(note);
   };
   const configureLavenderUpsell = () => {
     document.querySelector('[data-handle="lavender-oil"]')?.remove();
     document.querySelector('[data-handle="shipping-protection"]')?.remove();
+    document.querySelectorAll('[id*="UpsellsBlock"], .upsell').forEach(element => {
+      if (/proteção de envio|shipping protection/i.test(element.textContent || '')) element.remove();
+    });
   };
   const addShippingEstimator = () => {
     if (document.querySelector('#motorscent-shipping-estimator')) return;
@@ -157,7 +160,7 @@
     const section = document.createElement('section');
     section.id = 'motorscent-shipping-estimator';
     section.className = 'motorscent-shipping-estimator';
-    section.innerHTML = `<h2>Check shipping and delivery</h2><div class="motorscent-shipping-form"><label class="visually-hidden" for="motorscent-zip">Postal code</label><input id="motorscent-zip" autocomplete="postal-code" maxlength="16" placeholder="Enter your postal code"><button type="button">Check</button></div><p class="motorscent-shipping-message" aria-live="polite"></p><div class="motorscent-shipping-results" hidden><table><thead><tr><th>Delivery</th><th>Time</th><th>Price</th></tr></thead><tbody><tr><td><strong>Worldwide standard</strong></td><td>7–9 calendar days</td><td><strong>FREE</strong></td></tr></tbody></table><p>Free shipping is applied automatically at checkout.</p></div><div class="motorscent-delivery-card"><span class="motorscent-delivery-icon" aria-hidden="true">🚚</span><p><strong>Free worldwide shipping</strong> <span data-shipping-location>to your region</span><br><span>Estimated delivery in 7–9 calendar days</span></p></div><div class="motorscent-delivery-card"><span class="motorscent-delivery-icon motorscent-delivery-icon--return" aria-hidden="true">▣</span><p><strong>Guaranteed returns</strong><br><span>Money back within 7 days</span></p></div>`;
+    section.innerHTML = `<h2>Calcule o frete e a entrega</h2><div class="motorscent-shipping-form"><label class="visually-hidden" for="motorscent-zip">CEP</label><input id="motorscent-zip" autocomplete="postal-code" inputmode="numeric" maxlength="9" placeholder="Digite seu CEP"><button type="button">Calcular</button></div><p class="motorscent-shipping-message" aria-live="polite"></p><div class="motorscent-shipping-results" hidden><table><thead><tr><th>Entrega</th><th>Prazo</th><th>Preço</th></tr></thead><tbody><tr><td><strong>Entrega padrão rastreada</strong></td><td>7 a 9 dias corridos</td><td><strong>GRÁTIS</strong></td></tr></tbody></table><p>O frete grátis é aplicado automaticamente no checkout.</p></div><div class="motorscent-delivery-card"><span class="motorscent-delivery-icon" aria-hidden="true">🚚</span><p><strong>Frete grátis para todo o Brasil</strong> <span data-shipping-location>para sua região</span><br><span>Entrega estimada em 7 a 9 dias corridos</span></p></div><div class="motorscent-delivery-card"><span class="motorscent-delivery-icon motorscent-delivery-icon--return" aria-hidden="true">▣</span><p><strong>Devolução garantida</strong><br><span>Seu dinheiro de volta em até 7 dias</span></p></div>`;
     const timeline = document.querySelector('dynamic-dates.shipping-checkpoints');
     if (timeline) timeline.replaceWith(section); else form.after(section);
     [...document.querySelectorAll('.product__accordion')].filter(accordion => /shipping|envio/i.test(accordion.textContent)).forEach(accordion => accordion.remove());
@@ -166,13 +169,13 @@
     const message = section.querySelector('.motorscent-shipping-message');
     const results = section.querySelector('.motorscent-shipping-results');
     const locationLabel = section.querySelector('[data-shipping-location]');
-    const setLocation = (city, state) => { locationLabel.textContent = city ? `to ${city}${state ? `, ${state}` : ''}` : 'to your region'; };
+    const setLocation = (city, state) => { locationLabel.textContent = city ? `para ${city}${state ? `, ${state}` : ''}` : 'para sua região'; };
     const calculate = async () => {
       const zip = input.value.trim().toUpperCase().replace(/[^A-Z0-9 -]/g, '').slice(0, 16);
       input.value = zip;
       results.hidden = true;
-      if (zip.replace(/[ -]/g, '').length < 3) { message.textContent = 'Enter a valid postal code.'; return; }
-      message.textContent = `Free worldwide delivery is available for postal code ${zip}.`;
+      if (!/^\d{5}-?\d{3}$/.test(zip)) { message.textContent = 'Digite um CEP válido.'; return; }
+      message.textContent = `Frete grátis disponível para o CEP ${zip}.`;
       results.hidden = false;
       localStorage.setItem('motorscent_shipping_v1', JSON.stringify({ zip, method: 'worldwide-standard' }));
     };
@@ -191,35 +194,25 @@
     try { const saved = JSON.parse(localStorage.getItem('motorscent_shipping_v1') || 'null'); if (saved?.zip) { input.value = saved.zip; calculate(); } else detectLocation(); } catch { detectLocation(); }
   };
   document.addEventListener('DOMContentLoaded', () => {
-    // Render the complete USD offer immediately. Geolocation and remote configuration
-    // must never hold up the product, images or US$ 69 price.
-    displayLocale = 'en-US'; displayCurrency = 'USD'; displayRate = 1;
-    const initialCountry = window.NewbooxI18n?.detectCountry?.() || 'US';
-    storefrontLanguage = window.NewbooxI18n?.config?.(initialCountry)?.language === 'pt' ? 'pt' : 'en';
-    document.documentElement.lang = storefrontLanguage === 'pt' ? 'pt-BR' : 'en-US';
+    // Renderiza a oferta brasileira imediatamente; a configuração remota só confirma os valores.
+    displayLocale = 'pt-BR'; displayCurrency = 'BRL'; displayRate = 1;
+    storefrontLanguage = 'pt';
+    document.documentElement.lang = 'pt-BR';
     optimizeImages(); configureLavenderUpsell(); addPaymentNote(); addShippingEstimator();
     if (storefrontLanguage === 'pt') translate(document.body);
     syncSelectedModel(); updateOffer(); trackMotor('ViewContent');
     document.querySelectorAll('[name="quantity"]').forEach(input => input.addEventListener('change', updateOffer));
     document.querySelectorAll('input[name="Model"]').forEach(input => input.addEventListener('change', syncSelectedModel));
 
-    Promise.allSettled([
-      window.NewbooxI18n?.resolveCountry?.() || Promise.resolve(initialCountry),
-      fetch('/api/config', { cache: 'no-store' }).then(response => response.json())
-    ]).then(([countryResult, configResult]) => {
-      const country = countryResult.status === 'fulfilled' ? countryResult.value : initialCountry;
-      const nextLanguage = window.NewbooxI18n?.config?.(country)?.language === 'pt' ? 'pt' : 'en';
-      const config = configResult.status === 'fulfilled' ? configResult.value : null;
-      const price = Number(config?.displayUnitPrice || config?.product?.unitPrice);
-      if (config?.caktoCheckoutReady && price > 0) { catalogUnitPrice = price; analyticsProduct.price = price; }
-      if (nextLanguage !== storefrontLanguage) {
-        storefrontLanguage = nextLanguage;
-        document.documentElement.lang = storefrontLanguage === 'pt' ? 'pt-BR' : 'en-US';
-        if (storefrontLanguage === 'pt') translate(document.body);
-        syncSelectedModel();
+    fetch('/api/config', { cache: 'no-store' }).then(response => response.json()).then(config => {
+      if (config?.product) {
+        catalogUnitPrice = Number(config.product.cardPrice) || catalogUnitPrice;
+        catalogCashPrice = Number(config.product.cashPrice) || catalogCashPrice;
+        catalogOriginalPrice = Number(config.product.originalPrice) || catalogOriginalPrice;
+        analyticsProduct.price = catalogUnitPrice;
       }
       updateOffer();
-    });
+    }).catch(() => {});
   }, { once: true });
   document.addEventListener('submit', goToCheckout, true);
   document.addEventListener('click', event => {

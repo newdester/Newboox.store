@@ -7,7 +7,18 @@ for (const page of pages) {
   let html = fs.readFileSync(page, 'utf8');
 
   // The offer must be correct before JavaScript, geolocation or API calls finish.
-  html = html.replaceAll('99.95', '69.00').replaceAll('9995', '6900');
+  html = html
+    .replaceAll('$69.00', 'R$ 149,90')
+    .replaceAll('99.95', '149.90')
+    .replaceAll('69.00', '149.90')
+    .replace(/\b(?:9995|6900)\b/g, '14990')
+    .replaceAll('"currencyCode":"USD"', '"currencyCode":"BRL"')
+    .replaceAll('"currency":"USD"', '"currency":"BRL"')
+    .replaceAll('"priceCurrency" : "USD"', '"priceCurrency" : "BRL"')
+    .replaceAll('data-currency="USD"', 'data-currency="BRL"')
+    .replaceAll("Shopify.currency = {\"active\":\"USD\"", "Shopify.currency = {\"active\":\"BRL\"")
+    .replaceAll("meta.currency = 'USD'", "meta.currency = 'BRL'")
+    .replace(/<html([^>]*?)lang="en"/i, '<html$1lang="pt-BR"');
 
   // Remove the copied Shopify telemetry/payment bootloaders. They still contact
   // the former store from every country and do not participate in this checkout.

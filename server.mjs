@@ -4,6 +4,7 @@ import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import adminOverview from './api/admin/overview.js';
+import { paymentAmount, storeProduct } from './api/_lib/catalog.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const env = Object.fromEntries((await readFile(path.join(root, '.env'), 'utf8').catch(() => '')).split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#')).map(line => { const i = line.indexOf('='); return [line.slice(0, i), line.slice(i + 1)]; }));
@@ -27,11 +28,7 @@ const validWebhook = (req, url, body) => {
   const expected = createHmac('sha256', config.webhookSecret).update(`id:${dataId};request-id:${requestId};ts:${values.ts};`).digest('hex');
   try { return timingSafeEqual(Buffer.from(expected), Buffer.from(values.v1)); } catch { return false; }
 };
-const products = {
-  'chefpro-2l': { id: 'chefpro-2l', title: 'Triturador Elétrico ChefPro 2L Bivolt + Tábua de Madeira Grátis', unitPrice: 49.90, currency: 'BRL' },
-  'motor-scent': { id: 'motor-scent', title: 'Motor Scent — Umidificador Automotivo', unitPrice: 139.90, currency: 'BRL' }
-};
-const priceFor = (product, quantity) => product.id === 'motor-scent' ? (quantity === 1 ? 139.90 : quantity === 2 ? 129.90 : 99.90) : product.unitPrice;
+const product = storeProduct();
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
 const reply = (res, status, body) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(body)); };
 const readBody = req => new Promise((resolve, reject) => { let data = ''; req.on('data', chunk => { data += chunk; if (data.length > 300000) req.destroy(); }); req.on('end', () => { try { resolve(JSON.parse(data || '{}')); } catch { reject(new Error('JSON inválido')); } }); req.on('error', reject); });
@@ -41,7 +38,7 @@ const safePaymentStatus = async paymentId => {
   const response = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(paymentId)}`, { headers: { Authorization: `Bearer ${config.accessToken}` } });
   if (!response.ok) return null;
   const payment = await response.json();
-  return String(payment.external_reference || '').startsWith('CP-') ? payment : null;
+  return String(payment.external_reference || '').startsWith('NB-') ? payment : null;
 };
 
 async function processPayment(req, res) {
@@ -51,18 +48,17 @@ async function processPayment(req, res) {
   try {
     const body = await readBody(req);
     const quantity = safeQuantity(body.quantity);
-    const product = products[String(body.productId || 'chefpro-2l')] || products['chefpro-2l'];
     const form = body.formData || {};
     const email = String(form.payer?.email || '').trim();
     if (!form.payment_method_id || !/^\S+@\S+\.\S+$/.test(email)) return reply(res, 422, { error: 'Dados de pagamento incompletos.' });
-    const lavenderOil = product.id === 'motor-scent' && body.extras?.lavenderOil === true;
-    const extrasAmount = lavenderOil ? 20 : 0;
-    const orderId = `CP-${Date.now()}-${randomUUID().slice(0, 8)}`;
+    const paymentType = form.payment_type_id || (form.payment_method_id === 'pix' ? 'bank_transfer' : 'credit_card');
+    if (!['credit_card', 'bank_transfer'].includes(paymentType)) return reply(res, 422, { error: 'Este meio de pagamento não está disponível.' });
+    const orderId = `NB-${Date.now()}-${randomUUID().slice(0, 8)}`;
     const payload = {
-      transaction_amount: Number((priceFor(product, quantity) * quantity + extrasAmount).toFixed(2)),
+      transaction_amount: paymentAmount(product, quantity, paymentType),
       token: form.token,
-      description: `${product.title} × ${quantity}${lavenderOil ? ' + óleo de lavanda' : ''}`,
-      installments: Number(form.installments) || 1,
+      description: `${product.title} × ${quantity}`,
+      installments: paymentType === 'credit_card' ? Math.min(12, Math.max(1, Number(form.installments) || 1)) : 1,
       payment_method_id: form.payment_method_id,
       issuer_id: form.issuer_id,
       payer: { ...form.payer, email },
@@ -70,7 +66,6 @@ async function processPayment(req, res) {
       metadata: {
         product_id: product.id,
         quantity,
-        lavender_oil: lavenderOil,
         customer_name: String(body.customer?.name || '').slice(0, 120),
         customer_email: email.slice(0, 160),
         customer_phone: String(body.customer?.phone || '').replace(/\D/g, '').slice(0, 15)
@@ -87,7 +82,7 @@ async function processPayment(req, res) {
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  if (req.method === 'GET' && url.pathname === '/api/config') return reply(res, 200, { publicKey: config.publicKey, paymentEnabled: Boolean(config.accessToken && config.publicKey), caktoApiEnabled: Boolean(env.CAKTO_CLIENT_ID && env.CAKTO_CLIENT_SECRET), metaCapiEnabled: Boolean(env.META_PIXEL_ID && env.META_ACCESS_TOKEN), product: products['chefpro-2l'] });
+  if (req.method === 'GET' && url.pathname === '/api/config') return reply(res, 200, { publicKey: config.publicKey, paymentEnabled: Boolean(config.accessToken && config.publicKey), webhookConfigured: Boolean(config.webhookSecret), metaCapiEnabled: Boolean(env.META_PIXEL_ID && env.META_ACCESS_TOKEN), product });
   if (req.method === 'GET' && url.pathname === '/api/payment-status') {
     const quota = allowRequest(req, 'payment-status', 30, 60_000); applyRate(res, quota);
     if (!quota.allowed) return reply(res, 429, { error: 'Muitas consultas. Aguarde alguns instantes.' });

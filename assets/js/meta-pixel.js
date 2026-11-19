@@ -11,7 +11,7 @@
   }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
   fbq('init', PIXEL_ID);
   fbq('track', 'PageView');
-  const content = product => ({ content_ids: [product.id], content_name: product.title, content_type: 'product', currency: product.currency || 'USD', value: Number(product.price) });
+  const content = product => ({ content_ids: [product.id], content_name: product.title, content_type: 'product', currency: product.currency || 'BRL', value: Number(product.price) });
   window.MetaPixel = { track: (event, parameters = {}, eventId) => eventId ? window.fbq?.('track', event, parameters, { eventID: eventId }) : window.fbq?.('track', event, parameters), trackCustom: (event, parameters = {}) => window.fbq?.('trackCustom', event, parameters), content };
   window.dispatchEvent(new Event('meta-pixel-ready'));
 })();

@@ -1,49 +1,45 @@
 <!doctype html>
-<html lang="en"><head>
+<html lang="pt-BR"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="icon" href="motorscent-assets/favicon.png"><title>Checkout — Motor Scent</title>
+  <link rel="icon" href="motorscent-assets/favicon.png"><title>Checkout seguro — Motor Scent</title>
   <link rel="stylesheet" href="assets/css/checkout.css">
 </head><body>
-  <header class="checkout-header"><a class="brand" href="/" aria-label="Motor Scent home"><img src="assets/images/motorscent/logo.png" alt="Motor Scent"><span class="rating"><b>★ ★ ★ ★ ★</b><small id="ratingText">4.8/5 · 300+ reviews</small></span></a><a class="bag" href="/cart" aria-label="Cart">♧ <span id="cartCount">1</span></a></header>
+  <header class="checkout-header"><a class="brand" href="/" aria-label="Página inicial Motor Scent"><img src="assets/images/motorscent/logo.png" alt="Motor Scent"><span class="rating"><b>★ ★ ★ ★ ★</b><small id="ratingText">4,8/5 · mais de 300 avaliações</small></span></a><a class="bag" href="/cart" aria-label="Carrinho">♧ <span id="cartCount">1</span></a></header>
   <main class="checkout-shell"><section class="checkout-main">
-    <div class="eyebrow"><a href="/cart" id="backLink">← Back to cart</a><span id="secureLabel">Secure checkout</span></div>
-    <h1 id="pageTitle">Secure checkout</h1>
+    <div class="eyebrow"><a href="/cart" id="backLink">Voltar ao carrinho</a><span id="secureLabel">Pagamento protegido pelo Mercado Pago</span></div>
+    <h1 id="pageTitle">Finalizar compra</h1>
     <form id="customerForm" class="checkout-form">
-      <section class="checkout-section"><div class="section-heading"><h2 id="contactTitle">Contact</h2><span id="expressLabel">Fast and secure checkout</span></div>
-        <div class="field full"><label for="email" id="emailLabel">Email</label><input id="email" name="email" type="email" required autocomplete="email" placeholder="you@email.com"></div>
-        <label class="checkline"><input type="checkbox" checked><span id="updatesLabel">Receive delivery updates</span></label>
+      <section class="checkout-section"><div class="section-heading"><h2 id="contactTitle">Contato</h2><span id="expressLabel">Compra rápida e segura</span></div>
+        <div class="field full"><label for="email" id="emailLabel">E-mail</label><input id="email" name="email" type="email" required autocomplete="email" placeholder="voce@email.com"></div>
+        <label class="checkline"><input type="checkbox" checked><span id="updatesLabel">Receber atualizações da entrega</span></label>
       </section>
-      <section class="checkout-section"><div class="section-heading"><h2 id="deliveryTitle">Delivery details</h2><span class="worldwide" id="deliveryNote">Worldwide delivery in 7–9 calendar days</span></div>
+      <section class="checkout-section"><div class="section-heading"><h2 id="deliveryTitle">Dados de entrega</h2><span class="worldwide" id="deliveryNote">Frete grátis e entrega rastreada</span></div>
         <div class="form-grid">
-          <div class="field full"><label for="country" id="countryLabel">Country / region</label><select id="country" required></select></div>
-          <div class="field full"><label for="name" id="nameLabel">Full name</label><input id="name" name="name" required autocomplete="name"></div>
-          <div class="field"><label for="phone" id="phoneLabel">Phone</label><input id="phone" name="phone" required inputmode="tel" autocomplete="tel" placeholder="+1 555 000 0000"></div>
-          <div class="field" id="taxField"><label for="tax" id="taxLabel">Tax ID / document</label><input id="tax" name="tax" autocomplete="off"></div>
-          <div class="field full"><label for="zip" id="postalLabel">Postal code</label><input id="zip" name="zip" required autocomplete="postal-code"></div>
-          <div class="field full"><label for="address" id="addressLabel">Street address</label><input id="address" name="address" required autocomplete="street-address"></div>
-          <div class="field"><label for="number" id="numberLabel">Building number</label><input id="number" name="number" required></div>
-          <div class="field"><label for="complement" id="complementLabel">Apartment, suite (optional)</label><input id="complement" name="complement"></div>
-          <div class="field"><label for="city" id="cityLabel">City</label><input id="city" name="city" required autocomplete="address-level2"></div>
-          <div class="field"><label for="district" id="districtLabel">State / region</label><input id="district" name="district" required autocomplete="address-level1"></div>
+          <input id="country" name="country" type="hidden" value="BR">
+          <div class="field full"><label for="name" id="nameLabel">Nome completo</label><input id="name" name="name" required autocomplete="name"></div>
+          <div class="field"><label for="phone" id="phoneLabel">Telefone</label><input id="phone" name="phone" required inputmode="tel" autocomplete="tel" placeholder="(11) 99999-9999"></div>
+          <div class="field" id="taxField"><label for="tax" id="taxLabel">CPF</label><input id="tax" name="tax" required inputmode="numeric" autocomplete="off"></div>
+          <div class="field full"><label for="zip" id="postalLabel">CEP</label><input id="zip" name="zip" required inputmode="numeric" autocomplete="postal-code"></div>
+          <div class="field full"><label for="address" id="addressLabel">Endereço</label><input id="address" name="address" required autocomplete="street-address"></div>
+          <div class="field"><label for="number" id="numberLabel">Número</label><input id="number" name="number" required></div>
+          <div class="field"><label for="complement" id="complementLabel">Complemento (opcional)</label><input id="complement" name="complement"></div>
+          <div class="field"><label for="city" id="cityLabel">Cidade</label><input id="city" name="city" required autocomplete="address-level2"></div>
+          <div class="field"><label for="district" id="districtLabel">Estado</label><input id="district" name="district" required autocomplete="address-level1"></div>
         </div>
         <p class="field-feedback" id="zipFeedback" aria-live="polite"></p>
       </section>
-      <section class="assurance"><b id="assuranceTitle">Secure checkout</b><p id="assuranceBody">Encrypted payment, order tracking and support included with every order.</p></section>
-      <button class="button" id="continueButton" type="submit">Continue to payment</button><div id="checkoutStatus" class="status" aria-live="polite"></div>
+      <section class="assurance"><b id="assuranceTitle">Checkout seguro</b><p id="assuranceBody">Dados criptografados, pagamento processado pelo Mercado Pago e pedido rastreado.</p></section>
+      <button class="button" id="continueButton" type="submit">Continuar para pagamento</button><div id="checkoutStatus" class="status" aria-live="polite"></div>
     </form>
-    <section id="paymentArea" class="checkout-form hidden"><section class="checkout-section"><div class="section-heading"><h2 id="paymentTitle">Payment</h2><span id="protectedLabel">Card protected by 3D Secure</span></div>
-      <div class="payment-intro"><strong id="cardTitle">Credit or debit card</strong><span id="chargedNote">The final charge will be processed in USD. Local amount is an estimate.</span></div>
-      <form id="cardForm"><div class="form-grid">
-        <div class="field full"><label for="cardName" id="cardNameLabel">Name on card</label><input id="cardName" required autocomplete="cc-name"></div>
-        <div class="field full"><label for="cardNumber" id="cardNumberLabel">Card number</label><input id="cardNumber" required inputmode="numeric" autocomplete="cc-number"></div>
-        <div class="field"><label for="expiry" id="expiryLabel">Expiry (MM/YY)</label><input id="expiry" required inputmode="numeric" autocomplete="cc-exp"></div>
-        <div class="field"><label for="cvv" id="cvvLabel">Security code</label><input id="cvv" required inputmode="numeric" autocomplete="cc-csc"></div>
-        <div class="field full"><label for="installments" id="installmentsLabel">Payment</label><select id="installments"></select></div>
-      </div><button class="button" id="payButton" type="submit">Pay securely</button></form>
+    <section id="paymentArea" class="checkout-form hidden"><section class="checkout-section"><div class="section-heading"><h2 id="paymentTitle">Pagamento</h2><span id="protectedLabel">Segurança Mercado Pago</span></div>
+      <div class="payment-method-tabs" role="tablist"><button type="button" data-method="card">Cartão</button><button type="button" data-method="pix">Pix</button><button type="button" data-method="wallet">Saldo Mercado Pago</button></div>
+      <div data-method-panel="card"><div class="payment-intro"><strong>R$ 149,90 no cartão</strong><span>Em até 12x sem juros. Dados protegidos pelo Mercado Pago.</span></div><div id="cardPaymentBrick"></div></div>
+      <div data-method-panel="pix" class="hidden"><div class="payment-intro"><strong>R$ 129,90 à vista no Pix</strong><span>Aprovação rápida e QR Code gerado na hora.</span></div><div id="pixActions"><button class="button" id="generatePix" type="button">Gerar Pix</button></div><div id="pixResult" class="pix-result hidden"><img id="pixQr" alt="QR Code Pix"><label for="pixCode">Pix copia e cola</label><textarea id="pixCode" readonly></textarea><button class="button button--secondary" id="copyPix" type="button">Copiar código Pix</button><a id="pixLink" target="_blank" rel="noopener">Abrir pagamento</a></div></div>
+      <div data-method-panel="wallet" class="hidden"><div class="payment-intro"><strong>R$ 129,90 com sua conta Mercado Pago</strong><span>Use saldo, cartões salvos ou Linha de Crédito. A confirmação ocorre no ambiente seguro do Mercado Pago.</span></div><button class="button mp-wallet-button" id="payWithMercadoPago" type="button">Pagar com Mercado Pago</button></div>
       <div id="paymentStatus" class="status" aria-live="polite"></div>
     </section></section>
-  </section><aside class="order-panel"><div class="order-panel__inner"><h2 id="summaryTitle">Order summary</h2><div id="checkoutItem"></div><div class="order-divider"></div><div class="summary-row"><span id="subtotalLabel">Subtotal</span><strong id="checkoutTotal">$69.00</strong></div><div class="summary-row shipping"><span id="shippingLabel">Worldwide shipping</span><strong id="shippingFree">FREE</strong></div><div class="summary-row summary-total"><span id="totalLabel">Total</span><strong id="checkoutTotalBottom">$69.00</strong></div><p class="currency-note" id="footerCurrency">Charged in USD</p></div></aside>
+  </section><aside class="order-panel"><div class="order-panel__inner"><h2 id="summaryTitle">Resumo do pedido</h2><div id="checkoutItem"></div><div class="order-divider"></div><div class="summary-row"><span>De</span><del id="originalTotal">R$ 279,90</del></div><div class="summary-row"><span id="subtotalLabel">Oferta</span><strong id="checkoutTotal">R$ 149,90</strong></div><div class="summary-row shipping"><span id="shippingLabel">Frete</span><strong id="shippingFree">GRÁTIS</strong></div><div class="summary-row summary-total"><span id="totalLabel">Total</span><strong id="checkoutTotalBottom">R$ 149,90</strong></div><p class="currency-note" id="footerCurrency">Pagamento processado em BRL</p></div></aside>
   </main>
-  <footer class="checkout-footer"><a href="/" id="homeLink">Home</a><span>© 2026 Motor Scent</span><span id="footerLegal">Privacy · Terms</span></footer>
-  <script src="assets/js/i18n.js?v=20261120-ui"></script><script src="assets/js/storefront.js?v=20261120-ui"></script><script src="assets/js/checkout-v2.js?v=20261120-ui"></script>
+  <footer class="checkout-footer"><a href="/" id="homeLink">Início</a><span>© 2026 Motor Scent</span><span id="footerLegal">Privacidade · Termos</span></footer>
+  <script src="https://sdk.mercadopago.com/js/v2"></script><script src="assets/js/i18n.js?v=20261120-ui"></script><script src="assets/js/storefront.js?v=20261120-ui"></script><script src="assets/js/checkout-mercadopago.js?v=20261120-mp"></script>
 </body></html>
