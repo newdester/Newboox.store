@@ -8,7 +8,18 @@ const Storefront = (() => {
   const unitPrice = () => catalogUnitPrice;
   const extrasFor = cart => cart?.id === 'motor-scent' && cart?.extras?.lavenderOil ? 20 : 0;
   const totalFor = cart => Number((unitPrice(cart.id, cart.quantity) * cart.quantity + extrasFor(cart)).toFixed(2));
-  const getCart = () => { try { return JSON.parse(localStorage.getItem(CART)); } catch { return null; } };
+  const getCart = () => {
+    try {
+      const cart = JSON.parse(localStorage.getItem(CART));
+      if (!cart) return null;
+      if (cart.id !== 'motor-scent' || !/^Motor Scent\b/i.test(String(cart.title || ''))) {
+        const migrated = { id: 'motor-scent', title: 'Motor Scent', image: 'motorscent-assets/images/motor-scent-gt3.png', quantity: Math.min(10, Math.max(1, Number(cart.quantity) || 1)), price: catalogUnitPrice };
+        localStorage.setItem(CART, JSON.stringify(migrated));
+        return migrated;
+      }
+      return cart;
+    } catch { return null; }
+  };
   const putCart = cart => localStorage.setItem(CART, JSON.stringify(cart));
   const localeContext = () => ({ locale: 'en-US', currency: 'USD', rate: 1 });
   const formatMoney = (value, context) => { const local = Number(value || 0) * context.rate; const formatted = window.NewbooxI18n?.money ? window.NewbooxI18n.money(local, context.currency, context.locale) : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value); return context.currency === 'USD' ? formatted : `${formatted} ≈ ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)}`; };
