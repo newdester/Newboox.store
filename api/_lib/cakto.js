@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-const API_BASE = String(process.env.CAKTO_API_URL || 'https://api.cakto.com.br/public_api').trim().replace(/\/$/, '');
+const configuredApiBase = String(process.env.CAKTO_API_URL || 'https://api.cakto.com.br/public_api').trim().replace(/\/$/, '');
+const API_BASE = /\/public_api$/i.test(configuredApiBase) ? configuredApiBase : `${configuredApiBase}/public_api`;
 const DEFAULT_PRODUCT_ID_USD = 'dabef23e-c8f4-4eba-ab9d-0b6d95aaf6e4';
 let tokenCache = { value: '', expiresAt: 0 };
 let catalogCache = { value: null, expiresAt: 0 };
@@ -14,8 +15,7 @@ export async function getCaktoToken() {
   if (tokenCache.value && tokenCache.expiresAt > Date.now() + 60_000) return tokenCache.value;
   const body = new URLSearchParams({
     client_id: String(process.env.CAKTO_CLIENT_ID).trim(),
-    client_secret: String(process.env.CAKTO_CLIENT_SECRET).trim(),
-    grant_type: 'client_credentials'
+    client_secret: String(process.env.CAKTO_CLIENT_SECRET).trim()
   });
   const result = await fetch(`${API_BASE}/token/`, {
     method: 'POST',
@@ -23,7 +23,10 @@ export async function getCaktoToken() {
     body
   });
   const data = await result.json().catch(() => ({}));
-  if (!result.ok || !data.access_token) throw new Error('Não foi possível autenticar na Cakto.');
+  if (!result.ok || !data.access_token) {
+    const reason = String(data.error || data.detail || data.message || '').slice(0, 80);
+    throw new Error(`Não foi possível autenticar na Cakto${reason ? ` (${reason})` : ''}.`);
+  }
   const expiresIn = Number(data.expires_in) || 36000;
   tokenCache = { value: data.access_token, expiresAt: Date.now() + expiresIn * 1000 };
   return tokenCache.value;
