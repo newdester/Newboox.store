@@ -4,10 +4,11 @@
 
   const $ = id => document.getElementById(id);
   const COUNTRY_CODES = 'AD AE AF AG AI AL AM AO AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS XK YE YT ZA ZM ZW'.split(' ');
+  const PAYMENT_COUNTRY_CODES = COUNTRY_CODES.filter(code => code !== 'BR');
   const quantity = Math.min(10, Math.max(1, Number(cart.quantity) || 1));
   const state = {
     country: NewbooxI18n.detectCountry(), locale: 'en-US', currency: 'USD', rates: { USD: 1 },
-    customer: null, unitUsd: 69, totalUsd: 69 * quantity, sdk: null, config: null
+    customer: null, unitUsd: 69, totalUsd: 69 * quantity, sdk: null, config: null, blockedByBrazil: false
   };
 
   const money = (value, currency = 'USD', locale = 'en-US') => NewbooxI18n.money(value, currency, locale);
@@ -41,36 +42,41 @@
 
   function applyCopy() {
     document.documentElement.lang = state.locale;
-    const fields = { backLink:'back', homeLink:'home', pageTitle:'title', deliveryTitle:'delivery', nameLabel:'name', emailLabel:'email', phoneLabel:'phone', taxLabel:'tax', postalLabel:'postal', addressLabel:'address', numberLabel:'number', complementLabel:'complement', districtLabel:'district', cityLabel:'city', continueButton:'continue', paymentTitle:'payment', cardTitle:'card', cardNameLabel:'cardName', cardNumberLabel:'cardNumber', expiryLabel:'expiry', cvvLabel:'cvv', installmentsLabel:'installments', payButton:'pay', summaryTitle:'summary', totalLabel:'total', secureLabel:'secure' };
+    document.title = `${text('title')} — Motor Scent`;
+    const fields = { backLink:'back', homeLink:'home', pageTitle:'title', contactTitle:'contact', expressLabel:'express', updatesLabel:'updates', countryLabel:'country', deliveryTitle:'delivery', nameLabel:'name', emailLabel:'email', phoneLabel:'phone', taxLabel:'tax', postalLabel:'postal', addressLabel:'address', numberLabel:'number', complementLabel:'complement', districtLabel:'district', cityLabel:'city', assuranceTitle:'assurance', assuranceBody:'assuranceBody', continueButton:'continue', paymentTitle:'payment', protectedLabel:'protected', cardTitle:'card', cardNameLabel:'cardName', cardNumberLabel:'cardNumber', expiryLabel:'expiry', cvvLabel:'cvv', installmentsLabel:'installments', payButton:'pay', summaryTitle:'summary', subtotalLabel:'subtotal', shippingLabel:'shipping', shippingFree:'free', totalLabel:'total', secureLabel:'secure', footerLegal:'privacyTerms', ratingText:'reviews' };
     Object.entries(fields).forEach(([id, key]) => { if ($(id)) $(id).textContent = text(key); });
     $('chargedNote').textContent = text('charged');
     $('deliveryNote').textContent = text('deliveryNote');
   }
   function renderCountryOptions() {
     const displayNames = new Intl.DisplayNames([state.locale || 'en-US'], { type: 'region' });
-    $('country').innerHTML = COUNTRY_CODES.map(code => `<option value="${code}" ${code === state.country ? 'selected' : ''}>${displayNames.of(code) || code}</option>`).join('');
+    $('country').innerHTML = PAYMENT_COUNTRY_CODES.map(code => `<option value="${code}" ${code === state.country ? 'selected' : ''}>${displayNames.of(code) || code}</option>`).join('');
   }
   function renderSummary() {
     state.totalUsd = Number((state.unitUsd * quantity).toFixed(2));
     const localRate = state.rates[state.currency];
     const local = state.currency !== 'USD' && localRate ? `${money(state.totalUsd * localRate, state.currency, state.locale)} ≈ ` : '';
     const total = `${local}${money(state.totalUsd)}`;
-    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="${String(cart.title || 'Motor Scent').replace(/"/g, '&quot;')}"><div><p class="cart-name">${cart.title || 'Motor Scent'}</p><span class="cart-meta">${text('quantity')}: ${quantity}</span><span class="cart-meta">${money(state.unitUsd)} / unit</span></div><b class="cart-price">${total}</b></div>`;
+    const rawTitle = String(cart.title || 'Motor Scent');
+    const language = state.locale.split('-')[0];
+    const mixed = (language === 'en' && /\b(preto|preta|verde|laranja|azul|roxo|cinza|fórmula)\b/i.test(rawTitle)) || (language === 'pt' && /\b(black|green|orange|blue|red|purple|grey)\b/i.test(rawTitle));
+    const title = mixed ? 'Motor Scent' : rawTitle;
+    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="${title.replace(/"/g, '&quot;')}"><div><p class="cart-name">${title}</p><span class="cart-meta">${text('quantity')}: ${quantity}</span><span class="cart-meta">${money(state.unitUsd)} ${text('unit')}</span></div><b class="cart-price">${total}</b></div>`;
     $('checkoutTotal').textContent = total; $('checkoutTotalBottom').textContent = total;
-    $('footerCurrency').textContent = `Charged in USD · ${state.currency === 'USD' ? 'USD' : `${state.currency} estimate`}`;
+    $('footerCurrency').textContent = `${text('charged')} · ${state.currency === 'USD' ? 'USD' : state.currency}`;
     $('installments').innerHTML = `<option value="1">1x ${money(state.totalUsd)}</option>`;
     $('cartCount').textContent = String(quantity);
   }
   async function chooseCountry(country) {
     state.country = country;
     const regional = NewbooxI18n.config(country);
-    state.locale = regional.locale; state.currency = regional.currency;
+    state.locale = regional.language === 'pt' ? regional.locale : 'en-US'; state.currency = regional.currency;
     const taxField = $('taxField');
     const requiresBrazilianDocument = country === 'BR';
     taxField?.classList.toggle('hidden', !requiresBrazilianDocument);
     $('tax').required = requiresBrazilianDocument;
     sessionStorage.setItem('newboox_country', country);
-    applyCopy(); renderSummary();
+    renderCountryOptions(); applyCopy(); renderSummary();
   }
   async function loadCaktoSdk() {
     if (window.Cakto?.CaktoSDK) return;
@@ -99,11 +105,11 @@
   Storefront.applyBrand?.(cart);
   renderCountryOptions(); renderSummary(); applyCopy();
   let initializationError = null;
-  const sdkReady = Promise.all([NewbooxI18n.resolveCountry(), initializeCheckout()]).then(async ([country]) => { state.country = COUNTRY_CODES.includes(country) ? country : 'US'; renderCountryOptions(); await chooseCountry(state.country); setStatus('checkoutStatus', ''); return state.sdk; }).catch(error => { initializationError = error; setStatus('checkoutStatus', error.message || 'International checkout is temporarily unavailable.', true); return null; });
+  const sdkReady = Promise.all([NewbooxI18n.resolveCountry(), initializeCheckout()]).then(async ([country]) => { const detectedBrazil = country === 'BR'; state.blockedByBrazil = detectedBrazil; state.country = PAYMENT_COUNTRY_CODES.includes(country) ? country : 'US'; renderCountryOptions(); await chooseCountry(state.country); if (detectedBrazil) { state.locale = 'pt-BR'; renderCountryOptions(); applyCopy(); renderSummary(); } $('continueButton').disabled = detectedBrazil; setStatus('checkoutStatus', detectedBrazil ? text('unsupportedBrazil') : '', detectedBrazil); return state.sdk; }).catch(error => { initializationError = error; setStatus('checkoutStatus', error.message || 'International checkout is temporarily unavailable.', true); return null; });
 
-  $('country').addEventListener('change', event => chooseCountry(event.target.value));
+  $('country').addEventListener('change', async event => { state.blockedByBrazil = false; $('continueButton').disabled = false; await chooseCountry(event.target.value); setStatus('checkoutStatus', ''); });
   $('customerForm').addEventListener('submit', async event => {
-    event.preventDefault(); if (!event.currentTarget.checkValidity()) return event.currentTarget.reportValidity();
+    event.preventDefault(); if (state.blockedByBrazil) return setStatus('checkoutStatus', text('unsupportedBrazil'), true); if (!event.currentTarget.checkValidity()) return event.currentTarget.reportValidity();
     const phone = normalizedPhone($('phone').value);
     if (!/^\d{8,15}$/.test(phone)) return setStatus('checkoutStatus', 'Enter your phone number with country code.', true);
     state.customer = Object.fromEntries(new FormData(event.currentTarget).entries());
@@ -129,7 +135,10 @@
       const { cardToken } = await sdk.createToken(card);
       if (!cardToken) throw new Error('Cakto did not return a valid card token.');
       const authResult = await sdk.authenticate3DS({ card, customer: { amount: Math.round(state.totalUsd * 100), currency: 'USD', email: state.customer.email, name: state.customer.name, phone: normalizedPhone(state.customer.phone), paymentMethod: 'credit', address: { street: state.customer.address, number: state.customer.number, complement: state.customer.complement, city: state.customer.city, state: state.customer.district, zipcode: state.customer.zip } } });
-      if (!authResult?.success) throw new Error(authResult?.error || '3D Secure authentication was not approved.');
+      if (!authResult?.success) {
+        const detail = String(authResult?.error || '');
+        throw new Error(/3ds|cielo|authenticate/i.test(detail) ? text('threeDsError') : (detail || text('threeDsError')));
+      }
       await sdk.completeAntifraudProfile();
       const antifraudReference = sdk.getAntifraudReference?.();
       if (!antifraudReference) throw new Error('Unable to complete the security profile. Please try again.');

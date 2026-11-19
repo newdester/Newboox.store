@@ -95,9 +95,10 @@
   };
   const modelNames = new Map([['Black 911 GT3 RS', '911 GT3 RS preto'], ['Red Bull F1', 'Fórmula 1 Red Bull'], ['Green M4', 'M4 verde'], ['Orange Raptor', 'Raptor laranja'], ['Blue Raptor', 'Raptor azul'], ['Red Raptor', 'Raptor vermelho'], ['Green Aventador SVJ', 'Aventador SVJ verde'], ['Orange Aventador SVJ', 'Aventador SVJ laranja'], ['Green McLaren Senna', 'McLaren Senna verde'], ['Black C63 AMG', 'C63 AMG preto'], ['Black G-Wagon', 'G-Wagon preto'], ['Black Corvette Z06', 'Corvette Z06 preto'], ['Purple Hellcat', 'Hellcat roxo'], ['Black RS6 Avant', 'RS6 Avant preto'], ['Black Ram TRX', 'Ram TRX preta'], ['Grey Shelby GT500', 'Shelby GT500 cinza'], ['Grey Audi R8', 'Audi R8 cinza']]);
   const selectedModelInput = () => document.querySelector('input[name="Model"]:checked');
-  const selectedVariant = () => { const value = selectedModelInput()?.value; return modelNames.get(value) || value || 'Motor Scent'; };
+  let storefrontLanguage = 'en';
+  const selectedVariant = () => { const value = selectedModelInput()?.value; return storefrontLanguage === 'pt' ? (modelNames.get(value) || value || 'Motor Scent') : (value || 'Motor Scent'); };
   const selectedImage = () => { const input = selectedModelInput(); const image = input && document.querySelector(`label[for="${input.id}"]`)?.closest('.color-swatch')?.querySelector('img'); return image?.getAttribute('src') || document.querySelector('[data-media-id] img, .product__media img, .product-media img')?.getAttribute('src') || 'motorscent-assets/images/motor-scent-gt3.png'; };
-  const syncSelectedModel = () => { const model = selectedVariant(); document.querySelectorAll('[id^="custom-label-"]').forEach(label => { label.textContent = `Modelo: ${model}`; }); };
+  const syncSelectedModel = () => { const model = selectedVariant(); document.querySelectorAll('[id^="custom-label-"]').forEach(label => { label.textContent = `${storefrontLanguage === 'pt' ? 'Modelo' : 'Model'}: ${model}`; }); };
   const updateOffer = () => {
     const quantity = Math.max(1, Number(document.querySelector('[name="quantity"]')?.value || 1));
     const unit = priceFor(quantity), total = unit * quantity;
@@ -105,16 +106,16 @@
     document.querySelectorAll('.price__compare-price, .price__badge-sale').forEach(element => { element.style.display = 'none'; });
     document.querySelectorAll('.quantity-break').forEach(card => {
       const units = Number(card.dataset.quantity || 1), tier = priceFor(units), cardTotal = tier * units;
-      const label = card.querySelector('.quantity-break__label-text'); if (label) label.textContent = units === 1 ? '1 unit' : `${units} units`;
-      const caption = card.querySelector('.quantity-break__caption'); if (caption) caption.textContent = `${brl(tier)} por unidade`;
+      const label = card.querySelector('.quantity-break__label-text'); if (label) label.textContent = units === 1 ? (storefrontLanguage === 'pt' ? '1 unidade' : '1 unit') : `${units} ${storefrontLanguage === 'pt' ? 'unidades' : 'units'}`;
+      const caption = card.querySelector('.quantity-break__caption'); if (caption) caption.textContent = `${brl(tier)} ${storefrontLanguage === 'pt' ? 'por unidade' : 'per unit'}`;
       const price = card.querySelector('.quantity-break__price'); if (price) price.textContent = brl(cardTotal);
       const compare = card.querySelector('.quantity-break__compare-price'); if (compare) compare.style.display = 'none';
-      const benefit = card.querySelector('.quantity-break__benefit'); if (benefit) benefit.textContent = 'Free worldwide shipping';
+      const benefit = card.querySelector('.quantity-break__benefit'); if (benefit) benefit.textContent = storefrontLanguage === 'pt' ? 'Frete mundial grátis' : 'Free worldwide shipping';
     });
-    document.querySelectorAll('[data-handle="shipping-protection"] .upsell__title, [data-handle="shipping-protection"] h3, [data-handle="shipping-protection"] h4').forEach(element => { element.textContent = 'Proteção de envio'; });
+    document.querySelectorAll('[data-handle="shipping-protection"] .upsell__title, [data-handle="shipping-protection"] h3, [data-handle="shipping-protection"] h4').forEach(element => { element.textContent = storefrontLanguage === 'pt' ? 'Proteção de envio' : 'Shipping protection'; });
     let note = document.querySelector('#motorscent-local-offer');
     if (!note) { note = document.createElement('p'); note.id = 'motorscent-local-offer'; note.style.cssText = 'font-weight:700;margin:12px 0;color:#111'; const anchor = document.querySelector('form[action*="cart/add"], form.shopify-product-form'); anchor?.prepend(note); }
-    if (note) note.textContent = `${quantity} ${quantity === 1 ? 'unit' : 'units'} · ${brl(catalogUnitPrice)} each`;
+    if (note) note.textContent = storefrontLanguage === 'pt' ? `${quantity} ${quantity === 1 ? 'unidade' : 'unidades'} · ${brl(catalogUnitPrice)} cada` : `${quantity} ${quantity === 1 ? 'unit' : 'units'} · ${brl(catalogUnitPrice)} each`;
   };
   const goToCheckout = (event, destination = '/cart') => {
     const target = event.target instanceof Element ? event.target : null;
@@ -123,7 +124,7 @@
     event.preventDefault(); event.stopImmediatePropagation();
     const quantity = Math.min(10, Math.max(1, Number(form.querySelector('[name="quantity"]')?.value || 1)));
     const unit = priceFor(quantity);
-    localStorage.setItem('chefpro_cart_v1', JSON.stringify({ id: 'motor-scent', title: `Motor Scent — ${selectedVariant()}`, image: selectedImage(), quantity, price: unit }));
+    localStorage.setItem('chefpro_cart_v1', JSON.stringify({ id: 'motor-scent', title: `Motor Scent — ${selectedVariant()}`, model: selectedModelInput()?.value || '', image: selectedImage(), quantity, price: unit }));
     trackMotor('AddToCart', { value: Number((unit * quantity).toFixed(2)), contents: [{ id: 'motor-scent', quantity }] });
     location.assign(destination);
   };
@@ -142,7 +143,7 @@
     if (!form) return;
     const note = document.createElement('p');
     note.id = 'motorscent-payment-note';
-    note.textContent = 'Secure checkout powered by Cakto. Card details are tokenized and protected by 3D Secure. The final charge is processed in USD.';
+    note.textContent = storefrontLanguage === 'pt' ? 'Checkout seguro processado pela Cakto. Os dados do cartão são tokenizados e protegidos pelo 3D Secure. A cobrança final é processada em USD.' : 'Secure checkout powered by Cakto. Card details are tokenized and protected by 3D Secure. The final charge is processed in USD.';
     form.append(note);
   };
   const configureLavenderUpsell = () => {
@@ -189,7 +190,7 @@
     };
     try { const saved = JSON.parse(localStorage.getItem('motorscent_shipping_v1') || 'null'); if (saved?.zip) { input.value = saved.zip; calculate(); } else detectLocation(); } catch { detectLocation(); }
   };
-  document.addEventListener('DOMContentLoaded', async () => { displayLocale = 'en-US'; displayCurrency = 'USD'; displayRate = 1; document.documentElement.lang = displayLocale; try { const config = await fetch('/api/config', { cache: 'no-store' }).then(response => response.json()); const price = Number(config.displayUnitPrice || config.product?.unitPrice); if (config.caktoCheckoutReady && price > 0) { catalogUnitPrice = price; analyticsProduct.price = price; } } catch {} optimizeImages(); trackMotor('ViewContent'); syncSelectedModel(); configureLavenderUpsell(); addPaymentNote(); addShippingEstimator(); updateOffer(); document.querySelectorAll('[name="quantity"]').forEach(input => input.addEventListener('change', updateOffer)); document.querySelectorAll('input[name="Model"]').forEach(input => input.addEventListener('change', syncSelectedModel)); }, { once: true });
+  document.addEventListener('DOMContentLoaded', async () => { displayLocale = 'en-US'; displayCurrency = 'USD'; displayRate = 1; const country = await window.NewbooxI18n?.resolveCountry?.().catch?.(() => 'US') || 'US'; storefrontLanguage = window.NewbooxI18n?.config?.(country)?.language === 'pt' ? 'pt' : 'en'; document.documentElement.lang = storefrontLanguage === 'pt' ? 'pt-BR' : 'en-US'; try { const config = await fetch('/api/config', { cache: 'no-store' }).then(response => response.json()); const price = Number(config.displayUnitPrice || config.product?.unitPrice); if (config.caktoCheckoutReady && price > 0) { catalogUnitPrice = price; analyticsProduct.price = price; } } catch {} optimizeImages(); trackMotor('ViewContent'); configureLavenderUpsell(); addPaymentNote(); addShippingEstimator(); if (storefrontLanguage === 'pt') translate(document.body); syncSelectedModel(); updateOffer(); document.querySelectorAll('[name="quantity"]').forEach(input => input.addEventListener('change', updateOffer)); document.querySelectorAll('input[name="Model"]').forEach(input => input.addEventListener('change', syncSelectedModel)); }, { once: true });
   document.addEventListener('submit', goToCheckout, true);
   document.addEventListener('click', event => {
     const button = event.target instanceof Element && event.target.closest('#ProductSubmitButton-template--30990084735359__main, [id^="SectionAtcBtn-"], [id^="ProductSubmitButton-"], .shopify-payment-button button, [data-shopify="payment-button"]');
