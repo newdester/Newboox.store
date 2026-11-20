@@ -1,7 +1,7 @@
 const KIT_DEFINITIONS = [
   { id: 'toyadent-1', units: 1, price: 22.90, shipping: 9.32 },
   { id: 'toyadent-2', units: 2, price: 39.90, shipping: 9.32 },
-  { id: 'toyadent-3', units: 3, price: 49.90, shipping: 0 }
+  { id: 'toyadent-3', units: 3, price: 44.90, shipping: 0 }
 ];
 
 const asProduct = kit => ({
@@ -13,9 +13,9 @@ const asProduct = kit => ({
   cashPrice: kit.price,
   total: Number((kit.price + kit.shipping).toFixed(2)),
   maxInstallments: 1,
-  deliveryMinBusinessDays: 3,
-  deliveryMaxBusinessDays: 5,
-  carrier: 'Loggi'
+  deliveryMinDays: 3,
+  deliveryMaxDays: 5,
+  carrier: 'Entrega Full'
 });
 
 export function storeProducts() {

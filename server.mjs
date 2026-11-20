@@ -58,7 +58,7 @@ async function processPayment(req, res) {
     const payload = {
       transaction_amount: paymentAmount(selectedProduct),
       token: form.token,
-      description: `${selectedProduct.title} · frete ${selectedProduct.shipping ? 'Loggi' : 'grátis'}`,
+      description: `${selectedProduct.title} · frete ${selectedProduct.shipping ? selectedProduct.carrier : 'grátis'}`,
       installments: paymentType === 'credit_card' ? Math.min(selectedProduct.maxInstallments, Math.max(1, Number(form.installments) || 1)) : 1,
       payment_method_id: form.payment_method_id,
       issuer_id: form.issuer_id,

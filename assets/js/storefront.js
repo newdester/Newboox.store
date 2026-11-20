@@ -4,7 +4,7 @@ responsiveCss.href = '/assets/css/responsive.css';
 document.head.append(responsiveCss);
 if (!window.MetaPixel && !document.querySelector('script[src*="assets/js/meta-pixel.js"]')) {
   const metaPixel = document.createElement('script');
-  metaPixel.src = '/assets/js/meta-pixel.js?v=20261124';
+  metaPixel.src = '/assets/js/meta-pixel.js?v=20261120-newboox';
   document.head.append(metaPixel);
 }
 
@@ -16,7 +16,7 @@ const Storefront = (() => {
   const defaultKits = [
     { id: 'toyadent-1', units: 1, title: 'TOYADENT · Kit com 1 unidade', price: 22.90, shipping: 9.32 },
     { id: 'toyadent-2', units: 2, title: 'TOYADENT · Kit com 2 unidades', price: 39.90, shipping: 9.32 },
-    { id: 'toyadent-3', units: 3, title: 'TOYADENT · Kit com 3 unidades', price: 49.90, shipping: 0 }
+    { id: 'toyadent-3', units: 3, title: 'TOYADENT · Kit com 3 unidades', price: 44.90, shipping: 0 }
   ];
   let kits = defaultKits;
   const image = '/assets/images/toyadent/hero.webp';
@@ -68,11 +68,11 @@ const Storefront = (() => {
     document.documentElement.lang = 'pt-BR';
     document.title = 'Carrinho — TOYADENT';
     set('#continueShopping', 'Continuar comprando');
-    set('#shippingIncluded', 'Entrega Loggi em 3 a 5 dias úteis');
+    set('#shippingIncluded', 'Entrega Full calculada pelo CEP');
     set('#cartTitle', 'Seu carrinho');
     set('#summaryTitle', 'Resumo do pedido');
     set('#subtotalLabel', 'Produtos');
-    set('#shippingLabel', 'Frete Loggi');
+    set('#shippingLabel', 'Frete');
     set('#totalLabel', 'Total');
     set('#paymentNotice', 'Pagamento protegido pelo Mercado Pago. Cartão, Pix ou saldo Mercado Pago.');
     set('#footerHome', 'Início');
@@ -84,17 +84,17 @@ const Storefront = (() => {
       return;
     }
     const kit = kitById(cart.id);
-    cart = { ...kit, image, quantity: 1, currency: 'BRL' };
+    cart = { ...cart, ...kit, image, quantity: 1, currency: 'BRL' };
     putCart(cart);
     set('#cartCount', String(kit.units));
-    set('#deliveryWindow', 'Entrega estimada em 3 a 5 dias úteis via Loggi');
+    set('#deliveryWindow', cart.deliveryEstimate || 'Entrega Full calculada no CEP informado');
     set('#footerCurrency', 'Pagamento processado em BRL');
     document.querySelector('#checkoutLink')?.setAttribute('href', PAYMENT_URL);
-    root.innerHTML = `<div class="cart-line"><img src="${image}" alt="TOYADENT"><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${kit.units} ${kit.units === 1 ? 'unidade' : 'unidades'} de 90g</span><span class="cart-meta">Entrega Loggi em 3 a 5 dias úteis</span><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(kit.price)}</b></div>`;
+    root.innerHTML = `<div class="cart-line"><img src="${image}" alt="TOYADENT"><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${kit.units} ${kit.units === 1 ? 'unidade' : 'unidades'} de 90g</span><span class="cart-meta">${cart.deliveryEstimate || 'Entrega Full'}</span><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(kit.price)}</b></div>`;
     set('#subtotal', brl(kit.price));
     set('#shippingFree', kit.shipping ? brl(kit.shipping) : 'GRÁTIS');
     set('#total', brl(kit.price + kit.shipping));
-    set('#chargedNote', kit.shipping ? 'Frete fixo calculado para todo o Brasil' : 'Kit com 3 unidades: frete grátis');
+    set('#chargedNote', cart.deliveryEstimate || 'Prazo calculado conforme o CEP informado');
     root.querySelector('[data-remove]')?.addEventListener('click', () => {
       localStorage.removeItem(CART);
       location.reload();
@@ -117,8 +117,10 @@ const Storefront = (() => {
     applyBrand();
     if (status === 'approved' || status === 'paid') {
       if (title) title.textContent = 'Pagamento aprovado';
-      if (copyNode) copyNode.textContent = 'Obrigado! Seu pedido TOYADENT foi confirmado e será enviado pela Loggi.';
+      if (copyNode) copyNode.textContent = 'Obrigado! Seu pedido TOYADENT foi confirmado e seguirá por Entrega Full.';
       document.querySelector('#orderReference')?.replaceChildren(`Pedido ${payment?.orderId || ''} · Pagamento ${payment?.paymentId || returnedId || ''}`);
+      const paymentId = payment?.paymentId || returnedId;
+      if (paymentId) track('Purchase', getCart() || kitById('toyadent-1'), { value: Number(payment?.amount) || totalFor(getCart()), currency: 'BRL', order_id: payment?.orderId || '' }, `mp_payment_${paymentId}`);
       localStorage.removeItem(CART);
       return;
     }
@@ -126,9 +128,9 @@ const Storefront = (() => {
     if (copyNode) copyNode.textContent = 'Recebemos seu pedido. Assim que o Mercado Pago confirmar, enviaremos a confirmação por e-mail.';
   };
 
-  const track = (event, product, extra = {}) => {
+  const track = (event, product, extra = {}, eventId) => {
     const normalized = { ...product, currency: 'BRL', price: totalFor(product) };
-    const send = () => window.MetaPixel?.track(event, { ...window.MetaPixel.content(normalized), ...extra });
+    const send = () => window.MetaPixel?.track(event, { ...window.MetaPixel.content(normalized), ...extra }, eventId);
     if (window.MetaPixel) send();
     else window.addEventListener('meta-pixel-ready', send, { once: true });
   };

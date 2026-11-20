@@ -1,4 +1,10 @@
+import { createHash } from 'node:crypto';
+
 const META_ENDPOINT = pixelId => `https://graph.facebook.com/${pixelId}/events`;
+const hash = value => {
+  const normalized = String(value || '').trim().toLowerCase();
+  return normalized ? createHash('sha256').update(normalized).digest('hex') : '';
+};
 
 export async function sendMetaPurchase(payment) {
   const pixelId = process.env.META_PIXEL_ID;
@@ -7,18 +13,24 @@ export async function sendMetaPurchase(payment) {
   const quantity = Math.max(1, Number(payment.metadata?.quantity) || 1);
   const value = Number(payment.transaction_amount);
   const eventId = `mp_payment_${payment.id}`;
+  const email = hash(payment.metadata?.customer_email || payment.payer?.email);
+  const phone = hash(String(payment.metadata?.customer_phone || payment.payer?.phone?.number || '').replace(/\D/g, ''));
   const event = {
     event_name: 'Purchase',
     event_time: Math.floor(Date.now() / 1000),
     event_id: eventId,
     action_source: 'website',
     event_source_url: String(process.env.PUBLIC_BASE_URL || '').replace(/\/$/, ''),
+    user_data: {
+      ...(email ? { em: [email] } : {}),
+      ...(phone ? { ph: [phone] } : {})
+    },
     custom_data: {
       currency: String(payment.currency_id || 'BRL'),
       value,
       content_type: 'product',
-      content_ids: [String(payment.metadata?.product_id || 'chefpro-2l')],
-      contents: [{ id: String(payment.metadata?.product_id || 'chefpro-2l'), quantity, item_price: Number((value / quantity).toFixed(2)) }]
+      content_ids: [String(payment.metadata?.product_id || 'toyadent-1')],
+      contents: [{ id: String(payment.metadata?.product_id || 'toyadent-1'), quantity, item_price: Number((value / quantity).toFixed(2)) }]
     }
   };
   try {

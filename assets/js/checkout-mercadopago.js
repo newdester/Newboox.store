@@ -25,12 +25,16 @@
 
   function renderSummary() {
     const total = Number((selectedProduct.price + selectedProduct.shipping).toFixed(2));
-    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="TOYADENT"><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${selectedProduct.units} ${selectedProduct.units === 1 ? 'unidade' : 'unidades'} de 90g</span><span class="cart-meta">Loggi · 3 a 5 dias úteis</span></div><b class="cart-price">${brl(selectedProduct.price)}</b></div>`;
+    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="TOYADENT"><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${selectedProduct.units} ${selectedProduct.units === 1 ? 'unidade' : 'unidades'} de 90g</span><span class="cart-meta">${cart.deliveryEstimate || 'Entrega Full'}</span></div><b class="cart-price">${brl(selectedProduct.price)}</b></div>`;
     $('productSubtotal').textContent = brl(selectedProduct.price);
     $('checkoutShipping').textContent = selectedProduct.shipping ? brl(selectedProduct.shipping) : 'GRÁTIS';
     $('checkoutTotal').textContent = brl(total);
     $('checkoutTotalBottom').textContent = brl(total);
     document.querySelectorAll('[data-payment-total]').forEach(node => { node.textContent = brl(total); });
+    if (cart.deliveryEstimate) {
+      $('deliveryNote').textContent = cart.deliveryEstimate;
+      $('footerCurrency').textContent = `${cart.deliveryEstimate} · Pagamento em BRL`;
+    }
   }
 
   async function postPayment(formData) {
@@ -41,7 +45,7 @@
     sessionStorage.setItem(Storefront.PAYMENT, JSON.stringify(result));
     if (formData.payment_method_id === 'pix') { renderPix(result); return result; }
     if (result.status === 'approved') {
-      Storefront.track?.('Purchase', cart, { value: result.amount, currency: 'BRL', order_id: result.orderId });
+      Storefront.track?.('Purchase', cart, { value: result.amount, currency: 'BRL', order_id: result.orderId }, `mp_payment_${result.paymentId}`);
       location.assign('/thank-you');
       return result;
     }
@@ -71,7 +75,7 @@
         if (payment.status === 'approved') {
           const saved = { ...JSON.parse(sessionStorage.getItem(Storefront.PAYMENT) || '{}'), ...payment, status: 'approved' };
           sessionStorage.setItem(Storefront.PAYMENT, JSON.stringify(saved));
-          Storefront.track?.('Purchase', cart, { value: payment.amount, currency: 'BRL', order_id: saved.orderId });
+          Storefront.track?.('Purchase', cart, { value: payment.amount, currency: 'BRL', order_id: saved.orderId }, `mp_payment_${payment.paymentId || paymentId}`);
           location.assign('/thank-you');
           return;
         }

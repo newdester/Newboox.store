@@ -25,7 +25,7 @@ export default async function handler(request, response) {
   const payload = {
     transaction_amount: paymentAmount(product),
     token: formData.token,
-    description: `${product.title} · frete ${product.shipping ? 'Loggi' : 'grátis'}`,
+    description: `${product.title} · frete ${product.shipping ? product.carrier : 'grátis'}`,
     installments: paymentType === 'credit_card' ? Math.min(product.maxInstallments, Math.max(1, Number(formData.installments) || 1)) : 1,
     payment_method_id: formData.payment_method_id,
     issuer_id: formData.issuer_id,

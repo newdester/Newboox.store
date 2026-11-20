@@ -17,10 +17,10 @@ O checkout usa os componentes oficiais do Mercado Pago para cartão, Pix e saldo
 
 ## Oferta
 
-- 1 unidade: **R$ 22,90** + **R$ 9,32** de frete Loggi.
-- 2 unidades: **R$ 39,90** + **R$ 9,32** de frete Loggi.
-- 3 unidades: **R$ 49,90** com **frete grátis**.
-- Prazo exibido: **3 a 5 dias úteis** via Loggi.
+- 1 unidade: **R$ 22,90** + **R$ 9,32** de frete.
+- 2 unidades: **R$ 39,90** + **R$ 9,32** de frete.
+- 3 unidades: **R$ 44,90** com **frete grátis**.
+- A Entrega Full é consultada pelo CEP e exibe uma janela entre os dias da semana correspondentes a 3 e 5 dias após a consulta.
 
 ## Antes de produção
 
