@@ -11,6 +11,11 @@
   let deliveryEstimate = '';
   let tracked = false;
   const brl = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  const updateCartBadge = () => {
+    let units = 0;
+    try { units = Number(JSON.parse(localStorage.getItem(CART_KEY) || 'null')?.units) || 0; } catch {}
+    document.querySelectorAll('[data-cart-count]').forEach(node => { node.textContent = String(units); });
+  };
 
   function selectKit(id) {
     selected = kits.find(kit => kit.id === id) || kits[2];
@@ -33,6 +38,7 @@
   function saveCart() {
     const product = { ...selected, image, quantity: 1, currency: 'BRL', total: selected.price + selected.shipping, deliveryEstimate };
     localStorage.setItem(CART_KEY, JSON.stringify(product));
+    updateCartBadge();
     window.MetaPixel?.track('AddToCart', {
       ...window.MetaPixel.content(product),
       value: product.total,
@@ -103,6 +109,7 @@
     window.MetaPixel.track('ViewContent', { ...window.MetaPixel.content(product), value: selected.price + selected.shipping });
   };
   selectKit('toyadent-3');
+  updateCartBadge();
   trackView();
   window.addEventListener('meta-pixel-ready', trackView, { once: true });
 })();

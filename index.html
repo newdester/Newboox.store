@@ -15,19 +15,50 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Raleway:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500;1,600;1,700&display=swap" rel="stylesheet">
   <link rel="preload" as="image" href="/assets/images/toyadent/hero.webp" fetchpriority="high">
-  <link rel="stylesheet" href="/assets/css/toque-duplo.css?v=20261125">
+  <link rel="stylesheet" href="/assets/css/toque-duplo.css?v=20261120-commerce">
 </head>
 <body>
   <main class="offer-page dental-page">
-    <div class="top-banner dental-banner">OFERTA ESPECIAL TOYADENT</div>
+    <div class="top-banner dental-banner">TOYADENT 90G · CORREÇÃO ÓPTICA DE TOM · CONSULTE A ENTREGA PELO CEP</div>
+    <header class="store-header">
+      <a class="store-brand" href="/" aria-label="Página inicial TOYADENT">TOYADENT <small>90g</small></a>
+      <a class="store-cart" href="/cart" aria-label="Abrir carrinho">Carrinho <span data-cart-count>0</span></a>
+    </header>
 
     <section class="hero">
       <div class="container">
         <p class="eyebrow">TOYADENT · 90g</p>
         <h1>Um sorriso com aparência mais luminosa <em>todos os dias</em></h1>
         <p class="lead">A espuma violeta ajuda a equilibrar visualmente tons amarelados enquanto refresca o hálito e complementa sua higiene bucal.</p>
+        <ul class="quick-points" aria-label="Benefícios principais"><li>Uso diário</li><li>Sensação refrescante</li><li>Correção óptica</li></ul>
         <div class="media dental-media"><img src="/assets/images/toyadent/hero.webp" alt="Pasta dental violeta TOYADENT" width="900" height="900" sizes="(max-width: 430px) calc(100vw - 48px), 382px" fetchpriority="high" decoding="async"></div>
         <a class="cta-button" href="#oferta">Escolher meu kit</a>
+      </div>
+    </section>
+
+    <section class="offer dental-offer" id="oferta">
+      <div class="container">
+        <p class="eyebrow offer-eyebrow">Compre mais, pague menos</p>
+        <div class="offer-card kit-offer-card">
+          <div class="offer-card__heading"><span>TOYADENT · 90g</span><strong>Escolha seu kit</strong></div>
+          <div class="kit-grid" role="group" aria-label="Escolha a quantidade">
+            <button class="kit-card" type="button" data-kit="toyadent-1" aria-pressed="false"><span>1 unidade</span><strong>R$ 22,90</strong><small>Ideal para experimentar</small></button>
+            <button class="kit-card" type="button" data-kit="toyadent-2" aria-pressed="false"><span>2 unidades</span><strong>R$ 39,90</strong><small>Mais cuidado na rotina</small></button>
+            <button class="kit-card best-kit selected" type="button" data-kit="toyadent-3" aria-pressed="true"><b>MAIS ESCOLHIDO</b><span>3 unidades</span><strong>R$ 44,90</strong><small>Economize R$ 23,80 · frete grátis</small></button>
+          </div>
+          <div class="selected-summary">
+            <div><span>Produtos</span><strong data-selected-price>R$ 44,90</strong></div>
+            <div><span>Frete</span><strong data-selected-shipping>Informe o CEP</strong></div>
+            <div class="selected-total"><span>Total</span><strong data-selected-total>A calcular</strong></div>
+          </div>
+          <form id="shippingSimulator" class="cep-form cep-form--inline">
+            <label for="shippingZip">Consulte a entrega pelo CEP</label>
+            <div><input id="shippingZip" inputmode="numeric" maxlength="9" placeholder="00000-000" required><button type="submit">Calcular</button></div>
+          </form>
+          <p class="shipping-feedback" id="shippingFeedback" aria-live="polite">Informe o CEP para ver o frete e os dias previstos.</p>
+          <button class="cta-button" type="button" data-buy>Calcular entrega para continuar</button>
+          <div class="trust-row"><span>Pagamento protegido</span><span>Entrega Full</span><span>Compra segura</span></div>
+        </div>
       </div>
     </section>
 
@@ -76,38 +107,28 @@
       </div>
     </section>
 
-    <section class="offer dental-offer" id="oferta">
+    <section class="purchase-journey">
       <div class="container">
-        <div class="stock">ESCOLHA O MELHOR KIT PARA VOCÊ</div>
-        <div class="offer-card kit-offer-card">
-          <img src="/assets/images/toyadent/hero.webp" alt="Kit TOYADENT" width="900" height="900" sizes="275px" loading="lazy" decoding="async">
-          <h3>TOYADENT Pasta Dental Violeta · 90g</h3>
-          <div class="kit-grid" role="group" aria-label="Escolha a quantidade">
-            <button class="kit-card" type="button" data-kit="toyadent-1" aria-pressed="false"><span>1 unidade</span><strong>R$ 22,90</strong><small>Consulte a entrega</small></button>
-            <button class="kit-card" type="button" data-kit="toyadent-2" aria-pressed="false"><span>2 unidades</span><strong>R$ 39,90</strong><small>Consulte a entrega</small></button>
-            <button class="kit-card best-kit selected" type="button" data-kit="toyadent-3" aria-pressed="true"><b>MAIS VENDIDO</b><span>3 unidades</span><strong>R$ 44,90</strong><small>Consulte a entrega</small></button>
-          </div>
-          <div class="selected-summary">
-            <div><span>Produtos</span><strong data-selected-price>R$ 44,90</strong></div>
-            <div><span>Frete</span><strong data-selected-shipping>Informe o CEP</strong></div>
-            <div class="selected-total"><span>Total</span><strong data-selected-total>A calcular</strong></div>
-          </div>
-          <button class="cta-button" type="button" data-buy>Calcular entrega para continuar</button>
-          <div class="trust-row"><span>🔒 Mercado Pago</span><span>🚚 Entrega Full</span><span>✅ Compra segura</span></div>
-        </div>
+        <p class="eyebrow">Da escolha à entrega</p>
+        <h2>Uma compra simples, em <em>três etapas</em></h2>
+        <ol class="journey-list">
+          <li><span>1</span><div><strong>Escolha o kit</strong><p>Selecione a quantidade que faz sentido para a sua rotina.</p></div></li>
+          <li><span>2</span><div><strong>Consulte seu CEP</strong><p>Veja o frete e a janela estimada da Entrega Full antes de pagar.</p></div></li>
+          <li><span>3</span><div><strong>Finalize com segurança</strong><p>Pagamento processado pelo Mercado Pago e confirmação após aprovação.</p></div></li>
+        </ol>
       </div>
     </section>
 
-    <section class="shipping-simulator">
+    <section class="experience">
       <div class="container">
-        <p class="eyebrow">Simule a entrega</p>
-        <h2>Consulte pelo seu <em>CEP</em></h2>
-        <p class="lead">Informe seu CEP para ver o frete e os dias da semana previstos para a Entrega Full.</p>
-        <form id="shippingSimulator" class="cep-form">
-          <label for="shippingZip">CEP</label>
-          <div><input id="shippingZip" inputmode="numeric" maxlength="9" placeholder="00000-000" required><button type="submit">Calcular</button></div>
-        </form>
-        <p class="shipping-feedback" id="shippingFeedback" aria-live="polite">A previsão aparecerá após a consulta.</p>
+        <p class="eyebrow">Experiência TOYADENT</p>
+        <h2>Feita para entrar na sua <em>rotina</em></h2>
+        <div class="experience-grid">
+          <article><span>🪥</span><h3>Uso prático</h3><p>Uma pequena quantidade e a escovação normal do dia a dia.</p></article>
+          <article><span>🫧</span><h3>Espuma violeta</h3><p>A fórmula cria uma experiência visual diferente durante a escovação.</p></article>
+          <article><span>🌿</span><h3>Sensação refrescante</h3><p>Complementa sua higiene bucal com frescor após o uso.</p></article>
+        </div>
+        <p class="review-note">Avaliações de clientes só são exibidas quando há autorização e origem verificável.</p>
       </div>
     </section>
 
@@ -148,6 +169,6 @@
     </footer>
   </main>
   <script src="/assets/js/meta-pixel.js?v=20261120-newboox"></script>
-  <script src="/assets/js/toyadent.js?v=20261120-full"></script>
+  <script src="/assets/js/toyadent.js?v=20261120-commerce"></script>
 </body>
 </html>
