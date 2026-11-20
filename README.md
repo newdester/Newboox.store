@@ -1,10 +1,10 @@
-# E-commerce Toque Duplo
+# E-commerce TOYADENT
 
 ## Fluxo implementado
 
 `index.html` → `/cart` → `/checkout` → `/thank-you`
 
-Os botões de adicionar ao carrinho e o ícone de carrinho da página original são interceptados por `assets/js/product-bridge.js`. O produto e a quantidade ficam no navegador até a finalização.
+O kit escolhido fica salvo no navegador até a finalização. A landing page, o carrinho e o checkout compartilham o mesmo catálogo validado no servidor.
 
 ## Mercado Pago — ambiente de teste
 
@@ -13,17 +13,18 @@ Os botões de adicionar ao carrinho e o ícone de carrinho da página original s
 3. Execute `npm start` nesta pasta.
 4. Abra `http://localhost:4173`.
 
-O checkout usa os componentes oficiais do Mercado Pago: cartão de crédito em até 12x, Pix e saldo Mercado Pago. Os campos de cartão são hospedados/tokenizados pelo Mercado Pago: este projeto não grava número de cartão, CVV ou senha.
+O checkout usa os componentes oficiais do Mercado Pago para cartão, Pix e saldo Mercado Pago. Os campos de cartão são hospedados/tokenizados pelo Mercado Pago: este projeto não grava número de cartão, CVV ou senha.
 
 ## Oferta
 
-- Preço original: **R$ 279,90**.
-- Cartão: **R$ 149,90**, em até 12x sem juros (a campanha de parcelamento sem juros também deve estar habilitada na conta Mercado Pago).
-- Pix ou saldo Mercado Pago: **R$ 129,90**.
+- 1 unidade: **R$ 22,90** + **R$ 9,32** de frete Loggi.
+- 2 unidades: **R$ 39,90** + **R$ 9,32** de frete Loggi.
+- 3 unidades: **R$ 49,90** com **frete grátis**.
+- Prazo exibido: **3 a 5 dias úteis** via Loggi.
 
 ## Antes de produção
 
-- No Vercel, importe o repositório `newdester/ecom`, selecione a branch `main` e mantenha o diretório raiz como `./`.
+- No Vercel, use o repositório `newdester/Newboox.store`, selecione a branch `main` e mantenha o diretório raiz como `./`.
 - Em **Settings → Environment Variables**, cadastre `MP_PUBLIC_KEY` e `MP_ACCESS_TOKEN`; não as coloque em arquivos do projeto.
 - Use uma URL pública com HTTPS em `PUBLIC_BASE_URL`.
 - Configure uma notificação (webhook) do Mercado Pago apontando para `/api/mercadopago/webhook`; a assinatura HMAC é validada por `MP_WEBHOOK_SECRET`.
@@ -36,7 +37,7 @@ O painel fica em `/admin`. Ele consulta o Mercado Pago no servidor, resume venda
 
 Para incorporar desempenho de anúncios por campanha, configure também `META_AD_ACCOUNT_ID`, `META_ADS_ACCESS_TOKEN` (com permissões `ads_read` e `read_insights`) e `META_GRAPH_API_VERSION`. O token da Conversions API não deve ser reutilizado para esse fim.
 
-Limites atuais: a API do Mercado Pago fornece até doze meses de pagamentos, e o painel filtra as transações pelo prefixo `NB-` e pelo produto Toque Duplo. Os eventos de navegação já são enviados ao Pixel, mas ainda não são persistidos em um banco próprio.
+Limites atuais: a API do Mercado Pago fornece até doze meses de pagamentos, e o painel filtra as transações pelo prefixo `NB-` e pelos kits TOYADENT. Os eventos de navegação já são enviados ao Pixel, mas ainda não são persistidos em um banco próprio.
 
 ## Verificações realizadas
 

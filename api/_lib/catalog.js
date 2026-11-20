@@ -1,23 +1,33 @@
-const numberFrom = (value, fallback) => {
-  const parsed = Number(String(value ?? '').replace(',', '.'));
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
-};
+const KIT_DEFINITIONS = [
+  { id: 'toyadent-1', units: 1, price: 22.90, shipping: 9.32 },
+  { id: 'toyadent-2', units: 2, price: 39.90, shipping: 9.32 },
+  { id: 'toyadent-3', units: 3, price: 49.90, shipping: 0 }
+];
 
-export function storeProduct() {
-  return {
-    id: String(process.env.STORE_PRODUCT_ID || 'toque-duplo').trim(),
-    title: String(process.env.STORE_PRODUCT_NAME || 'Toque Duplo').trim(),
-    currency: 'BRL',
-    originalPrice: numberFrom(process.env.STORE_ORIGINAL_PRICE, 279.90),
-    cardPrice: numberFrom(process.env.STORE_CARD_PRICE, 149.90),
-    cashPrice: numberFrom(process.env.STORE_CASH_PRICE, 129.90),
-    maxInstallments: 12
-  };
+const asProduct = kit => ({
+  ...kit,
+  title: `TOYADENT · Kit com ${kit.units} ${kit.units === 1 ? 'unidade' : 'unidades'}`,
+  currency: 'BRL',
+  originalPrice: kit.price,
+  cardPrice: kit.price,
+  cashPrice: kit.price,
+  total: Number((kit.price + kit.shipping).toFixed(2)),
+  maxInstallments: 1,
+  deliveryMinBusinessDays: 3,
+  deliveryMaxBusinessDays: 5,
+  carrier: 'Loggi'
+});
+
+export function storeProducts() {
+  return KIT_DEFINITIONS.map(asProduct);
 }
 
-export const quantityFrom = value => Math.min(10, Math.max(1, Number.parseInt(value, 10) || 1));
+export function storeProduct(productId = 'toyadent-1') {
+  return storeProducts().find(product => product.id === String(productId || '')) || storeProducts()[0];
+}
 
-export function paymentAmount(product, quantity, paymentType) {
-  const unit = paymentType === 'credit_card' ? product.cardPrice : product.cashPrice;
-  return Number((unit * quantity).toFixed(2));
+export const quantityFrom = () => 1;
+
+export function paymentAmount(product) {
+  return Number((product.price + product.shipping).toFixed(2));
 }

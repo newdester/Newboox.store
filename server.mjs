@@ -4,7 +4,7 @@ import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import adminOverview from './api/admin/overview.js';
-import { paymentAmount, storeProduct } from './api/_lib/catalog.js';
+import { paymentAmount, storeProduct, storeProducts } from './api/_lib/catalog.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const env = Object.fromEntries((await readFile(path.join(root, '.env'), 'utf8').catch(() => '')).split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#')).map(line => { const i = line.indexOf('='); return [line.slice(0, i), line.slice(i + 1)]; }));
@@ -47,7 +47,8 @@ async function processPayment(req, res) {
   if (!config.accessToken || !config.publicKey) return reply(res, 503, { error: 'Integração Mercado Pago não configurada. Adicione as credenciais de teste no arquivo .env.' });
   try {
     const body = await readBody(req);
-    const quantity = safeQuantity(body.quantity);
+    const quantity = 1;
+    const selectedProduct = storeProduct(body.productId);
     const form = body.formData || {};
     const email = String(form.payer?.email || '').trim();
     if (!form.payment_method_id || !/^\S+@\S+\.\S+$/.test(email)) return reply(res, 422, { error: 'Dados de pagamento incompletos.' });
@@ -55,17 +56,19 @@ async function processPayment(req, res) {
     if (!['credit_card', 'bank_transfer'].includes(paymentType)) return reply(res, 422, { error: 'Este meio de pagamento não está disponível.' });
     const orderId = `NB-${Date.now()}-${randomUUID().slice(0, 8)}`;
     const payload = {
-      transaction_amount: paymentAmount(product, quantity, paymentType),
+      transaction_amount: paymentAmount(selectedProduct),
       token: form.token,
-      description: `${product.title} × ${quantity}`,
-      installments: paymentType === 'credit_card' ? Math.min(12, Math.max(1, Number(form.installments) || 1)) : 1,
+      description: `${selectedProduct.title} · frete ${selectedProduct.shipping ? 'Loggi' : 'grátis'}`,
+      installments: paymentType === 'credit_card' ? Math.min(selectedProduct.maxInstallments, Math.max(1, Number(form.installments) || 1)) : 1,
       payment_method_id: form.payment_method_id,
       issuer_id: form.issuer_id,
       payer: { ...form.payer, email },
       external_reference: orderId,
       metadata: {
-        product_id: product.id,
-        quantity,
+        product_id: selectedProduct.id,
+        quantity: selectedProduct.units,
+        shipping: selectedProduct.shipping,
+        carrier: selectedProduct.carrier,
         customer_name: String(body.customer?.name || '').slice(0, 120),
         customer_email: email.slice(0, 160),
         customer_phone: String(body.customer?.phone || '').replace(/\D/g, '').slice(0, 15)
@@ -82,7 +85,7 @@ async function processPayment(req, res) {
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  if (req.method === 'GET' && url.pathname === '/api/config') return reply(res, 200, { publicKey: config.publicKey, paymentEnabled: Boolean(config.accessToken && config.publicKey), webhookConfigured: Boolean(config.webhookSecret), metaCapiEnabled: Boolean(env.META_PIXEL_ID && env.META_ACCESS_TOKEN), product });
+  if (req.method === 'GET' && url.pathname === '/api/config') return reply(res, 200, { publicKey: config.publicKey, paymentEnabled: Boolean(config.accessToken && config.publicKey), webhookConfigured: Boolean(config.webhookSecret), metaCapiEnabled: Boolean(env.META_PIXEL_ID && env.META_ACCESS_TOKEN), product, kits: storeProducts() });
   if (req.method === 'GET' && url.pathname === '/api/payment-status') {
     const quota = allowRequest(req, 'payment-status', 30, 60_000); applyRate(res, quota);
     if (!quota.allowed) return reply(res, 429, { error: 'Muitas consultas. Aguarde alguns instantes.' });

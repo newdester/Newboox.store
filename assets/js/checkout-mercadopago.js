@@ -2,9 +2,10 @@
   const cart = Storefront.getCart();
   if (!cart) { location.replace('/cart'); return; }
   const $ = id => document.getElementById(id);
-  const quantity = Math.min(10, Math.max(1, Number(cart.quantity) || 1));
+  const quantity = 1;
   const brl = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   let config;
+  let selectedProduct;
   let customer;
   let cardBrick;
 
@@ -18,17 +19,18 @@
   const payloadBase = formData => ({
     formData,
     quantity,
-    productId: config.product.id,
+    productId: selectedProduct.id,
     customer: { name: customer.name, email: customer.email, phone: customer.phone }
   });
 
-  function renderSummary(mode = 'card') {
-    const unit = mode === 'card' ? config.product.cardPrice : config.product.cashPrice;
-    const total = Number((unit * quantity).toFixed(2));
-    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="${String(cart.title || config.product.title).replace(/"/g, '&quot;')}"><div><p class="cart-name">${cart.title || config.product.title}</p><span class="cart-meta">Quantidade: ${quantity}</span><span class="cart-meta">${mode === 'card' ? `até 12x sem juros` : 'pagamento à vista'}</span></div><b class="cart-price">${brl(total)}</b></div>`;
+  function renderSummary() {
+    const total = Number((selectedProduct.price + selectedProduct.shipping).toFixed(2));
+    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="TOYADENT"><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${selectedProduct.units} ${selectedProduct.units === 1 ? 'unidade' : 'unidades'} de 90g</span><span class="cart-meta">Loggi · 3 a 5 dias úteis</span></div><b class="cart-price">${brl(selectedProduct.price)}</b></div>`;
+    $('productSubtotal').textContent = brl(selectedProduct.price);
+    $('checkoutShipping').textContent = selectedProduct.shipping ? brl(selectedProduct.shipping) : 'GRÁTIS';
     $('checkoutTotal').textContent = brl(total);
     $('checkoutTotalBottom').textContent = brl(total);
-    $('originalTotal').textContent = brl(config.product.originalPrice * quantity);
+    document.querySelectorAll('[data-payment-total]').forEach(node => { node.textContent = brl(total); });
   }
 
   async function postPayment(formData) {
@@ -86,10 +88,10 @@
     const mp = new MercadoPago(config.publicKey, { locale: 'pt-BR' });
     cardBrick = await mp.bricks().create('cardPayment', 'cardPaymentBrick', {
       initialization: {
-        amount: Number((config.product.cardPrice * quantity).toFixed(2)),
+        amount: Number((selectedProduct.price + selectedProduct.shipping).toFixed(2)),
         payer: { email: customer.email, identification: { type: 'CPF', number: String(customer.tax || '').replace(/\D/g, '') } }
       },
-      customization: { paymentMethods: { minInstallments: 1, maxInstallments: 12 } },
+      customization: { paymentMethods: { minInstallments: 1, maxInstallments: 1 } },
       callbacks: {
         onReady: () => setStatus('Cartão carregado com segurança pelo Mercado Pago.'),
         onSubmit: formData => postPayment(formData).catch(error => { setStatus(error.message, true); throw error; }),
@@ -101,7 +103,7 @@
   function selectMethod(method) {
     document.querySelectorAll('[data-method]').forEach(button => button.classList.toggle('active', button.dataset.method === method));
     document.querySelectorAll('[data-method-panel]').forEach(panel => panel.classList.toggle('hidden', panel.dataset.methodPanel !== method));
-    renderSummary(method === 'card' ? 'card' : 'cash');
+    renderSummary();
     setStatus('');
     if (method === 'card') renderCardBrick().catch(error => setStatus(error.message || 'Não foi possível carregar o pagamento.', true));
   }
@@ -109,12 +111,13 @@
   async function initialize() {
     config = await fetch('/api/config', { cache: 'no-store' }).then(response => response.json());
     if (!config.paymentEnabled || !config.publicKey) throw new Error('Mercado Pago ainda não está ativo neste deploy.');
-    renderSummary('card');
-    $('cartCount').textContent = String(quantity);
+    selectedProduct = config.kits?.find(product => product.id === cart.id) || config.product;
+    renderSummary();
+    $('cartCount').textContent = String(selectedProduct.units);
     Storefront.track?.('InitiateCheckout', cart, {
-      value: Number((config.product.cardPrice * quantity).toFixed(2)),
+      value: Number((selectedProduct.price + selectedProduct.shipping).toFixed(2)),
       currency: 'BRL',
-      num_items: quantity
+      num_items: selectedProduct.units
     });
   }
 
@@ -131,9 +134,9 @@
     customer = Object.fromEntries(new FormData(event.currentTarget).entries());
     localStorage.setItem(Storefront.CUSTOMER, JSON.stringify(customer));
     Storefront.track?.('AddPaymentInfo', cart, {
-      value: Number((config.product.cardPrice * quantity).toFixed(2)),
+      value: Number((selectedProduct.price + selectedProduct.shipping).toFixed(2)),
       currency: 'BRL',
-      num_items: quantity
+      num_items: selectedProduct.units
     });
     event.currentTarget.classList.add('hidden');
     $('paymentArea').classList.remove('hidden');
@@ -147,7 +150,7 @@
   $('payWithMercadoPago').addEventListener('click', async () => {
     try {
       setStatus('Abrindo ambiente seguro do Mercado Pago…');
-      const response = await fetch('/api/mercadopago/preference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity }) });
+      const response = await fetch('/api/mercadopago/preference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity: 1, productId: selectedProduct.id }) });
       const result = await response.json();
       if (!response.ok || !result.initPoint) throw new Error(result.error || 'Não foi possível abrir o Mercado Pago.');
       location.assign(result.initPoint);
