@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Raleway:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500;1,600;1,700&display=swap" rel="stylesheet">
   <link rel="preload" as="image" href="/assets/images/toyadent/hero.webp" fetchpriority="high">
-  <link rel="stylesheet" href="/assets/css/toque-duplo.css?v=20261120-commerce">
+  <link rel="stylesheet" href="/assets/css/toque-duplo.css?v=20261120-bf">
 </head>
 <body>
   <main class="offer-page dental-page">
@@ -31,7 +31,15 @@
         <h1>Um sorriso com aparência mais luminosa <em>todos os dias</em></h1>
         <p class="lead">A espuma violeta ajuda a equilibrar visualmente tons amarelados enquanto refresca o hálito e complementa sua higiene bucal.</p>
         <ul class="quick-points" aria-label="Benefícios principais"><li>Uso diário</li><li>Sensação refrescante</li><li>Correção óptica</li></ul>
-        <div class="media dental-media"><img src="/assets/images/toyadent/hero.webp" alt="Pasta dental violeta TOYADENT" width="900" height="900" sizes="(max-width: 430px) calc(100vw - 48px), 382px" fetchpriority="high" decoding="async"></div>
+        <div class="product-gallery">
+          <div class="media dental-media"><img data-gallery-main src="/assets/images/toyadent/hero.webp" alt="Pasta dental violeta TOYADENT" width="900" height="900" sizes="(max-width: 430px) calc(100vw - 48px), 382px" fetchpriority="high" decoding="async"></div>
+          <div class="gallery-thumbs" aria-label="Visualizações do produto">
+            <button class="selected" type="button" data-gallery-thumb="/assets/images/toyadent/hero.webp" data-gallery-alt="Kit TOYADENT"><img src="/assets/images/toyadent/hero.webp" alt="Kit TOYADENT"></button>
+            <button type="button" data-gallery-thumb="/assets/images/toyadent/benefit1.webp" data-gallery-alt="Embalagem da TOYADENT"><img src="/assets/images/toyadent/benefit1.webp" alt="Embalagem TOYADENT"></button>
+            <button type="button" data-gallery-thumb="/assets/images/toyadent/benefit2.webp" data-gallery-alt="Tecnologia de cor da TOYADENT"><img src="/assets/images/toyadent/benefit2.webp" alt="Tecnologia de cor"></button>
+            <button type="button" data-gallery-thumb="/assets/images/toyadent/benefit3.webp" data-gallery-alt="Textura da espuma TOYADENT"><img src="/assets/images/toyadent/benefit3.webp" alt="Textura da espuma"></button>
+          </div>
+        </div>
         <a class="cta-button" href="#oferta">Escolher meu kit</a>
       </div>
     </section>
@@ -42,9 +50,13 @@
         <div class="offer-card kit-offer-card">
           <div class="offer-card__heading"><span>TOYADENT · 90g</span><strong>Escolha seu kit</strong></div>
           <div class="kit-grid" role="group" aria-label="Escolha a quantidade">
-            <button class="kit-card" type="button" data-kit="toyadent-1" aria-pressed="false"><span>1 unidade</span><strong>R$ 22,90</strong><small>Ideal para experimentar</small></button>
-            <button class="kit-card" type="button" data-kit="toyadent-2" aria-pressed="false"><span>2 unidades</span><strong>R$ 39,90</strong><small>Mais cuidado na rotina</small></button>
-            <button class="kit-card best-kit selected" type="button" data-kit="toyadent-3" aria-pressed="true"><b>MAIS ESCOLHIDO</b><span>3 unidades</span><strong>R$ 44,90</strong><small>Economize R$ 23,80 · frete grátis</small></button>
+            <button class="kit-card" type="button" data-kit="toyadent-1" aria-pressed="false"><span>1 unidade <del>R$ 37,20</del></span><strong>R$ 22,90</strong><small>Oferta Black Friday</small></button>
+            <button class="kit-card" type="button" data-kit="toyadent-2" aria-pressed="false"><span>2 unidades <del>R$ 74,40</del></span><strong>R$ 39,90</strong><small>Oferta Black Friday</small></button>
+            <button class="kit-card best-kit selected" type="button" data-kit="toyadent-3" aria-pressed="true"><b>MAIS ESCOLHIDO</b><span>3 unidades <del>R$ 111,60</del></span><strong>R$ 44,90</strong><small>Economize R$ 66,70 · frete grátis</small></button>
+          </div>
+          <div class="kit-quantity-picker" aria-label="Quantidade de kits">
+            <span>Quantidade de kits</span>
+            <div><button type="button" data-quantity-decrease aria-label="Diminuir quantidade de kits">−</button><strong data-kit-quantity>1</strong><button type="button" data-quantity-increase aria-label="Aumentar quantidade de kits">+</button></div>
           </div>
           <div class="selected-summary">
             <div><span>Produtos</span><strong data-selected-price>R$ 44,90</strong></div>
@@ -55,7 +67,7 @@
             <label for="shippingZip">Consulte a entrega pelo CEP</label>
             <div><input id="shippingZip" inputmode="numeric" maxlength="9" placeholder="00000-000" required><button type="submit">Calcular</button></div>
           </form>
-          <p class="shipping-feedback" id="shippingFeedback" aria-live="polite">Informe o CEP para ver o frete e os dias previstos.</p>
+          <p class="shipping-feedback" id="shippingFeedback" aria-live="polite">Consulte o CEP para calcular frete e prazo. Compras a partir de R$ 40,00 têm frete grátis.</p>
           <button class="cta-button" type="button" data-buy>Calcular entrega para continuar</button>
           <div class="trust-row"><span>Pagamento protegido</span><span>Entrega Full</span><span>Compra segura</span></div>
         </div>
@@ -128,7 +140,6 @@
           <article><span>🫧</span><h3>Espuma violeta</h3><p>A fórmula cria uma experiência visual diferente durante a escovação.</p></article>
           <article><span>🌿</span><h3>Sensação refrescante</h3><p>Complementa sua higiene bucal com frescor após o uso.</p></article>
         </div>
-        <p class="review-note">Avaliações de clientes só são exibidas quando há autorização e origem verificável.</p>
       </div>
     </section>
 
@@ -141,7 +152,7 @@
         <details><summary>É um tratamento odontológico?</summary><p>Não. O efeito é cosmético e não substitui avaliação, limpeza ou tratamento indicado por um dentista.</p></details>
         <details><summary>Qual o conteúdo da embalagem?</summary><p>Cada unidade contém 90g de pasta dental TOYADENT.</p></details>
         <details><summary>Qual o prazo de entrega?</summary><p>Informe o CEP para ver a janela estimada da Entrega Full, apresentada pelos dias da semana.</p></details>
-        <details><summary>Quanto custa o frete?</summary><p>O valor é exibido depois que o CEP é consultado. O kit com 3 unidades possui frete grátis.</p></details>
+        <details><summary>Quanto custa o frete?</summary><p>O valor só é exibido depois que o CEP é consultado. Compras a partir de R$ 40,00 têm frete grátis; abaixo desse valor, o frete é R$ 9,32.</p></details>
       </div>
     </section>
 
@@ -161,14 +172,11 @@
     <footer>
       <p class="footer-title">TOYADENT</p>
       <p>Cuidado diário e correção óptica de tons.</p>
-      <p><a href="mailto:contato@apredilleta.com">contato@apredilleta.com</a></p>
-      <p>WhatsApp: <a href="https://wa.me/5511915294825" target="_blank" rel="noopener">(11) 91529-4825</a></p>
-      <p>CNPJ: 59.134.397/0001-57</p>
       <p class="legal"><a href="/privacy">Política de Privacidade</a> · <a href="/terms">Termos de Uso</a></p>
       <p>Copyright 2026 © Todos os direitos reservados</p>
     </footer>
   </main>
   <script src="/assets/js/meta-pixel.js?v=20261120-newboox"></script>
-  <script src="/assets/js/toyadent.js?v=20261120-commerce"></script>
+  <script src="/assets/js/toyadent.js?v=20261120-bf"></script>
 </body>
 </html>

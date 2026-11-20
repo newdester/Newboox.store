@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { paymentAmount, storeProduct } from '../_lib/catalog.js';
+import { paymentAmount, quantityFrom, shippingAmount, storeProduct } from '../_lib/catalog.js';
 import { rateLimit, sendRateHeaders } from '../_lib/rate-limit.js';
 
 const publicBaseUrl = () => String(process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '');
@@ -12,11 +12,12 @@ export default async function handler(request, response) {
   if (!process.env.MP_ACCESS_TOKEN || !publicBaseUrl()) return response.status(503).json({ error: 'Mercado Pago ainda não configurado.' });
 
   const product = storeProduct(request.body?.productId);
+  const quantity = quantityFrom(request.body?.quantity);
   const reference = `NB-WALLET-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const payload = {
     purpose: 'wallet_purchase',
-    items: [{ id: product.id, title: product.title, quantity: 1, currency_id: 'BRL', unit_price: product.price }],
-    shipments: { cost: product.shipping, mode: 'not_specified' },
+    items: [{ id: product.id, title: product.title, quantity, currency_id: 'BRL', unit_price: product.price }],
+    shipments: { cost: shippingAmount(product, quantity), mode: 'not_specified' },
     external_reference: reference,
     back_urls: {
       success: `${publicBaseUrl()}/thank-you?source=mercadopago`,
@@ -26,7 +27,7 @@ export default async function handler(request, response) {
     auto_return: 'approved',
     notification_url: `${publicBaseUrl()}/api/mercadopago/webhook`,
     payment_methods: { excluded_payment_types: [{ id: 'ticket' }], installments: 1 },
-    metadata: { product_id: product.id, quantity: product.units, shipping: product.shipping, carrier: product.carrier, checkout_price: paymentAmount(product) }
+    metadata: { product_id: product.id, quantity: product.units * quantity, kit_quantity: quantity, shipping: shippingAmount(product, quantity), carrier: product.carrier, checkout_price: paymentAmount(product, quantity) }
   };
 
   try {
@@ -37,7 +38,7 @@ export default async function handler(request, response) {
     });
     const data = await result.json().catch(() => ({}));
     if (!result.ok || !data.id) return response.status(422).json({ error: data.message || 'Não foi possível iniciar o pagamento com saldo Mercado Pago.' });
-    return response.status(200).json({ id: data.id, initPoint: data.init_point, amount: paymentAmount(product) });
+    return response.status(200).json({ id: data.id, initPoint: data.init_point, amount: paymentAmount(product, quantity) });
   } catch {
     return response.status(502).json({ error: 'Não foi possível comunicar com o Mercado Pago.' });
   }

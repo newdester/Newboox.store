@@ -17,9 +17,9 @@ O checkout usa os componentes oficiais do Mercado Pago para cartão, Pix e saldo
 
 ## Oferta
 
-- 1 unidade: **R$ 22,90** + **R$ 9,32** de frete.
-- 2 unidades: **R$ 39,90** + **R$ 9,32** de frete.
-- 3 unidades: **R$ 44,90** com **frete grátis**.
+- Preço de referência: **R$ 37,20 por unidade**.
+- Black Friday: 1 unidade por **R$ 22,90**, 2 por **R$ 39,90** ou 3 por **R$ 44,90**.
+- O frete só é mostrado após a consulta do CEP: **R$ 9,32** abaixo de **R$ 40,00** em produtos e **grátis** a partir desse valor.
 - A Entrega Full é consultada pelo CEP e exibe uma janela entre os dias da semana correspondentes a 3 e 5 dias após a consulta.
 
 ## Antes de produção

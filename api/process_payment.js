@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { rateLimit, sendRateHeaders } from './_lib/rate-limit.js';
 import { sendMetaPurchase } from './_lib/meta-capi.js';
-import { paymentAmount, storeProduct } from './_lib/catalog.js';
+import { paymentAmount, quantityFrom, shippingAmount, storeProduct } from './_lib/catalog.js';
 const baseUrl = () => String(process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '');
 
 export default async function handler(request, response) {
@@ -12,6 +12,7 @@ export default async function handler(request, response) {
   if (!process.env.MP_ACCESS_TOKEN || !process.env.MP_PUBLIC_KEY) return response.status(503).json({ error: 'Pagamento ainda não configurado.' });
 
   const { formData = {}, customer = {} } = request.body || {};
+  const quantity = quantityFrom(request.body?.quantity);
   const product = storeProduct(request.body?.productId);
   const email = String(formData.payer?.email || '').trim();
   if (!formData.payment_method_id || !/^\S+@\S+\.\S+$/.test(email)) return response.status(422).json({ error: 'Dados de pagamento incompletos.' });
@@ -23,9 +24,9 @@ export default async function handler(request, response) {
   const paymentType = formData.payment_type_id || (formData.payment_method_id === 'pix' ? 'bank_transfer' : 'credit_card');
   const orderId = `NB-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const payload = {
-    transaction_amount: paymentAmount(product),
+    transaction_amount: paymentAmount(product, quantity),
     token: formData.token,
-    description: `${product.title} · frete ${product.shipping ? product.carrier : 'grátis'}`,
+    description: `${product.title} × ${quantity} · frete ${shippingAmount(product, quantity) ? product.carrier : 'grátis'}`,
     installments: paymentType === 'credit_card' ? Math.min(product.maxInstallments, Math.max(1, Number(formData.installments) || 1)) : 1,
     payment_method_id: formData.payment_method_id,
     issuer_id: formData.issuer_id,
@@ -33,8 +34,9 @@ export default async function handler(request, response) {
     external_reference: orderId,
     metadata: {
       product_id: product.id,
-      quantity: product.units,
-      shipping: product.shipping,
+      quantity: product.units * quantity,
+      kit_quantity: quantity,
+      shipping: shippingAmount(product, quantity),
       carrier: product.carrier,
       customer_name: String(customer.name || '').slice(0, 120),
       customer_email: email.slice(0, 160),

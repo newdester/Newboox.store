@@ -1,19 +1,22 @@
 (() => {
   const CART_KEY = 'chefpro_cart_v1';
   const kits = [
-    { id: 'toyadent-1', units: 1, title: 'TOYADENT · Kit com 1 unidade', price: 22.90, shipping: 9.32 },
-    { id: 'toyadent-2', units: 2, title: 'TOYADENT · Kit com 2 unidades', price: 39.90, shipping: 9.32 },
-    { id: 'toyadent-3', units: 3, title: 'TOYADENT · Kit com 3 unidades', price: 44.90, shipping: 0 }
+    { id: 'toyadent-1', units: 1, title: 'TOYADENT · Kit com 1 unidade', price: 22.90, originalPrice: 37.20 },
+    { id: 'toyadent-2', units: 2, title: 'TOYADENT · Kit com 2 unidades', price: 39.90, originalPrice: 74.40 },
+    { id: 'toyadent-3', units: 3, title: 'TOYADENT · Kit com 3 unidades', price: 44.90, originalPrice: 111.60 }
   ];
+  const SHIPPING_RATE = 9.32;
+  const FREE_SHIPPING_THRESHOLD = 40;
   const image = '/assets/images/toyadent/hero.webp';
   let selected = kits[2];
+  let kitQuantity = 1;
   let shippingCalculated = false;
   let deliveryEstimate = '';
   let tracked = false;
   const brl = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   const updateCartBadge = () => {
     let units = 0;
-    try { units = Number(JSON.parse(localStorage.getItem(CART_KEY) || 'null')?.units) || 0; } catch {}
+    try { const saved = JSON.parse(localStorage.getItem(CART_KEY) || 'null'); units = (Number(saved?.units) || 0) * (Number(saved?.kitQuantity) || 1); } catch {}
     document.querySelectorAll('[data-cart-count]').forEach(node => { node.textContent = String(units); });
   };
 
@@ -24,19 +27,24 @@
       button.classList.toggle('selected', active);
       button.setAttribute('aria-pressed', String(active));
     });
-    const shipping = shippingCalculated ? (selected.shipping ? brl(selected.shipping) : 'GRÁTIS') : 'Informe o CEP';
-    const total = shippingCalculated ? brl(selected.price + selected.shipping) : 'A calcular';
-    document.querySelectorAll('[data-selected-price]').forEach(node => { node.textContent = brl(selected.price); });
+    const subtotal = Number((selected.price * kitQuantity).toFixed(2));
+    const shippingAmount = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_RATE;
+    const shipping = shippingCalculated ? (shippingAmount ? brl(shippingAmount) : 'GRÁTIS') : 'Informe o CEP';
+    const total = shippingCalculated ? brl(subtotal + shippingAmount) : 'A calcular';
+    document.querySelectorAll('[data-selected-price]').forEach(node => { node.textContent = brl(subtotal); });
     document.querySelectorAll('[data-selected-shipping]').forEach(node => { node.textContent = shipping; });
     document.querySelectorAll('[data-selected-total]').forEach(node => { node.textContent = total; });
     document.querySelectorAll('[data-selected-units]').forEach(node => { node.textContent = String(selected.units); });
+    document.querySelectorAll('[data-kit-quantity]').forEach(node => { node.textContent = String(kitQuantity); });
     document.querySelectorAll('[data-buy]').forEach(button => {
       button.textContent = shippingCalculated ? 'Comprar agora' : 'Calcular entrega para continuar';
     });
   }
 
   function saveCart() {
-    const product = { ...selected, image, quantity: 1, currency: 'BRL', total: selected.price + selected.shipping, deliveryEstimate };
+    const subtotal = Number((selected.price * kitQuantity).toFixed(2));
+    const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_RATE;
+    const product = { ...selected, image, kitQuantity, currency: 'BRL', total: subtotal + shipping, shipping, deliveryEstimate };
     localStorage.setItem(CART_KEY, JSON.stringify(product));
     updateCartBadge();
     window.MetaPixel?.track('AddToCart', {
@@ -47,6 +55,8 @@
   }
 
   document.querySelectorAll('[data-kit]').forEach(button => button.addEventListener('click', () => selectKit(button.dataset.kit)));
+  document.querySelector('[data-quantity-decrease]')?.addEventListener('click', () => { kitQuantity = Math.max(1, kitQuantity - 1); selectKit(selected.id); });
+  document.querySelector('[data-quantity-increase]')?.addEventListener('click', () => { kitQuantity = Math.min(10, kitQuantity + 1); selectKit(selected.id); });
   document.querySelectorAll('[data-buy]').forEach(button => button.addEventListener('click', () => {
     if (!shippingCalculated) {
       document.querySelector('#shippingSimulator')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -86,7 +96,9 @@
       deliveryEstimate = `Entrega Full para ${address.localidade} - ${address.uf}: ${deliveryDays()}`;
       shippingCalculated = true;
       selectKit(selected.id);
-      feedback.innerHTML = `<strong>${deliveryEstimate}</strong> · Frete <strong>${selected.shipping ? brl(selected.shipping) : 'GRÁTIS'}</strong>.`;
+      const subtotal = selected.price * kitQuantity;
+      const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_RATE;
+      feedback.innerHTML = `<strong>${deliveryEstimate}</strong> · Frete <strong>${shipping ? brl(shipping) : 'GRÁTIS'}</strong>.`;
     } catch (error) {
       shippingCalculated = false;
       selectKit(selected.id);
@@ -102,11 +114,19 @@
     selectKit(selected.id);
   });
 
+  document.querySelectorAll('[data-gallery-thumb]').forEach(button => button.addEventListener('click', () => {
+    const main = document.querySelector('[data-gallery-main]');
+    if (!main) return;
+    main.src = button.dataset.galleryThumb;
+    main.alt = button.dataset.galleryAlt || 'TOYADENT';
+    document.querySelectorAll('[data-gallery-thumb]').forEach(item => item.classList.toggle('selected', item === button));
+  }));
+
   const trackView = () => {
     if (tracked || !window.MetaPixel) return;
     tracked = true;
     const product = { ...selected, image, currency: 'BRL' };
-    window.MetaPixel.track('ViewContent', { ...window.MetaPixel.content(product), value: selected.price + selected.shipping });
+    window.MetaPixel.track('ViewContent', { ...window.MetaPixel.content(product), value: selected.price * kitQuantity });
   };
   selectKit('toyadent-3');
   updateCartBadge();

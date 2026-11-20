@@ -2,7 +2,7 @@
   const cart = Storefront.getCart();
   if (!cart) { location.replace('/cart'); return; }
   const $ = id => document.getElementById(id);
-  const quantity = 1;
+  const quantity = Storefront.kitQuantityFor(cart);
   const brl = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   let config;
   let selectedProduct;
@@ -24,10 +24,13 @@
   });
 
   function renderSummary() {
-    const total = Number((selectedProduct.price + selectedProduct.shipping).toFixed(2));
-    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="TOYADENT"><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${selectedProduct.units} ${selectedProduct.units === 1 ? 'unidade' : 'unidades'} de 90g</span><span class="cart-meta">${cart.deliveryEstimate || 'Entrega Full'}</span></div><b class="cart-price">${brl(selectedProduct.price)}</b></div>`;
-    $('productSubtotal').textContent = brl(selectedProduct.price);
-    $('checkoutShipping').textContent = selectedProduct.shipping ? brl(selectedProduct.shipping) : 'GRÁTIS';
+    const total = Storefront.totalFor(cart);
+    const subtotal = Storefront.subtotalFor(cart);
+    const shipping = Storefront.extrasFor(cart);
+    const totalUnits = selectedProduct.units * quantity;
+    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="TOYADENT"><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g · ${quantity} ${quantity === 1 ? 'kit' : 'kits'}</span><span class="cart-meta">${cart.deliveryEstimate || 'Entrega Full'}</span></div><b class="cart-price">${brl(subtotal)}</b></div>`;
+    $('productSubtotal').textContent = brl(subtotal);
+    $('checkoutShipping').textContent = shipping ? brl(shipping) : 'GRÁTIS';
     $('checkoutTotal').textContent = brl(total);
     $('checkoutTotalBottom').textContent = brl(total);
     document.querySelectorAll('[data-payment-total]').forEach(node => { node.textContent = brl(total); });
@@ -92,7 +95,7 @@
     const mp = new MercadoPago(config.publicKey, { locale: 'pt-BR' });
     cardBrick = await mp.bricks().create('cardPayment', 'cardPaymentBrick', {
       initialization: {
-        amount: Number((selectedProduct.price + selectedProduct.shipping).toFixed(2)),
+        amount: Storefront.totalFor(cart),
         payer: { email: customer.email, identification: { type: 'CPF', number: String(customer.tax || '').replace(/\D/g, '') } }
       },
       customization: { paymentMethods: { minInstallments: 1, maxInstallments: 1 } },
@@ -117,11 +120,11 @@
     if (!config.paymentEnabled || !config.publicKey) throw new Error('Mercado Pago ainda não está ativo neste deploy.');
     selectedProduct = config.kits?.find(product => product.id === cart.id) || config.product;
     renderSummary();
-    $('cartCount').textContent = String(selectedProduct.units);
+    $('cartCount').textContent = String(selectedProduct.units * quantity);
     Storefront.track?.('InitiateCheckout', cart, {
-      value: Number((selectedProduct.price + selectedProduct.shipping).toFixed(2)),
+      value: Storefront.totalFor(cart),
       currency: 'BRL',
-      num_items: selectedProduct.units
+      num_items: selectedProduct.units * quantity
     });
   }
 
@@ -138,9 +141,9 @@
     customer = Object.fromEntries(new FormData(event.currentTarget).entries());
     localStorage.setItem(Storefront.CUSTOMER, JSON.stringify(customer));
     Storefront.track?.('AddPaymentInfo', cart, {
-      value: Number((selectedProduct.price + selectedProduct.shipping).toFixed(2)),
+      value: Storefront.totalFor(cart),
       currency: 'BRL',
-      num_items: selectedProduct.units
+      num_items: selectedProduct.units * quantity
     });
     event.currentTarget.classList.add('hidden');
     $('paymentArea').classList.remove('hidden');
@@ -154,7 +157,7 @@
   $('payWithMercadoPago').addEventListener('click', async () => {
     try {
       setStatus('Abrindo ambiente seguro do Mercado Pago…');
-      const response = await fetch('/api/mercadopago/preference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity: 1, productId: selectedProduct.id }) });
+      const response = await fetch('/api/mercadopago/preference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity, productId: selectedProduct.id }) });
       const result = await response.json();
       if (!response.ok || !result.initPoint) throw new Error(result.error || 'Não foi possível abrir o Mercado Pago.');
       location.assign(result.initPoint);

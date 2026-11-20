@@ -4,7 +4,7 @@ import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import adminOverview from './api/admin/overview.js';
-import { paymentAmount, storeProduct, storeProducts } from './api/_lib/catalog.js';
+import { paymentAmount, shippingAmount, storeProduct, storeProducts } from './api/_lib/catalog.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const env = Object.fromEntries((await readFile(path.join(root, '.env'), 'utf8').catch(() => '')).split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#')).map(line => { const i = line.indexOf('='); return [line.slice(0, i), line.slice(i + 1)]; }));
@@ -47,7 +47,7 @@ async function processPayment(req, res) {
   if (!config.accessToken || !config.publicKey) return reply(res, 503, { error: 'Integração Mercado Pago não configurada. Adicione as credenciais de teste no arquivo .env.' });
   try {
     const body = await readBody(req);
-    const quantity = 1;
+    const quantity = safeQuantity(body.quantity);
     const selectedProduct = storeProduct(body.productId);
     const form = body.formData || {};
     const email = String(form.payer?.email || '').trim();
@@ -56,9 +56,9 @@ async function processPayment(req, res) {
     if (!['credit_card', 'bank_transfer'].includes(paymentType)) return reply(res, 422, { error: 'Este meio de pagamento não está disponível.' });
     const orderId = `NB-${Date.now()}-${randomUUID().slice(0, 8)}`;
     const payload = {
-      transaction_amount: paymentAmount(selectedProduct),
+      transaction_amount: paymentAmount(selectedProduct, quantity),
       token: form.token,
-      description: `${selectedProduct.title} · frete ${selectedProduct.shipping ? selectedProduct.carrier : 'grátis'}`,
+      description: `${selectedProduct.title} × ${quantity} · frete ${shippingAmount(selectedProduct, quantity) ? selectedProduct.carrier : 'grátis'}`,
       installments: paymentType === 'credit_card' ? Math.min(selectedProduct.maxInstallments, Math.max(1, Number(form.installments) || 1)) : 1,
       payment_method_id: form.payment_method_id,
       issuer_id: form.issuer_id,
@@ -66,8 +66,9 @@ async function processPayment(req, res) {
       external_reference: orderId,
       metadata: {
         product_id: selectedProduct.id,
-        quantity: selectedProduct.units,
-        shipping: selectedProduct.shipping,
+        quantity: selectedProduct.units * quantity,
+        kit_quantity: quantity,
+        shipping: shippingAmount(selectedProduct, quantity),
         carrier: selectedProduct.carrier,
         customer_name: String(body.customer?.name || '').slice(0, 120),
         customer_email: email.slice(0, 160),
