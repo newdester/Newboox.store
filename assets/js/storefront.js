@@ -1,5 +1,5 @@
 const responsiveCss = document.createElement('link'); responsiveCss.rel = 'stylesheet'; responsiveCss.href = 'assets/css/responsive.css'; document.head.append(responsiveCss);
-if (!window.MetaPixel && !document.querySelector('script[src="assets/js/meta-pixel.js"]')) { const metaPixel = document.createElement('script'); metaPixel.src = 'assets/js/meta-pixel.js'; document.head.append(metaPixel); }
+if (!window.MetaPixel && !document.querySelector('script[src*="assets/js/meta-pixel.js"]')) { const metaPixel = document.createElement('script'); metaPixel.src = '/assets/js/meta-pixel.js?v=20261124'; document.head.append(metaPixel); }
 
 const Storefront = (() => {
   const CART = 'chefpro_cart_v1', CUSTOMER = 'chefpro_customer_v1', PAYMENT = 'chefpro_payment_v1';

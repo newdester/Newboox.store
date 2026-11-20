@@ -111,6 +111,11 @@
     if (!config.paymentEnabled || !config.publicKey) throw new Error('Mercado Pago ainda não está ativo neste deploy.');
     renderSummary('card');
     $('cartCount').textContent = String(quantity);
+    Storefront.track?.('InitiateCheckout', cart, {
+      value: Number((config.product.cardPrice * quantity).toFixed(2)),
+      currency: 'BRL',
+      num_items: quantity
+    });
   }
 
   $('customerForm').addEventListener('submit', async event => {
@@ -125,6 +130,11 @@
     }
     customer = Object.fromEntries(new FormData(event.currentTarget).entries());
     localStorage.setItem(Storefront.CUSTOMER, JSON.stringify(customer));
+    Storefront.track?.('AddPaymentInfo', cart, {
+      value: Number((config.product.cardPrice * quantity).toFixed(2)),
+      currency: 'BRL',
+      num_items: quantity
+    });
     event.currentTarget.classList.add('hidden');
     $('paymentArea').classList.remove('hidden');
     selectMethod('card');
