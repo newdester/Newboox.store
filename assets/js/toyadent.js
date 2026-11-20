@@ -5,8 +5,6 @@
     { id: 'toyadent-2', units: 2, title: 'TOYADENT · Kit com 2 unidades', price: 39.90, originalPrice: 74.40 },
     { id: 'toyadent-3', units: 3, title: 'TOYADENT · Kit com 3 unidades', price: 44.90, originalPrice: 111.60 }
   ];
-  const SHIPPING_RATE = 9.32;
-  const FREE_SHIPPING_THRESHOLD = 40;
   const image = '/assets/images/toyadent/hero.webp';
   let selected = kits[2];
   let kitQuantity = 1;
@@ -28,9 +26,8 @@
       button.setAttribute('aria-pressed', String(active));
     });
     const subtotal = Number((selected.price * kitQuantity).toFixed(2));
-    const shippingAmount = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_RATE;
-    const shipping = shippingCalculated ? (shippingAmount ? brl(shippingAmount) : 'GRÁTIS') : 'Informe o CEP';
-    const total = shippingCalculated ? brl(subtotal + shippingAmount) : 'A calcular';
+    const shipping = shippingCalculated ? 'GRÁTIS' : 'Informe o CEP';
+    const total = shippingCalculated ? brl(subtotal) : 'A calcular';
     document.querySelectorAll('[data-selected-price]').forEach(node => { node.textContent = brl(subtotal); });
     document.querySelectorAll('[data-selected-shipping]').forEach(node => { node.textContent = shipping; });
     document.querySelectorAll('[data-selected-total]').forEach(node => { node.textContent = total; });
@@ -43,14 +40,14 @@
 
   function saveCart() {
     const subtotal = Number((selected.price * kitQuantity).toFixed(2));
-    const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_RATE;
-    const product = { ...selected, image, kitQuantity, currency: 'BRL', total: subtotal + shipping, shipping, deliveryEstimate };
+    const shipping = 0;
+    const product = { ...selected, image, kitQuantity, currency: 'BRL', total: subtotal, shipping, carrier: 'FedEx Economy', deliveryEstimate };
     localStorage.setItem(CART_KEY, JSON.stringify(product));
     updateCartBadge();
     window.MetaPixel?.track('AddToCart', {
       ...window.MetaPixel.content(product),
       value: product.total,
-      contents: [{ id: product.id, quantity: product.units }]
+      contents: [{ id: product.id, quantity: product.units * kitQuantity }]
     });
   }
 
@@ -73,8 +70,8 @@
 
   const shippingForm = document.querySelector('#shippingSimulator');
   const deliveryDays = () => {
-    const name = offset => new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(new Date(Date.now() + offset * 86_400_000));
-    return `entre ${name(3)} e ${name(5)}`;
+    const format = offset => new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(new Date(Date.now() + offset * 86_400_000));
+    return `entre ${format(8)} e ${format(12)}`;
   };
   shippingForm?.addEventListener('submit', async event => {
     event.preventDefault();
@@ -93,12 +90,10 @@
     try {
       const address = await fetch(`https://viacep.com.br/ws/${zip}/json/`).then(response => response.json());
       if (address.erro) throw new Error('CEP não encontrado.');
-      deliveryEstimate = `Entrega Full para ${address.localidade} - ${address.uf}: ${deliveryDays()}`;
+      deliveryEstimate = `FedEx Economy grátis para ${address.localidade} - ${address.uf}: ${deliveryDays()}`;
       shippingCalculated = true;
       selectKit(selected.id);
-      const subtotal = selected.price * kitQuantity;
-      const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_RATE;
-      feedback.innerHTML = `<strong>${deliveryEstimate}</strong> · Frete <strong>${shipping ? brl(shipping) : 'GRÁTIS'}</strong>.`;
+      feedback.innerHTML = `<strong>${deliveryEstimate}</strong><span class="shipping-option"><b>FedEx Economy</b><small>8 a 12 dias · rastreado</small><strong>GRÁTIS</strong></span><span class="shipping-option shipping-option--express"><b>FedEx Express</b><small>2 a 3 dias · cotação conforme o CEP</small><strong>SOB CONSULTA</strong></span>`;
     } catch (error) {
       shippingCalculated = false;
       selectKit(selected.id);

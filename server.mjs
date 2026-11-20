@@ -86,7 +86,7 @@ async function processPayment(req, res) {
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  if (req.method === 'GET' && url.pathname === '/api/config') return reply(res, 200, { publicKey: config.publicKey, paymentEnabled: Boolean(config.accessToken && config.publicKey), webhookConfigured: Boolean(config.webhookSecret), metaCapiEnabled: Boolean(env.META_PIXEL_ID && env.META_ACCESS_TOKEN), product, kits: storeProducts() });
+  if (req.method === 'GET' && url.pathname === '/api/config') return reply(res, 200, { publicKey: config.publicKey, paymentEnabled: Boolean(config.accessToken && config.publicKey), webhookConfigured: Boolean(config.webhookSecret), metaCapiEnabled: Boolean(env.META_PIXEL_ID && env.META_ACCESS_TOKEN), fedexExpressConfigured: Boolean(env.FEDEX_CLIENT_ID && env.FEDEX_CLIENT_SECRET && env.FEDEX_ACCOUNT_NUMBER && env.FEDEX_ORIGIN_POSTAL_CODE && env.FEDEX_PACKAGE_WEIGHT_KG), shipping: { economy: { carrier: 'FedEx', price: 0, minDays: 8, maxDays: 12 }, express: { carrier: 'FedEx', minDays: 2, maxDays: 3 } }, product, kits: storeProducts() });
   if (req.method === 'GET' && url.pathname === '/api/payment-status') {
     const quota = allowRequest(req, 'payment-status', 30, 60_000); applyRate(res, quota);
     if (!quota.allowed) return reply(res, 429, { error: 'Muitas consultas. Aguarde alguns instantes.' });

@@ -4,8 +4,6 @@ const KIT_DEFINITIONS = [
   { id: 'toyadent-3', units: 3, price: 44.90 }
 ];
 const ORIGINAL_UNIT_PRICE = 37.20;
-const SHIPPING_RATE = 9.32;
-const FREE_SHIPPING_THRESHOLD = 40;
 
 const asProduct = kit => ({
   ...kit,
@@ -14,12 +12,12 @@ const asProduct = kit => ({
   originalPrice: Number((kit.units * ORIGINAL_UNIT_PRICE).toFixed(2)),
   cardPrice: kit.price,
   cashPrice: kit.price,
-  shipping: kit.price >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_RATE,
-  total: Number((kit.price + (kit.price >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_RATE)).toFixed(2)),
+  shipping: 0,
+  total: kit.price,
   maxInstallments: 1,
-  deliveryMinDays: 3,
-  deliveryMaxDays: 5,
-  carrier: 'Entrega Full'
+  deliveryMinDays: 8,
+  deliveryMaxDays: 12,
+  carrier: 'FedEx Economy'
 });
 
 export function storeProducts() {
@@ -33,8 +31,8 @@ export function storeProduct(productId = 'toyadent-1') {
 export const quantityFrom = value => Math.min(10, Math.max(1, Number.parseInt(value, 10) || 1));
 
 export function shippingAmount(product, quantity = 1) {
-  const subtotal = Number(product.price) * quantityFrom(quantity);
-  return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_RATE;
+  quantityFrom(quantity);
+  return 0;
 }
 
 export function paymentAmount(product, quantity = 1) {

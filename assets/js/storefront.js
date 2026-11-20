@@ -18,8 +18,6 @@ const Storefront = (() => {
     { id: 'toyadent-2', units: 2, title: 'TOYADENT · Kit com 2 unidades', price: 39.90, originalPrice: 74.40 },
     { id: 'toyadent-3', units: 3, title: 'TOYADENT · Kit com 3 unidades', price: 44.90, originalPrice: 111.60 }
   ];
-  const SHIPPING_RATE = 9.32;
-  const FREE_SHIPPING_THRESHOLD = 40;
   let kits = defaultKits;
   const image = '/assets/images/toyadent/hero.webp';
   const brl = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
@@ -27,7 +25,7 @@ const Storefront = (() => {
   const unitPrice = id => kitById(id).price;
   const kitQuantityFor = cart => Math.min(10, Math.max(1, Number.parseInt(cart?.kitQuantity, 10) || 1));
   const subtotalFor = cart => Number((kitById(cart?.id).price * kitQuantityFor(cart)).toFixed(2));
-  const extrasFor = cart => subtotalFor(cart) >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_RATE;
+  const extrasFor = () => 0;
   const totalFor = cart => {
     return Number((subtotalFor(cart) + extrasFor(cart)).toFixed(2));
   };
@@ -71,7 +69,7 @@ const Storefront = (() => {
     document.documentElement.lang = 'pt-BR';
     document.title = 'Carrinho — TOYADENT';
     set('#continueShopping', 'Continuar comprando');
-    set('#shippingIncluded', 'Entrega Full calculada pelo CEP');
+    set('#shippingIncluded', 'Frete grátis FedEx · 8 a 12 dias');
     set('#cartTitle', 'Seu carrinho');
     set('#summaryTitle', 'Resumo do pedido');
     set('#subtotalLabel', 'Produtos');
@@ -93,10 +91,10 @@ const Storefront = (() => {
     const subtotal = subtotalFor(cart);
     const shipping = extrasFor(cart);
     set('#cartCount', String(totalUnits));
-    set('#deliveryWindow', cart.deliveryEstimate || 'Entrega Full calculada no CEP informado');
+    set('#deliveryWindow', cart.deliveryEstimate || 'FedEx Economy grátis · 8 a 12 dias');
     set('#footerCurrency', 'Pagamento processado em BRL');
     document.querySelector('#checkoutLink')?.setAttribute('href', PAYMENT_URL);
-    root.innerHTML = `<div class="cart-line"><img src="${image}" alt="TOYADENT"><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g</span><span class="cart-meta">${cart.deliveryEstimate || 'Entrega Full'}</span><div class="cart-quantity" aria-label="Quantidade de kits"><button type="button" data-decrease aria-label="Diminuir quantidade">−</button><strong>${cart.kitQuantity}</strong><button type="button" data-increase aria-label="Aumentar quantidade">+</button></div><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(subtotal)}</b></div>`;
+    root.innerHTML = `<div class="cart-line"><img src="${image}" alt="TOYADENT"><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g</span><span class="cart-meta">${cart.deliveryEstimate || 'FedEx Economy grátis · 8 a 12 dias'}</span><div class="cart-quantity" aria-label="Quantidade de kits"><button type="button" data-decrease aria-label="Diminuir quantidade">−</button><strong>${cart.kitQuantity}</strong><button type="button" data-increase aria-label="Aumentar quantidade">+</button></div><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     set('#subtotal', brl(subtotal));
     set('#shippingFree', shipping ? brl(shipping) : 'GRÁTIS');
     set('#total', brl(totalFor(cart)));
@@ -125,7 +123,7 @@ const Storefront = (() => {
     applyBrand();
     if (status === 'approved' || status === 'paid') {
       if (title) title.textContent = 'Pagamento aprovado';
-      if (copyNode) copyNode.textContent = 'Obrigado! Seu pedido TOYADENT foi confirmado e seguirá por Entrega Full.';
+      if (copyNode) copyNode.textContent = 'Obrigado! Seu pedido TOYADENT foi confirmado e seguirá pela FedEx.';
       document.querySelector('#orderReference')?.replaceChildren(`Pedido ${payment?.orderId || ''} · Pagamento ${payment?.paymentId || returnedId || ''}`);
       const paymentId = payment?.paymentId || returnedId;
       if (paymentId) track('Purchase', getCart() || kitById('toyadent-1'), { value: Number(payment?.amount) || totalFor(getCart()), currency: 'BRL', order_id: payment?.orderId || '' }, `mp_payment_${paymentId}`);

@@ -28,7 +28,7 @@
     const subtotal = Storefront.subtotalFor(cart);
     const shipping = Storefront.extrasFor(cart);
     const totalUnits = selectedProduct.units * quantity;
-    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="TOYADENT"><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g · ${quantity} ${quantity === 1 ? 'kit' : 'kits'}</span><span class="cart-meta">${cart.deliveryEstimate || 'Entrega Full'}</span></div><b class="cart-price">${brl(subtotal)}</b></div>`;
+    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="TOYADENT"><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g · ${quantity} ${quantity === 1 ? 'kit' : 'kits'}</span><span class="cart-meta">${cart.deliveryEstimate || 'FedEx Economy grátis · 8 a 12 dias'}</span></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     $('productSubtotal').textContent = brl(subtotal);
     $('checkoutShipping').textContent = shipping ? brl(shipping) : 'GRÁTIS';
     $('checkoutTotal').textContent = brl(total);
