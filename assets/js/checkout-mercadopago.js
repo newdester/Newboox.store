@@ -92,6 +92,9 @@
 
   async function renderCardBrick() {
     if (cardBrick) return;
+    if (typeof window.MercadoPago !== 'function') {
+      throw new Error(window.StoreWebview?.isEmbeddedBrowser ? window.StoreWebview.paymentFallback : 'Não foi possível carregar o pagamento. Atualize a página ou tente novamente.');
+    }
     const mp = new MercadoPago(config.publicKey, { locale: 'pt-BR' });
     cardBrick = await mp.bricks().create('cardPayment', 'cardPaymentBrick', {
       initialization: {
@@ -153,7 +156,17 @@
 
   document.querySelectorAll('[data-method]').forEach(button => button.addEventListener('click', () => selectMethod(button.dataset.method)));
   $('generatePix').addEventListener('click', () => postPayment({ payment_method_id: 'pix', payment_type_id: 'bank_transfer', installments: 1, payer: { email: customer.email, identification: { type: 'CPF', number: String(customer.tax || '').replace(/\D/g, '') } } }).catch(error => setStatus(error.message, true)));
-  $('copyPix').addEventListener('click', async () => { await navigator.clipboard.writeText($('pixCode').value); $('copyPix').textContent = 'Código copiado'; });
+  $('copyPix').addEventListener('click', async () => {
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard indisponível');
+      await navigator.clipboard.writeText($('pixCode').value);
+    } catch {
+      $('pixCode').focus();
+      $('pixCode').select();
+      document.execCommand('copy');
+    }
+    $('copyPix').textContent = 'Código copiado';
+  });
   $('payWithMercadoPago').addEventListener('click', async () => {
     try {
       setStatus('Abrindo ambiente seguro do Mercado Pago…');
@@ -182,5 +195,6 @@
   });
 
   try { const saved = JSON.parse(localStorage.getItem(Storefront.CUSTOMER) || '{}'); Object.entries(saved).forEach(([key, value]) => { if ($(key)) $(key).value = value; }); if ($('zip').value) $('zip').dispatchEvent(new Event('blur')); } catch {}
+  if (window.StoreWebview?.isEmbeddedBrowser) $('webviewNotice').classList.remove('hidden');
   initialize().catch(error => { $('continueButton').disabled = true; $('checkoutStatus').textContent = error.message; $('checkoutStatus').classList.add('show'); $('checkoutStatus').dataset.error = 'true'; });
 })();
