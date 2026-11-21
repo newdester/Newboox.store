@@ -4,6 +4,7 @@ const KIT_DEFINITIONS = [
   { id: 'toyadent-3', units: 3, price: 44.90 }
 ];
 const ORIGINAL_UNIT_PRICE = 37.20;
+const SEDEX_RATE = 12.36;
 
 const asProduct = kit => ({
   ...kit,
@@ -29,13 +30,14 @@ export function storeProduct(productId = 'toyadent-1') {
 }
 
 export const quantityFrom = value => Math.min(10, Math.max(1, Number.parseInt(value, 10) || 1));
+export const shippingServiceFrom = value => String(value || '').toLowerCase() === 'sedex' ? 'sedex' : 'standard';
 
-export function shippingAmount(product, quantity = 1) {
+export function shippingAmount(product, quantity = 1, shippingService = 'standard') {
   quantityFrom(quantity);
-  return 0;
+  return shippingServiceFrom(shippingService) === 'sedex' ? SEDEX_RATE : 0;
 }
 
-export function paymentAmount(product, quantity = 1) {
+export function paymentAmount(product, quantity = 1, shippingService = 'standard') {
   const amount = Number(product.price) * quantityFrom(quantity);
-  return Number((amount + shippingAmount(product, quantity)).toFixed(2));
+  return Number((amount + shippingAmount(product, quantity, shippingService)).toFixed(2));
 }

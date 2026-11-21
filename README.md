@@ -20,7 +20,8 @@ O checkout usa os componentes oficiais do Mercado Pago para cartão, Pix e saldo
 - Preço de referência: **R$ 37,20 por unidade**.
 - Black Friday: 1 unidade por **R$ 22,90**, 2 por **R$ 39,90** ou 3 por **R$ 44,90**.
 - **Entrega padrão grátis** em todos os kits, com prazo estimado de **8 a 12 dias úteis**.
-- **SEDEX** com prazo estimado de **2 a 3 dias úteis**; a cotação real é feita no checkout e depende da API dos Correios.
+- **SEDEX** por **R$ 12,36**, com prazo estimado de **2 a 3 dias úteis**.
+- Ao concluir os dados, o Pix é gerado automaticamente; se o cliente escolher cartão ou saldo Mercado Pago, o Pix pendente é cancelado antes da troca.
 
 ## Antes de produção
 

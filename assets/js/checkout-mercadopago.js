@@ -9,6 +9,10 @@
   let customer;
   let cardBrick;
   let activeStep = 1;
+  let activeMethod = '';
+  let pendingPixPaymentId = null;
+  let pixPollVersion = 0;
+  let pixGenerating = false;
 
   const showStep = step => {
     activeStep = step;
@@ -53,7 +57,19 @@
     formData,
     quantity,
     productId: selectedProduct.id,
-    customer: { name: customer.name, email: customer.email, phone: customer.phone }
+    shippingService: Storefront.shippingServiceFor(cart),
+    customer: {
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      tax: customer.tax,
+      zip: customer.zip,
+      address: customer.address,
+      number: customer.number,
+      complement: customer.complement,
+      city: customer.city,
+      state: customer.district
+    }
   });
 
   function renderSummary() {
@@ -61,15 +77,16 @@
     const subtotal = Storefront.subtotalFor(cart);
     const shipping = Storefront.extrasFor(cart);
     const totalUnits = selectedProduct.units * quantity;
-    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="TOYADENT"><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g · ${quantity} ${quantity === 1 ? 'kit' : 'kits'}</span><span class="cart-meta">${cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis'}</span></div><b class="cart-price">${brl(subtotal)}</b></div>`;
+    const isSedex = Storefront.shippingServiceFor(cart) === 'sedex';
+    const deliveryText = isSedex ? 'SEDEX · 2 a 3 dias úteis' : (cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis');
+    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="TOYADENT"><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g · ${quantity} ${quantity === 1 ? 'kit' : 'kits'}</span><span class="cart-meta">${deliveryText}</span></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     $('productSubtotal').textContent = brl(subtotal);
     $('checkoutShipping').textContent = shipping ? brl(shipping) : 'GRÁTIS';
+    $('shippingLabel').textContent = isSedex ? 'SEDEX' : 'Entrega padrão';
     $('checkoutTotal').textContent = brl(total);
     $('checkoutTotalBottom').textContent = brl(total);
     document.querySelectorAll('[data-payment-total]').forEach(node => { node.textContent = brl(total); });
-    if (cart.deliveryEstimate) {
-      $('footerCurrency').textContent = `${cart.deliveryEstimate} · Pagamento em BRL`;
-    }
+    $('footerCurrency').textContent = `${deliveryText} · Pagamento em BRL`;
   }
 
   async function postPayment(formData) {
@@ -78,7 +95,11 @@
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.cause || result.error || 'Pagamento não autorizado.');
     sessionStorage.setItem(Storefront.PAYMENT, JSON.stringify(result));
-    if (formData.payment_method_id === 'pix') { renderPix(result); return result; }
+    if (formData.payment_method_id === 'pix') {
+      if (!['pending', 'in_process', 'authorized'].includes(result.status)) throw new Error('Não foi possível gerar este Pix. Tente novamente.');
+      renderPix(result);
+      return result;
+    }
     if (result.status === 'approved') {
       Storefront.track?.('Purchase', cart, { value: result.amount, currency: 'BRL', order_id: result.orderId }, `mp_payment_${result.paymentId}`);
       location.assign('/thank-you');
@@ -90,19 +111,22 @@
 
   function renderPix(result) {
     const pix = result.pix || {};
+    pendingPixPaymentId = String(result.paymentId || '');
+    const pollVersion = ++pixPollVersion;
     $('pixActions').classList.add('hidden');
     $('pixResult').classList.remove('hidden');
     if (pix.qr_code_base64) $('pixQr').src = `data:image/png;base64,${pix.qr_code_base64}`;
     $('pixCode').value = pix.qr_code || '';
     $('pixLink').href = pix.ticket_url || '#';
     setStatus('Pix gerado. Pague pelo aplicativo do seu banco.');
-    pollPix(result.paymentId);
+    pollPix(result.paymentId, pollVersion);
   }
 
-  async function pollPix(paymentId) {
+  async function pollPix(paymentId, pollVersion) {
     if (!paymentId) return;
     for (let attempt = 0; attempt < 60; attempt += 1) {
       await new Promise(resolve => setTimeout(resolve, 5000));
+      if (pollVersion !== pixPollVersion || String(paymentId) !== pendingPixPaymentId) return;
       try {
         const response = await fetch(`/api/payment-status?paymentId=${encodeURIComponent(paymentId)}`, { cache: 'no-store' });
         if (!response.ok) continue;
@@ -119,6 +143,53 @@
           return;
         }
       } catch {}
+    }
+  }
+
+  function resetPix() {
+    pendingPixPaymentId = null;
+    pixPollVersion += 1;
+    $('pixResult').classList.add('hidden');
+    $('pixActions').classList.remove('hidden');
+    $('pixQr').removeAttribute('src');
+    $('pixCode').value = '';
+    $('pixLink').removeAttribute('href');
+    $('generatePix').disabled = false;
+    $('generatePix').textContent = 'Gerar novo Pix';
+  }
+
+  async function cancelPendingPix() {
+    if (!pendingPixPaymentId) return true;
+    const paymentId = pendingPixPaymentId;
+    setStatus('Cancelando o Pix pendente antes de trocar o pagamento…');
+    const response = await fetch('/api/cancel-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentId })
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || (!result.cancelled && !['cancelled', 'rejected', 'refunded'].includes(result.status))) {
+      throw new Error(result.error || 'Não foi possível cancelar o Pix pendente. Tente novamente.');
+    }
+    resetPix();
+    const saved = JSON.parse(sessionStorage.getItem(Storefront.PAYMENT) || '{}');
+    if (String(saved.paymentId || '') === paymentId) sessionStorage.removeItem(Storefront.PAYMENT);
+    return true;
+  }
+
+  async function generatePix() {
+    if (pixGenerating || pendingPixPaymentId) return;
+    pixGenerating = true;
+    $('generatePix').disabled = true;
+    $('generatePix').textContent = 'Gerando Pix…';
+    try {
+      await postPayment({ payment_method_id: 'pix', payment_type_id: 'bank_transfer', installments: 1, payer: { email: customer.email, identification: { type: 'CPF', number: String(customer.tax || '').replace(/\D/g, '') } } });
+    } catch (error) {
+      $('generatePix').disabled = false;
+      $('generatePix').textContent = 'Tentar gerar Pix novamente';
+      setStatus(error.message, true);
+    } finally {
+      pixGenerating = false;
     }
   }
 
@@ -142,18 +213,30 @@
     });
   }
 
-  function selectMethod(method) {
+  async function selectMethod(method, autoGeneratePix = false) {
+    if (method !== 'pix' && pixGenerating) throw new Error('Aguarde alguns segundos enquanto o Pix é gerado. Depois você poderá trocar o pagamento.');
+    if (method === activeMethod) {
+      if (method === 'pix' && autoGeneratePix && !pendingPixPaymentId) await generatePix();
+      return;
+    }
+    if (method !== 'pix' && pendingPixPaymentId) await cancelPendingPix();
+    activeMethod = method;
     document.querySelectorAll('[data-method]').forEach(button => button.classList.toggle('active', button.dataset.method === method));
     document.querySelectorAll('[data-method-panel]').forEach(panel => panel.classList.toggle('hidden', panel.dataset.methodPanel !== method));
     renderSummary();
     setStatus('');
     if (method === 'card') renderCardBrick().catch(error => setStatus(error.message || 'Não foi possível carregar o pagamento.', true));
+    if (method === 'pix' && autoGeneratePix && !pendingPixPaymentId) await generatePix();
   }
 
   async function initialize() {
     config = await fetch('/api/config', { cache: 'no-store' }).then(response => response.json());
     if (!config.paymentEnabled || !config.publicKey) throw new Error('Mercado Pago ainda não está ativo neste deploy.');
     selectedProduct = config.kits?.find(product => product.id === cart.id) || config.product;
+    document.querySelectorAll('input[name="shippingService"]').forEach(input => {
+      input.checked = input.value === Storefront.shippingServiceFor(cart);
+      input.closest('.delivery-choice')?.classList.toggle('selected', input.checked);
+    });
     renderSummary();
     $('cartCount').textContent = String(selectedProduct.units * quantity);
     Storefront.track?.('InitiateCheckout', cart, {
@@ -176,14 +259,18 @@
     event.currentTarget.classList.add('hidden');
     $('paymentArea').classList.remove('hidden');
     document.querySelectorAll('[data-progress]').forEach(item => { const value = Number(item.dataset.progress); item.classList.toggle('active', value === 4); item.classList.toggle('complete', value < 4); });
-    selectMethod('card');
+    await selectMethod('pix');
     $('paymentArea').scrollIntoView({ behavior: 'smooth' });
+    await generatePix();
   });
 
-  document.querySelectorAll('[data-method]').forEach(button => button.addEventListener('click', () => selectMethod(button.dataset.method)));
+  document.querySelectorAll('[data-method]').forEach(button => button.addEventListener('click', async () => {
+    try { await selectMethod(button.dataset.method, button.dataset.method === 'pix'); }
+    catch (error) { setStatus(error.message, true); }
+  }));
   document.querySelectorAll('[data-next-step]').forEach(button => button.addEventListener('click', () => { if (validateStep(activeStep)) showStep(Number(button.dataset.nextStep)); }));
   document.querySelectorAll('[data-back-step]').forEach(button => button.addEventListener('click', () => showStep(Number(button.dataset.backStep))));
-  $('generatePix').addEventListener('click', () => postPayment({ payment_method_id: 'pix', payment_type_id: 'bank_transfer', installments: 1, payer: { email: customer.email, identification: { type: 'CPF', number: String(customer.tax || '').replace(/\D/g, '') } } }).catch(error => setStatus(error.message, true)));
+  $('generatePix').addEventListener('click', generatePix);
   $('copyPix').addEventListener('click', async () => {
     try {
       if (!navigator.clipboard?.writeText) throw new Error('Clipboard indisponível');
@@ -198,7 +285,7 @@
   $('payWithMercadoPago').addEventListener('click', async () => {
     try {
       setStatus('Abrindo ambiente seguro do Mercado Pago…');
-      const response = await fetch('/api/mercadopago/preference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity, productId: selectedProduct.id }) });
+      const response = await fetch('/api/mercadopago/preference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity, productId: selectedProduct.id, shippingService: Storefront.shippingServiceFor(cart) }) });
       const result = await response.json();
       if (!response.ok || !result.initPoint) throw new Error(result.error || 'Não foi possível abrir o Mercado Pago.');
       location.assign(result.initPoint);
@@ -224,6 +311,15 @@
       $('number').focus();
     } catch { $('zipFeedback').textContent = 'Não foi possível localizar o CEP. Preencha o endereço manualmente.'; }
   });
+
+  document.querySelectorAll('input[name="shippingService"]').forEach(input => input.addEventListener('change', event => {
+    cart.shippingService = event.target.value === 'sedex' ? 'sedex' : 'standard';
+    if (cart.shippingService === 'sedex') cart.deliveryEstimate = 'SEDEX · 2 a 3 dias úteis';
+    else cart.deliveryEstimate = $('city').value ? `Entrega padrão grátis para ${$('city').value} - ${$('district').value} · 8 a 12 dias úteis` : 'Entrega padrão grátis · 8 a 12 dias úteis';
+    Storefront.putCart(cart);
+    document.querySelectorAll('.delivery-choice').forEach(label => label.classList.toggle('selected', label.contains(event.target)));
+    renderSummary();
+  }));
 
   try { const saved = JSON.parse(localStorage.getItem(Storefront.CUSTOMER) || '{}'); Object.entries(saved).forEach(([key, value]) => { if ($(key)) $(key).value = value; }); if ($('zip').value) $('zip').dispatchEvent(new Event('blur')); } catch {}
   if (window.StoreWebview?.isEmbeddedBrowser) $('webviewNotice').classList.remove('hidden');

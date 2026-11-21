@@ -13,6 +13,7 @@ const Storefront = (() => {
   const CUSTOMER = 'chefpro_customer_v1';
   const PAYMENT = 'chefpro_payment_v1';
   const PAYMENT_URL = '/checkout';
+  const SEDEX_RATE = 12.36;
   const defaultKits = [
     { id: 'toyadent-1', units: 1, title: 'TOYADENT · Kit com 1 unidade', price: 22.90, originalPrice: 37.20 },
     { id: 'toyadent-2', units: 2, title: 'TOYADENT · Kit com 2 unidades', price: 39.90, originalPrice: 74.40 },
@@ -25,7 +26,8 @@ const Storefront = (() => {
   const unitPrice = id => kitById(id).price;
   const kitQuantityFor = cart => Math.min(10, Math.max(1, Number.parseInt(cart?.kitQuantity, 10) || 1));
   const subtotalFor = cart => Number((kitById(cart?.id).price * kitQuantityFor(cart)).toFixed(2));
-  const extrasFor = () => 0;
+  const shippingServiceFor = cart => cart?.shippingService === 'sedex' ? 'sedex' : 'standard';
+  const extrasFor = cart => shippingServiceFor(cart) === 'sedex' ? SEDEX_RATE : 0;
   const totalFor = cart => {
     return Number((subtotalFor(cart) + extrasFor(cart)).toFixed(2));
   };
@@ -33,16 +35,16 @@ const Storefront = (() => {
   const getCart = () => {
     try {
       const stored = JSON.parse(localStorage.getItem(CART));
-      if (stored && /^toyadent-[123]$/.test(String(stored.id))) return { ...stored, kitQuantity: kitQuantityFor(stored), image };
+      if (stored && /^toyadent-[123]$/.test(String(stored.id))) return { ...stored, kitQuantity: kitQuantityFor(stored), shippingService: shippingServiceFor(stored), image };
       if (!stored) return null;
-      const migrated = { ...defaultKits[2], image, kitQuantity: 1, currency: 'BRL' };
+      const migrated = { ...defaultKits[2], image, kitQuantity: 1, shippingService: 'standard', currency: 'BRL' };
       localStorage.setItem(CART, JSON.stringify(migrated));
       return migrated;
     } catch {
       return null;
     }
   };
-  const putCart = cart => localStorage.setItem(CART, JSON.stringify({ ...cart, kitQuantity: kitQuantityFor(cart) }));
+  const putCart = cart => localStorage.setItem(CART, JSON.stringify({ ...cart, kitQuantity: kitQuantityFor(cart), shippingService: shippingServiceFor(cart) }));
   const applyBrand = () => {
     document.title = document.title.replace(/Toque Duplo|Motor Scent|MaxLar|ChefPro/g, 'TOYADENT');
   };
@@ -85,16 +87,16 @@ const Storefront = (() => {
       return;
     }
     const kit = kitById(cart.id);
-    cart = { ...cart, ...kit, image, kitQuantity: kitQuantityFor(cart), currency: 'BRL' };
+    cart = { ...cart, ...kit, image, kitQuantity: kitQuantityFor(cart), shippingService: shippingServiceFor(cart), currency: 'BRL' };
     putCart(cart);
     const totalUnits = kit.units * cart.kitQuantity;
     const subtotal = subtotalFor(cart);
     const shipping = extrasFor(cart);
     set('#cartCount', String(totalUnits));
-    set('#deliveryWindow', cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis');
+    set('#deliveryWindow', cart.shippingService === 'sedex' ? 'SEDEX · 2 a 3 dias úteis' : (cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis'));
     set('#footerCurrency', 'Pagamento processado em BRL');
     document.querySelector('#checkoutLink')?.setAttribute('href', PAYMENT_URL);
-    root.innerHTML = `<div class="cart-line"><img src="${image}" alt="TOYADENT"><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g</span><span class="cart-meta">${cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis'}</span><div class="cart-quantity" aria-label="Quantidade de kits"><button type="button" data-decrease aria-label="Diminuir quantidade">−</button><strong>${cart.kitQuantity}</strong><button type="button" data-increase aria-label="Aumentar quantidade">+</button></div><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(subtotal)}</b></div>`;
+    root.innerHTML = `<div class="cart-line"><img src="${image}" alt="TOYADENT"><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g</span><span class="cart-meta">${cart.shippingService === 'sedex' ? 'SEDEX · 2 a 3 dias úteis' : (cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis')}</span><div class="cart-quantity" aria-label="Quantidade de kits"><button type="button" data-decrease aria-label="Diminuir quantidade">−</button><strong>${cart.kitQuantity}</strong><button type="button" data-increase aria-label="Aumentar quantidade">+</button></div><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     set('#subtotal', brl(subtotal));
     set('#shippingFree', shipping ? brl(shipping) : 'GRÁTIS');
     set('#total', brl(totalFor(cart)));
@@ -141,5 +143,5 @@ const Storefront = (() => {
     else window.addEventListener('meta-pixel-ready', send, { once: true });
   };
 
-  return { CART, CUSTOMER, PAYMENT, PAYMENT_URL, brl, unitPrice, extrasFor, subtotalFor, totalFor, kitQuantityFor, getCart, putCart, applyBrand, loadConfig, kitById, renderCart, renderThankYou, track };
+  return { CART, CUSTOMER, PAYMENT, PAYMENT_URL, brl, unitPrice, shippingServiceFor, extrasFor, subtotalFor, totalFor, kitQuantityFor, getCart, putCart, applyBrand, loadConfig, kitById, renderCart, renderThankYou, track };
 })();

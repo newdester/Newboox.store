@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { rateLimit, sendRateHeaders } from './_lib/rate-limit.js';
 import { sendMetaPurchase } from './_lib/meta-capi.js';
-import { paymentAmount, quantityFrom, shippingAmount, storeProduct } from './_lib/catalog.js';
+import { paymentAmount, quantityFrom, shippingAmount, shippingServiceFrom, storeProduct } from './_lib/catalog.js';
 const baseUrl = () => String(process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '');
 
 export default async function handler(request, response) {
@@ -14,6 +14,9 @@ export default async function handler(request, response) {
   const { formData = {}, customer = {} } = request.body || {};
   const quantity = quantityFrom(request.body?.quantity);
   const product = storeProduct(request.body?.productId);
+  const shippingService = shippingServiceFrom(request.body?.shippingService);
+  const shipping = shippingAmount(product, quantity, shippingService);
+  const carrier = shippingService === 'sedex' ? 'SEDEX' : 'Correios - Entrega Padrão';
   const email = String(formData.payer?.email || '').trim();
   if (!formData.payment_method_id || !/^\S+@\S+\.\S+$/.test(email)) return response.status(422).json({ error: 'Dados de pagamento incompletos.' });
   const allowedPaymentTypes = new Set(['credit_card', 'bank_transfer']);
@@ -24,9 +27,9 @@ export default async function handler(request, response) {
   const paymentType = formData.payment_type_id || (formData.payment_method_id === 'pix' ? 'bank_transfer' : 'credit_card');
   const orderId = `NB-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const payload = {
-    transaction_amount: paymentAmount(product, quantity),
+    transaction_amount: paymentAmount(product, quantity, shippingService),
     token: formData.token,
-    description: `${product.title} × ${quantity} · frete ${shippingAmount(product, quantity) ? product.carrier : 'grátis'}`,
+    description: `${product.title} × ${quantity} · ${shippingService === 'sedex' ? 'SEDEX' : 'frete grátis'}`,
     installments: paymentType === 'credit_card' ? Math.min(product.maxInstallments, Math.max(1, Number(formData.installments) || 1)) : 1,
     payment_method_id: formData.payment_method_id,
     issuer_id: formData.issuer_id,
@@ -36,8 +39,9 @@ export default async function handler(request, response) {
       product_id: product.id,
       quantity: product.units * quantity,
       kit_quantity: quantity,
-      shipping: shippingAmount(product, quantity),
-      carrier: product.carrier,
+      shipping,
+      shipping_service: shippingService,
+      carrier,
       customer_name: String(customer.name || '').slice(0, 120),
       customer_email: email.slice(0, 160),
       customer_phone: String(customer.phone || '').replace(/\D/g, '').slice(0, 15)

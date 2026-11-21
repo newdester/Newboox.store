@@ -38,7 +38,7 @@
   function saveCart(destination) {
     const subtotal = Number((selected.price * kitQuantity).toFixed(2));
     const shipping = 0;
-    const product = { ...selected, image, kitQuantity, currency: 'BRL', total: subtotal, shipping, carrier: 'Correios - Entrega Padrão', deliveryEstimate };
+    const product = { ...selected, image, kitQuantity, shippingService: 'standard', currency: 'BRL', total: subtotal, shipping, carrier: 'Correios - Entrega Padrão', deliveryEstimate };
     localStorage.setItem(CART_KEY, JSON.stringify(product));
     updateCartBadge();
     window.MetaPixel?.track('AddToCart', {
@@ -78,10 +78,10 @@
       const location = await fetch('/api/locale', { cache: 'no-store' }).then(response => response.json());
       const place = [location.city, location.region].filter(Boolean).join(' - ');
       deliveryEstimate = `${place ? `Previsão para ${place}` : 'Previsão de entrega'}: ${deliveryDays()}`;
-      if (node) node.innerHTML = `<strong>${deliveryEstimate}</strong><span>Entrega padrão grátis. CEP e SEDEX são calculados no checkout.</span>`;
+      if (node) node.innerHTML = `<strong>${deliveryEstimate}</strong><span>Entrega padrão grátis. Endereço e opção SEDEX ficam no checkout.</span>`;
     } catch {
       deliveryEstimate = `Entrega padrão grátis: ${deliveryDays()}`;
-      if (node) node.textContent = `${deliveryEstimate}. CEP e SEDEX são calculados no checkout.`;
+      if (node) node.textContent = `${deliveryEstimate}. Endereço e opção SEDEX ficam no checkout.`;
     }
   };
 

@@ -4,7 +4,7 @@ import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import adminOverview from './api/admin/overview.js';
-import { paymentAmount, shippingAmount, storeProduct, storeProducts } from './api/_lib/catalog.js';
+import { paymentAmount, shippingAmount, shippingServiceFrom, storeProduct, storeProducts } from './api/_lib/catalog.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const env = Object.fromEntries((await readFile(path.join(root, '.env'), 'utf8').catch(() => '')).split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#')).map(line => { const i = line.indexOf('='); return [line.slice(0, i), line.slice(i + 1)]; }));
@@ -49,6 +49,9 @@ async function processPayment(req, res) {
     const body = await readBody(req);
     const quantity = safeQuantity(body.quantity);
     const selectedProduct = storeProduct(body.productId);
+    const shippingService = shippingServiceFrom(body.shippingService);
+    const shipping = shippingAmount(selectedProduct, quantity, shippingService);
+    const carrier = shippingService === 'sedex' ? 'SEDEX' : 'Correios - Entrega Padrão';
     const form = body.formData || {};
     const email = String(form.payer?.email || '').trim();
     if (!form.payment_method_id || !/^\S+@\S+\.\S+$/.test(email)) return reply(res, 422, { error: 'Dados de pagamento incompletos.' });
@@ -56,9 +59,9 @@ async function processPayment(req, res) {
     if (!['credit_card', 'bank_transfer'].includes(paymentType)) return reply(res, 422, { error: 'Este meio de pagamento não está disponível.' });
     const orderId = `NB-${Date.now()}-${randomUUID().slice(0, 8)}`;
     const payload = {
-      transaction_amount: paymentAmount(selectedProduct, quantity),
+      transaction_amount: paymentAmount(selectedProduct, quantity, shippingService),
       token: form.token,
-      description: `${selectedProduct.title} × ${quantity} · frete ${shippingAmount(selectedProduct, quantity) ? selectedProduct.carrier : 'grátis'}`,
+      description: `${selectedProduct.title} × ${quantity} · ${shippingService === 'sedex' ? 'SEDEX' : 'frete grátis'}`,
       installments: paymentType === 'credit_card' ? Math.min(selectedProduct.maxInstallments, Math.max(1, Number(form.installments) || 1)) : 1,
       payment_method_id: form.payment_method_id,
       issuer_id: form.issuer_id,
@@ -68,8 +71,9 @@ async function processPayment(req, res) {
         product_id: selectedProduct.id,
         quantity: selectedProduct.units * quantity,
         kit_quantity: quantity,
-        shipping: shippingAmount(selectedProduct, quantity),
-        carrier: selectedProduct.carrier,
+        shipping,
+        shipping_service: shippingService,
+        carrier,
         customer_name: String(body.customer?.name || '').slice(0, 120),
         customer_email: email.slice(0, 160),
         customer_phone: String(body.customer?.phone || '').replace(/\D/g, '').slice(0, 15)
@@ -86,7 +90,7 @@ async function processPayment(req, res) {
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  if (req.method === 'GET' && url.pathname === '/api/config') return reply(res, 200, { publicKey: config.publicKey, paymentEnabled: Boolean(config.accessToken && config.publicKey), webhookConfigured: Boolean(config.webhookSecret), metaCapiEnabled: Boolean(env.META_PIXEL_ID && env.META_ACCESS_TOKEN), sedexConfigured: Boolean(env.CORREIOS_API_USER && env.CORREIOS_API_PASSWORD && env.CORREIOS_CONTRACT_NUMBER && env.CORREIOS_ORIGIN_POSTAL_CODE && env.CORREIOS_PACKAGE_WEIGHT_G), shipping: { standard: { carrier: 'Correios', price: 0, minDays: 8, maxDays: 12 }, sedex: { carrier: 'SEDEX', minDays: 2, maxDays: 3 } }, product, kits: storeProducts() });
+  if (req.method === 'GET' && url.pathname === '/api/config') return reply(res, 200, { publicKey: config.publicKey, paymentEnabled: Boolean(config.accessToken && config.publicKey), webhookConfigured: Boolean(config.webhookSecret), metaCapiEnabled: Boolean(env.META_PIXEL_ID && env.META_ACCESS_TOKEN), sedexConfigured: true, shipping: { standard: { carrier: 'Correios', price: 0, minDays: 8, maxDays: 12 }, sedex: { carrier: 'SEDEX', price: 12.36, minDays: 2, maxDays: 3 } }, product, kits: storeProducts() });
   if (req.method === 'GET' && url.pathname === '/api/locale') return reply(res, 200, { country: 'BR', city: '', region: '' });
   if (req.method === 'GET' && url.pathname === '/api/payment-status') {
     const quota = allowRequest(req, 'payment-status', 30, 60_000); applyRate(res, quota);
@@ -96,6 +100,23 @@ http.createServer(async (req, res) => {
       if (!payment) return reply(res, 404, { error: 'Pagamento não encontrado.' });
       return reply(res, 200, { paymentId: payment.id, status: payment.status, statusDetail: payment.status_detail, amount: payment.transaction_amount, pix: payment.point_of_interaction?.transaction_data || null });
     } catch { return reply(res, 502, { error: 'Não foi possível consultar o pagamento.' }); }
+  }
+  if (req.method === 'POST' && url.pathname === '/api/cancel-payment') {
+    const quota = allowRequest(req, 'cancel-payment', 8, 60_000); applyRate(res, quota);
+    if (!quota.allowed) return reply(res, 429, { error: 'Muitas tentativas. Aguarde um minuto.' });
+    if (!config.accessToken) return reply(res, 503, { error: 'Pagamento indisponível.' });
+    try {
+      const body = await readBody(req);
+      if (!/^\d+$/.test(String(body.paymentId || ''))) return reply(res, 400, { error: 'Pagamento inválido.' });
+      const payment = await safePaymentStatus(body.paymentId);
+      if (!payment) return reply(res, 404, { error: 'Pagamento não encontrado.' });
+      if (payment.payment_method_id !== 'pix') return reply(res, 422, { error: 'Somente o Pix pendente pode ser cancelado por esta ação.' });
+      if (!['pending', 'in_process', 'authorized'].includes(payment.status)) return reply(res, 200, { paymentId: payment.id, status: payment.status, cancelled: payment.status === 'cancelled' });
+      const result = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(payment.id)}`, { method: 'PUT', headers: { Authorization: `Bearer ${config.accessToken}`, 'Content-Type': 'application/json', 'X-Idempotency-Key': randomUUID() }, body: JSON.stringify({ status: 'cancelled' }) });
+      const cancelled = await result.json().catch(() => ({}));
+      if (!result.ok) return reply(res, 422, { error: cancelled.message || 'Não foi possível cancelar o Pix pendente.' });
+      return reply(res, 200, { paymentId: cancelled.id, status: cancelled.status, cancelled: cancelled.status === 'cancelled' });
+    } catch { return reply(res, 502, { error: 'Não foi possível comunicar com o Mercado Pago.' }); }
   }
   if (req.method === 'GET' && url.pathname === '/api/admin/overview') {
     const request = { method: req.method, headers: req.headers, socket: req.socket, query: Object.fromEntries(url.searchParams.entries()) };
