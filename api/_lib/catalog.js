@@ -17,7 +17,7 @@ const asProduct = kit => ({
   maxInstallments: 1,
   deliveryMinDays: 8,
   deliveryMaxDays: 12,
-  carrier: 'FedEx Economy'
+  carrier: 'Correios - Entrega Padrão'
 });
 
 export function storeProducts() {

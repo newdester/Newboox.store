@@ -8,8 +8,7 @@
   const image = '/assets/images/toyadent/hero.webp';
   let selected = kits[2];
   let kitQuantity = 1;
-  let shippingCalculated = false;
-  let deliveryEstimate = '';
+  let deliveryEstimate = 'Entrega padrão grátis · 8 a 12 dias úteis';
   let tracked = false;
   const brl = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   const updateCartBadge = () => {
@@ -26,22 +25,20 @@
       button.setAttribute('aria-pressed', String(active));
     });
     const subtotal = Number((selected.price * kitQuantity).toFixed(2));
-    const shipping = shippingCalculated ? 'GRÁTIS' : 'Informe o CEP';
-    const total = shippingCalculated ? brl(subtotal) : 'A calcular';
+    const shipping = 'GRÁTIS';
+    const total = brl(subtotal);
     document.querySelectorAll('[data-selected-price]').forEach(node => { node.textContent = brl(subtotal); });
     document.querySelectorAll('[data-selected-shipping]').forEach(node => { node.textContent = shipping; });
     document.querySelectorAll('[data-selected-total]').forEach(node => { node.textContent = total; });
     document.querySelectorAll('[data-selected-units]').forEach(node => { node.textContent = String(selected.units); });
     document.querySelectorAll('[data-kit-quantity]').forEach(node => { node.textContent = String(kitQuantity); });
-    document.querySelectorAll('[data-buy]').forEach(button => {
-      button.textContent = shippingCalculated ? 'Comprar agora' : 'Calcular entrega para continuar';
-    });
+    document.querySelectorAll('[data-buy]').forEach(button => { button.textContent = 'Comprar agora'; });
   }
 
-  function saveCart() {
+  function saveCart(destination) {
     const subtotal = Number((selected.price * kitQuantity).toFixed(2));
     const shipping = 0;
-    const product = { ...selected, image, kitQuantity, currency: 'BRL', total: subtotal, shipping, carrier: 'FedEx Economy', deliveryEstimate };
+    const product = { ...selected, image, kitQuantity, currency: 'BRL', total: subtotal, shipping, carrier: 'Correios - Entrega Padrão', deliveryEstimate };
     localStorage.setItem(CART_KEY, JSON.stringify(product));
     updateCartBadge();
     window.MetaPixel?.track('AddToCart', {
@@ -49,65 +46,44 @@
       value: product.total,
       contents: [{ id: product.id, quantity: product.units * kitQuantity }]
     });
+    window.location.assign(destination);
   }
 
   document.querySelectorAll('[data-kit]').forEach(button => button.addEventListener('click', () => selectKit(button.dataset.kit)));
   document.querySelector('[data-quantity-decrease]')?.addEventListener('click', () => { kitQuantity = Math.max(1, kitQuantity - 1); selectKit(selected.id); });
   document.querySelector('[data-quantity-increase]')?.addEventListener('click', () => { kitQuantity = Math.min(10, kitQuantity + 1); selectKit(selected.id); });
-  document.querySelectorAll('[data-buy]').forEach(button => button.addEventListener('click', () => {
-    if (!shippingCalculated) {
-      document.querySelector('#shippingSimulator')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      document.querySelector('#shippingZip')?.focus();
-      return;
-    }
-    saveCart();
-    window.location.assign('/checkout');
-  }));
+  document.querySelectorAll('[data-buy]').forEach(button => button.addEventListener('click', () => saveCart('/checkout')));
+  document.querySelectorAll('[data-add-cart]').forEach(button => button.addEventListener('click', () => saveCart('/cart')));
   document.querySelectorAll('a[href="#oferta"]').forEach(link => link.addEventListener('click', event => {
     event.preventDefault();
     document.querySelector('#oferta')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }));
 
-  const shippingForm = document.querySelector('#shippingSimulator');
-  const deliveryDays = () => {
-    const format = offset => new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(new Date(Date.now() + offset * 86_400_000));
-    return `entre ${format(8)} e ${format(12)}`;
+  const addBusinessDays = days => {
+    const date = new Date();
+    let added = 0;
+    while (added < days) {
+      date.setDate(date.getDate() + 1);
+      if (date.getDay() !== 0 && date.getDay() !== 6) added += 1;
+    }
+    return date;
   };
-  shippingForm?.addEventListener('submit', async event => {
-    event.preventDefault();
-    const input = document.querySelector('#shippingZip');
-    const feedback = document.querySelector('#shippingFeedback');
-    const zip = String(input?.value || '').replace(/\D/g, '');
-    if (zip.length !== 8) {
-      feedback.textContent = 'Digite um CEP com 8 números.';
-      feedback.dataset.error = 'true';
-      shippingCalculated = false;
-      selectKit(selected.id);
-      return;
-    }
-    feedback.textContent = 'Consultando entrega…';
-    feedback.dataset.error = 'false';
+  const deliveryDays = () => {
+    const format = date => new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(date);
+    return `entre ${format(addBusinessDays(8))} e ${format(addBusinessDays(12))}`;
+  };
+  const loadLocationEstimate = async () => {
+    const node = document.querySelector('#locationEstimate');
     try {
-      const address = await fetch(`https://viacep.com.br/ws/${zip}/json/`).then(response => response.json());
-      if (address.erro) throw new Error('CEP não encontrado.');
-      deliveryEstimate = `FedEx Economy grátis para ${address.localidade} - ${address.uf}: ${deliveryDays()}`;
-      shippingCalculated = true;
-      selectKit(selected.id);
-      feedback.innerHTML = `<strong>${deliveryEstimate}</strong><span class="shipping-option"><b>FedEx Economy</b><small>8 a 12 dias · rastreado</small><strong>GRÁTIS</strong></span><span class="shipping-option shipping-option--express"><b>FedEx Express</b><small>2 a 3 dias · cotação conforme o CEP</small><strong>SOB CONSULTA</strong></span>`;
-    } catch (error) {
-      shippingCalculated = false;
-      selectKit(selected.id);
-      feedback.textContent = error.message || 'Não foi possível consultar o CEP. Tente novamente.';
-      feedback.dataset.error = 'true';
+      const location = await fetch('/api/locale', { cache: 'no-store' }).then(response => response.json());
+      const place = [location.city, location.region].filter(Boolean).join(' - ');
+      deliveryEstimate = `${place ? `Previsão para ${place}` : 'Previsão de entrega'}: ${deliveryDays()}`;
+      if (node) node.innerHTML = `<strong>${deliveryEstimate}</strong><span>Entrega padrão grátis. CEP e SEDEX são calculados no checkout.</span>`;
+    } catch {
+      deliveryEstimate = `Entrega padrão grátis: ${deliveryDays()}`;
+      if (node) node.textContent = `${deliveryEstimate}. CEP e SEDEX são calculados no checkout.`;
     }
-  });
-  document.querySelector('#shippingZip')?.addEventListener('input', event => {
-    const digits = event.target.value.replace(/\D/g, '').slice(0, 8);
-    event.target.value = digits.replace(/^(\d{5})(\d)/, '$1-$2');
-    shippingCalculated = false;
-    deliveryEstimate = '';
-    selectKit(selected.id);
-  });
+  };
 
   document.querySelectorAll('[data-gallery-thumb]').forEach(button => button.addEventListener('click', () => {
     const main = document.querySelector('[data-gallery-main]');
@@ -125,6 +101,7 @@
   };
   selectKit('toyadent-3');
   updateCartBadge();
+  loadLocationEstimate();
   trackView();
   window.addEventListener('meta-pixel-ready', trackView, { once: true });
 })();

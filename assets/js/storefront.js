@@ -69,7 +69,7 @@ const Storefront = (() => {
     document.documentElement.lang = 'pt-BR';
     document.title = 'Carrinho — TOYADENT';
     set('#continueShopping', 'Continuar comprando');
-    set('#shippingIncluded', 'Frete grátis FedEx · 8 a 12 dias');
+    set('#shippingIncluded', 'Frete grátis · 8 a 12 dias úteis');
     set('#cartTitle', 'Seu carrinho');
     set('#summaryTitle', 'Resumo do pedido');
     set('#subtotalLabel', 'Produtos');
@@ -91,10 +91,10 @@ const Storefront = (() => {
     const subtotal = subtotalFor(cart);
     const shipping = extrasFor(cart);
     set('#cartCount', String(totalUnits));
-    set('#deliveryWindow', cart.deliveryEstimate || 'FedEx Economy grátis · 8 a 12 dias');
+    set('#deliveryWindow', cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis');
     set('#footerCurrency', 'Pagamento processado em BRL');
     document.querySelector('#checkoutLink')?.setAttribute('href', PAYMENT_URL);
-    root.innerHTML = `<div class="cart-line"><img src="${image}" alt="TOYADENT"><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g</span><span class="cart-meta">${cart.deliveryEstimate || 'FedEx Economy grátis · 8 a 12 dias'}</span><div class="cart-quantity" aria-label="Quantidade de kits"><button type="button" data-decrease aria-label="Diminuir quantidade">−</button><strong>${cart.kitQuantity}</strong><button type="button" data-increase aria-label="Aumentar quantidade">+</button></div><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(subtotal)}</b></div>`;
+    root.innerHTML = `<div class="cart-line"><img src="${image}" alt="TOYADENT"><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g</span><span class="cart-meta">${cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis'}</span><div class="cart-quantity" aria-label="Quantidade de kits"><button type="button" data-decrease aria-label="Diminuir quantidade">−</button><strong>${cart.kitQuantity}</strong><button type="button" data-increase aria-label="Aumentar quantidade">+</button></div><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     set('#subtotal', brl(subtotal));
     set('#shippingFree', shipping ? brl(shipping) : 'GRÁTIS');
     set('#total', brl(totalFor(cart)));
@@ -123,7 +123,7 @@ const Storefront = (() => {
     applyBrand();
     if (status === 'approved' || status === 'paid') {
       if (title) title.textContent = 'Pagamento aprovado';
-      if (copyNode) copyNode.textContent = 'Obrigado! Seu pedido TOYADENT foi confirmado e seguirá pela FedEx.';
+      if (copyNode) copyNode.textContent = 'Obrigado! Seu pedido TOYADENT foi confirmado e seguirá pelos Correios.';
       document.querySelector('#orderReference')?.replaceChildren(`Pedido ${payment?.orderId || ''} · Pagamento ${payment?.paymentId || returnedId || ''}`);
       const paymentId = payment?.paymentId || returnedId;
       if (paymentId) track('Purchase', getCart() || kitById('toyadent-1'), { value: Number(payment?.amount) || totalFor(getCart()), currency: 'BRL', order_id: payment?.orderId || '' }, `mp_payment_${paymentId}`);

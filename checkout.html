@@ -2,24 +2,28 @@
 <html lang="pt-BR"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Checkout seguro — TOYADENT</title>
-  <link rel="stylesheet" href="assets/css/checkout.css">
+  <link rel="stylesheet" href="assets/css/checkout.css?v=20261120-steps">
 </head><body>
   <header class="checkout-header"><a class="brand" href="/" aria-label="Página inicial TOYADENT"><span class="brand-wordmark">TOYADENT</span><span class="rating"><b>★ ★ ★ ★ ★</b><small id="ratingText">Compra segura</small></span></a><a class="bag" href="/cart" aria-label="Carrinho">♧ <span id="cartCount">1</span></a></header>
   <main class="checkout-shell"><section class="checkout-main">
     <div class="eyebrow"><a href="/cart" id="backLink">Voltar ao carrinho</a><span id="secureLabel">Pagamento protegido pelo Mercado Pago</span></div>
     <aside class="webview-notice hidden" id="webviewNotice" role="status"><strong>Você está no navegador do Instagram/Facebook.</strong><span>Esta loja funciona aqui. Se o formulário de pagamento não carregar, abra o menu ⋮ e selecione “Abrir no navegador” para concluir no Chrome ou Safari.</span></aside>
     <h1 id="pageTitle">Finalizar compra</h1>
+    <ol class="checkout-progress" aria-label="Etapas da compra"><li class="active" data-progress="1"><span>1</span>Contato</li><li data-progress="2"><span>2</span>Endereço</li><li data-progress="3"><span>3</span>Entrega</li><li data-progress="4"><span>4</span>Pagamento</li></ol>
     <form id="customerForm" class="checkout-form">
-      <section class="checkout-section"><div class="section-heading"><h2 id="contactTitle">Contato</h2><span id="expressLabel">Compra rápida e segura</span></div>
+      <section class="checkout-section checkout-form-step" data-checkout-step="1"><div class="section-heading"><h2 id="contactTitle">Seus dados</h2><span id="expressLabel">Etapa 1 de 4</span></div>
         <div class="field full"><label for="email" id="emailLabel">E-mail</label><input id="email" name="email" type="email" required autocomplete="email" placeholder="voce@email.com"></div>
-        <label class="checkline"><input type="checkbox" checked><span id="updatesLabel">Receber atualizações da entrega</span></label>
-      </section>
-      <section class="checkout-section"><div class="section-heading"><h2 id="deliveryTitle">Dados de entrega</h2><span class="worldwide" id="deliveryNote">FedEx Economy grátis · 8 a 12 dias</span></div>
-        <div class="form-grid">
+        <div class="form-grid form-grid--personal">
           <input id="country" name="country" type="hidden" value="BR">
           <div class="field full"><label for="name" id="nameLabel">Nome completo</label><input id="name" name="name" required autocomplete="name"></div>
           <div class="field"><label for="phone" id="phoneLabel">Telefone</label><input id="phone" name="phone" required inputmode="tel" autocomplete="tel" placeholder="(11) 99999-9999"></div>
           <div class="field" id="taxField"><label for="tax" id="taxLabel">CPF</label><input id="tax" name="tax" required inputmode="numeric" autocomplete="off"></div>
+        </div>
+        <label class="checkline"><input type="checkbox" checked><span id="updatesLabel">Receber atualizações da entrega</span></label>
+        <button class="button step-button" type="button" data-next-step="2">Continuar para endereço</button>
+      </section>
+      <section class="checkout-section checkout-form-step hidden" data-checkout-step="2"><div class="section-heading"><h2 id="deliveryTitle">Endereço de entrega</h2><span class="worldwide" id="deliveryNote">Etapa 2 de 4</span></div>
+        <div class="form-grid">
           <div class="field full"><label for="zip" id="postalLabel">CEP</label><input id="zip" name="zip" required inputmode="numeric" autocomplete="postal-code"></div>
           <div class="field full"><label for="address" id="addressLabel">Endereço</label><input id="address" name="address" required autocomplete="street-address"></div>
           <div class="field"><label for="number" id="numberLabel">Número</label><input id="number" name="number" required></div>
@@ -28,9 +32,16 @@
           <div class="field"><label for="district" id="districtLabel">Estado</label><input id="district" name="district" required autocomplete="address-level1"></div>
         </div>
         <p class="field-feedback" id="zipFeedback" aria-live="polite"></p>
+        <div class="step-actions"><button class="button button--secondary" type="button" data-back-step="1">Voltar</button><button class="button" type="button" data-next-step="3">Continuar para entrega</button></div>
       </section>
-      <section class="assurance"><b id="assuranceTitle">Checkout seguro</b><p id="assuranceBody">Dados criptografados, pagamento processado pelo Mercado Pago e pedido rastreado.</p></section>
-      <button class="button" id="continueButton" type="submit">Continuar para pagamento</button><div id="checkoutStatus" class="status" aria-live="polite"></div>
+      <section class="checkout-section checkout-form-step hidden" data-checkout-step="3"><div class="section-heading"><h2>Escolha a entrega</h2><span class="worldwide">Etapa 3 de 4</span></div>
+        <label class="delivery-choice selected"><input type="radio" name="shippingService" value="standard" checked><span><b>Entrega padrão grátis</b><small>8 a 12 dias úteis · código de rastreio</small></span><strong>GRÁTIS</strong></label>
+        <label class="delivery-choice delivery-choice--disabled"><input type="radio" name="shippingService" value="sedex" disabled><span><b>SEDEX</b><small>2 a 3 dias úteis · cotação pelo CEP</small></span><strong>SOB CONSULTA</strong></label>
+        <p class="field-feedback">A cotação automática do SEDEX será liberada após a ativação da API dos Correios.</p>
+        <section class="assurance"><b id="assuranceTitle">Checkout seguro</b><p id="assuranceBody">Dados criptografados, pagamento processado pelo Mercado Pago e pedido rastreado.</p></section>
+        <div class="step-actions"><button class="button button--secondary" type="button" data-back-step="2">Voltar</button><button class="button" id="continueButton" type="submit">Continuar para pagamento</button></div>
+      </section>
+      <div id="checkoutStatus" class="status" aria-live="polite"></div>
     </form>
     <section id="paymentArea" class="checkout-form hidden"><section class="checkout-section"><div class="section-heading"><h2 id="paymentTitle">Pagamento</h2><span id="protectedLabel">Segurança Mercado Pago</span></div>
       <div class="payment-method-tabs" role="tablist"><button type="button" data-method="card">Cartão</button><button type="button" data-method="pix">Pix</button><button type="button" data-method="wallet">Saldo Mercado Pago</button></div>
@@ -39,8 +50,8 @@
       <div data-method-panel="wallet" class="hidden"><div class="payment-intro"><strong><span data-payment-total>R$ 0,00</span> com sua conta Mercado Pago</strong><span>Use saldo ou cartões salvos. A confirmação ocorre no ambiente seguro do Mercado Pago.</span></div><button class="button mp-wallet-button" id="payWithMercadoPago" type="button">Pagar com Mercado Pago</button></div>
       <div id="paymentStatus" class="status" aria-live="polite"></div>
     </section></section>
-  </section><aside class="order-panel"><div class="order-panel__inner"><h2 id="summaryTitle">Resumo do pedido</h2><div id="checkoutItem"></div><div class="order-divider"></div><div class="summary-row"><span id="subtotalLabel">Produtos</span><strong id="productSubtotal">R$ 0,00</strong></div><div class="summary-row shipping"><span id="shippingLabel">FedEx Economy</span><strong id="checkoutShipping">GRÁTIS</strong></div><div class="summary-row"><span>Subtotal</span><strong id="checkoutTotal">R$ 0,00</strong></div><div class="summary-row summary-total"><span id="totalLabel">Total</span><strong id="checkoutTotalBottom">R$ 0,00</strong></div><p class="currency-note" id="footerCurrency">FedEx Economy · Pagamento em BRL</p></div></aside>
+  </section><aside class="order-panel"><div class="order-panel__inner"><h2 id="summaryTitle">Resumo do pedido</h2><div id="checkoutItem"></div><div class="order-divider"></div><div class="summary-row"><span id="subtotalLabel">Produtos</span><strong id="productSubtotal">R$ 0,00</strong></div><div class="summary-row shipping"><span id="shippingLabel">Entrega padrão</span><strong id="checkoutShipping">GRÁTIS</strong></div><div class="summary-row"><span>Subtotal</span><strong id="checkoutTotal">R$ 0,00</strong></div><div class="summary-row summary-total"><span id="totalLabel">Total</span><strong id="checkoutTotalBottom">R$ 0,00</strong></div><p class="currency-note" id="footerCurrency">Entrega rastreada · Pagamento em BRL</p></div></aside>
   </main>
   <footer class="checkout-footer"><a href="/" id="homeLink">Início</a><span>© 2026 Newboox</span><span id="footerLegal">Privacidade · Termos</span></footer>
-  <script>window.META_AUTO_PAGEVIEW=false;</script><script src="/assets/js/meta-pixel.js?v=20261120-funnel"></script><script src="/assets/js/webview-support.js?v=20261120-webview"></script><script src="https://sdk.mercadopago.com/js/v2"></script><script src="assets/js/i18n.js?v=20261120-fedex"></script><script src="assets/js/storefront.js?v=20261120-fedex"></script><script src="assets/js/checkout-mercadopago.js?v=20261120-fedex"></script>
+  <script>window.META_AUTO_PAGEVIEW=false;</script><script src="/assets/js/meta-pixel.js?v=20261120-funnel"></script><script src="/assets/js/webview-support.js?v=20261120-webview"></script><script src="https://sdk.mercadopago.com/js/v2"></script><script src="assets/js/i18n.js?v=20261120-sedex"></script><script src="assets/js/storefront.js?v=20261120-sedex"></script><script src="assets/js/checkout-mercadopago.js?v=20261120-sedex"></script>
 </body></html>

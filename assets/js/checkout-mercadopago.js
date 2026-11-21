@@ -8,6 +8,39 @@
   let selectedProduct;
   let customer;
   let cardBrick;
+  let activeStep = 1;
+
+  const showStep = step => {
+    activeStep = step;
+    document.querySelectorAll('[data-checkout-step]').forEach(section => section.classList.toggle('hidden', Number(section.dataset.checkoutStep) !== step));
+    document.querySelectorAll('[data-progress]').forEach(item => {
+      const value = Number(item.dataset.progress);
+      item.classList.toggle('active', value === step);
+      item.classList.toggle('complete', value < step);
+    });
+    document.querySelector('[data-checkout-step]:not(.hidden)')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const validateStep = step => {
+    const section = document.querySelector(`[data-checkout-step="${step}"]`);
+    const fields = [...section.querySelectorAll('input[required]')];
+    const invalid = fields.find(field => !field.checkValidity());
+    if (invalid) { invalid.reportValidity(); invalid.focus(); return false; }
+    if (step === 1 && $('tax').value.replace(/\D/g, '').length !== 11) {
+      $('checkoutStatus').textContent = 'Digite um CPF com 11 números.';
+      $('checkoutStatus').classList.add('show');
+      $('checkoutStatus').dataset.error = 'true';
+      $('tax').focus();
+      return false;
+    }
+    if (step === 2 && $('zip').value.replace(/\D/g, '').length !== 8) {
+      $('zipFeedback').textContent = 'Digite um CEP válido com 8 números.';
+      $('zip').focus();
+      return false;
+    }
+    $('checkoutStatus').classList.remove('show');
+    return true;
+  };
 
   const setStatus = (message, error = false) => {
     const node = $('paymentStatus');
@@ -28,14 +61,13 @@
     const subtotal = Storefront.subtotalFor(cart);
     const shipping = Storefront.extrasFor(cart);
     const totalUnits = selectedProduct.units * quantity;
-    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="TOYADENT"><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g · ${quantity} ${quantity === 1 ? 'kit' : 'kits'}</span><span class="cart-meta">${cart.deliveryEstimate || 'FedEx Economy grátis · 8 a 12 dias'}</span></div><b class="cart-price">${brl(subtotal)}</b></div>`;
+    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="TOYADENT"><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g · ${quantity} ${quantity === 1 ? 'kit' : 'kits'}</span><span class="cart-meta">${cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis'}</span></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     $('productSubtotal').textContent = brl(subtotal);
     $('checkoutShipping').textContent = shipping ? brl(shipping) : 'GRÁTIS';
     $('checkoutTotal').textContent = brl(total);
     $('checkoutTotalBottom').textContent = brl(total);
     document.querySelectorAll('[data-payment-total]').forEach(node => { node.textContent = brl(total); });
     if (cart.deliveryEstimate) {
-      $('deliveryNote').textContent = cart.deliveryEstimate;
       $('footerCurrency').textContent = `${cart.deliveryEstimate} · Pagamento em BRL`;
     }
   }
@@ -134,13 +166,6 @@
   $('customerForm').addEventListener('submit', async event => {
     event.preventDefault();
     if (!event.currentTarget.checkValidity()) return event.currentTarget.reportValidity();
-    if ($('tax').value.replace(/\D/g, '').length !== 11) {
-      $('checkoutStatus').textContent = 'Digite um CPF com 11 números.';
-      $('checkoutStatus').classList.add('show');
-      $('checkoutStatus').dataset.error = 'true';
-      $('tax').focus();
-      return;
-    }
     customer = Object.fromEntries(new FormData(event.currentTarget).entries());
     localStorage.setItem(Storefront.CUSTOMER, JSON.stringify(customer));
     Storefront.track?.('AddPaymentInfo', cart, {
@@ -150,11 +175,14 @@
     });
     event.currentTarget.classList.add('hidden');
     $('paymentArea').classList.remove('hidden');
+    document.querySelectorAll('[data-progress]').forEach(item => { const value = Number(item.dataset.progress); item.classList.toggle('active', value === 4); item.classList.toggle('complete', value < 4); });
     selectMethod('card');
     $('paymentArea').scrollIntoView({ behavior: 'smooth' });
   });
 
   document.querySelectorAll('[data-method]').forEach(button => button.addEventListener('click', () => selectMethod(button.dataset.method)));
+  document.querySelectorAll('[data-next-step]').forEach(button => button.addEventListener('click', () => { if (validateStep(activeStep)) showStep(Number(button.dataset.nextStep)); }));
+  document.querySelectorAll('[data-back-step]').forEach(button => button.addEventListener('click', () => showStep(Number(button.dataset.backStep))));
   $('generatePix').addEventListener('click', () => postPayment({ payment_method_id: 'pix', payment_type_id: 'bank_transfer', installments: 1, payer: { email: customer.email, identification: { type: 'CPF', number: String(customer.tax || '').replace(/\D/g, '') } } }).catch(error => setStatus(error.message, true)));
   $('copyPix').addEventListener('click', async () => {
     try {
@@ -189,6 +217,9 @@
       $('address').value = address.logradouro || $('address').value;
       $('city').value = address.localidade || $('city').value;
       $('district').value = address.uf || $('district').value;
+      cart.deliveryEstimate = `Entrega padrão grátis para ${address.localidade} - ${address.uf} · 8 a 12 dias úteis`;
+      Storefront.putCart(cart);
+      renderSummary();
       $('zipFeedback').textContent = 'Endereço preenchido automaticamente. Confira o número e o complemento.';
       $('number').focus();
     } catch { $('zipFeedback').textContent = 'Não foi possível localizar o CEP. Preencha o endereço manualmente.'; }
@@ -196,5 +227,6 @@
 
   try { const saved = JSON.parse(localStorage.getItem(Storefront.CUSTOMER) || '{}'); Object.entries(saved).forEach(([key, value]) => { if ($(key)) $(key).value = value; }); if ($('zip').value) $('zip').dispatchEvent(new Event('blur')); } catch {}
   if (window.StoreWebview?.isEmbeddedBrowser) $('webviewNotice').classList.remove('hidden');
+  showStep(1);
   initialize().catch(error => { $('continueButton').disabled = true; $('checkoutStatus').textContent = error.message; $('checkoutStatus').classList.add('show'); $('checkoutStatus').dataset.error = 'true'; });
 })();
