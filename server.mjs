@@ -90,7 +90,7 @@ async function processPayment(req, res) {
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  if (req.method === 'GET' && url.pathname === '/api/config') return reply(res, 200, { publicKey: config.publicKey, paymentEnabled: Boolean(config.accessToken && config.publicKey), webhookConfigured: Boolean(config.webhookSecret), metaCapiEnabled: Boolean(env.META_PIXEL_ID && env.META_ACCESS_TOKEN), sedexConfigured: true, shipping: { standard: { carrier: 'Correios', price: 0, minDays: 8, maxDays: 12 }, sedex: { carrier: 'SEDEX', price: 12.36, minDays: 2, maxDays: 3 } }, product, kits: storeProducts() });
+  if (req.method === 'GET' && url.pathname === '/api/config') return reply(res, 200, { publicKey: config.publicKey, paymentEnabled: Boolean(config.accessToken && config.publicKey), webhookConfigured: Boolean(config.webhookSecret), metaCapiEnabled: Boolean(env.META_PIXEL_ID && env.META_ACCESS_TOKEN), metaTestMode: Boolean(env.META_TEST_EVENT_CODE), sedexConfigured: true, shipping: { standard: { carrier: 'Correios', price: 0, minDays: 8, maxDays: 12 }, sedex: { carrier: 'SEDEX', price: 12.36, minDays: 2, maxDays: 3 } }, product, kits: storeProducts() });
   if (req.method === 'GET' && url.pathname === '/api/locale') return reply(res, 200, { country: 'BR', city: '', region: '' });
   if (req.method === 'GET' && url.pathname === '/api/payment-status') {
     const quota = allowRequest(req, 'payment-status', 30, 60_000); applyRate(res, quota);

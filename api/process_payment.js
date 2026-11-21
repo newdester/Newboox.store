@@ -3,6 +3,8 @@ import { rateLimit, sendRateHeaders } from './_lib/rate-limit.js';
 import { sendMetaPurchase } from './_lib/meta-capi.js';
 import { paymentAmount, quantityFrom, shippingAmount, shippingServiceFrom, storeProduct } from './_lib/catalog.js';
 const baseUrl = () => String(process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '');
+const safeMeta = (value, max = 250) => String(value || '').trim().slice(0, max);
+const clientIp = request => String(request.headers?.['x-forwarded-for'] || request.socket?.remoteAddress || '').split(',')[0].trim().slice(0, 64);
 
 export default async function handler(request, response) {
   if (request.method !== 'POST') return response.status(405).json({ error: 'Método não permitido.' });
@@ -11,7 +13,7 @@ export default async function handler(request, response) {
   if (!quota.allowed) return response.status(429).json({ error: 'Muitas tentativas. Aguarde um minuto antes de tentar novamente.' });
   if (!process.env.MP_ACCESS_TOKEN || !process.env.MP_PUBLIC_KEY) return response.status(503).json({ error: 'Pagamento ainda não configurado.' });
 
-  const { formData = {}, customer = {} } = request.body || {};
+  const { formData = {}, customer = {}, attribution = {} } = request.body || {};
   const quantity = quantityFrom(request.body?.quantity);
   const product = storeProduct(request.body?.productId);
   const shippingService = shippingServiceFrom(request.body?.shippingService);
@@ -26,6 +28,7 @@ export default async function handler(request, response) {
 
   const paymentType = formData.payment_type_id || (formData.payment_method_id === 'pix' ? 'bank_transfer' : 'credit_card');
   const orderId = `NB-${Date.now()}-${randomUUID().slice(0, 8)}`;
+  const nameParts = safeMeta(customer.name, 120).split(/\s+/).filter(Boolean);
   const payload = {
     transaction_amount: paymentAmount(product, quantity, shippingService),
     token: formData.token,
@@ -43,8 +46,20 @@ export default async function handler(request, response) {
       shipping_service: shippingService,
       carrier,
       customer_name: String(customer.name || '').slice(0, 120),
+      customer_first_name: nameParts[0] || '',
+      customer_last_name: nameParts.slice(1).join(' ').slice(0, 80),
       customer_email: email.slice(0, 160),
-      customer_phone: String(customer.phone || '').replace(/\D/g, '').slice(0, 15)
+      customer_phone: String(customer.phone || '').replace(/\D/g, '').slice(0, 15),
+      customer_zip: String(customer.zip || '').replace(/\D/g, '').slice(0, 8),
+      customer_city: safeMeta(customer.city, 80),
+      customer_state: safeMeta(customer.state, 40),
+      meta_fbp: safeMeta(attribution.fbp),
+      meta_fbc: safeMeta(attribution.fbc),
+      meta_fbclid: safeMeta(attribution.fbclid),
+      meta_source_url: safeMeta(attribution.sourceUrl || baseUrl()),
+      meta_referrer_url: safeMeta(attribution.referrerUrl),
+      meta_client_ip: clientIp(request),
+      meta_client_user_agent: safeMeta(request.headers?.['user-agent'], 250)
     }
   };
   // Cartão gera token; alguns meios (como Pix) não o utilizam.
@@ -64,6 +79,7 @@ export default async function handler(request, response) {
     const payment = await mpResponse.json();
     if (!mpResponse.ok) return response.status(422).json({ error: payment.message || 'O pagamento não foi autorizado.', cause: payment.cause?.[0]?.description || null });
     const meta = await sendMetaPurchase(payment);
+    if (payment.status === 'approved' && !meta.sent) console.error('Meta Purchase rejected after payment', { eventId: meta.eventId, status: meta.status, error: meta.error, fbtraceId: meta.fbtraceId });
     return response.status(200).json({
       orderId,
       paymentId: payment.id,
@@ -71,7 +87,8 @@ export default async function handler(request, response) {
       statusDetail: payment.status_detail,
       amount: payload.transaction_amount,
       pix: payment.point_of_interaction?.transaction_data || null,
-      metaEventId: meta.eventId || `mp_payment_${payment.id}`
+      metaEventId: meta.eventId || `mp_payment_${payment.id}`,
+      metaAccepted: Boolean(meta.sent)
     });
   } catch {
     return response.status(502).json({ error: 'Não foi possível comunicar com o provedor de pagamento.' });

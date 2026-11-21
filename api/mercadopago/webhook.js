@@ -32,7 +32,11 @@ export default async function handler(request, response) {
   if (!paymentId || !process.env.MP_ACCESS_TOKEN) return response.status(200).json({ received: true });
   try {
     const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(paymentId)}`, { headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` } });
-    if (paymentResponse.ok) await sendMetaPurchase(await paymentResponse.json());
+    if (paymentResponse.ok) {
+      const meta = await sendMetaPurchase(await paymentResponse.json());
+      if (meta.sent) console.info('Meta Purchase accepted', { eventId: meta.eventId, eventsReceived: meta.eventsReceived, fbtraceId: meta.fbtraceId });
+      else console.error('Meta Purchase rejected', { eventId: meta.eventId, status: meta.status, reason: meta.reason, error: meta.error, fbtraceId: meta.fbtraceId });
+    } else console.error('Mercado Pago payment lookup failed', { paymentId, status: paymentResponse.status });
   } catch { /* Confirmação ao Mercado Pago não deve depender do Meta. */ }
   return response.status(200).json({ received: true });
 }

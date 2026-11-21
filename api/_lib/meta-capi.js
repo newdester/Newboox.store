@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-const META_ENDPOINT = pixelId => `https://graph.facebook.com/${pixelId}/events`;
+const META_ENDPOINT = pixelId => `https://graph.facebook.com/${process.env.META_GRAPH_API_VERSION || 'v25.0'}/${pixelId}/events`;
 const hash = value => {
   const normalized = String(value || '').trim().toLowerCase();
   return normalized ? createHash('sha256').update(normalized).digest('hex') : '';
@@ -9,25 +9,43 @@ const hash = value => {
 export async function sendMetaPurchase(payment) {
   const pixelId = process.env.META_PIXEL_ID;
   const accessToken = process.env.META_ACCESS_TOKEN;
-  if (!pixelId || !accessToken || payment.status !== 'approved') return { sent: false };
+  if (!pixelId || !accessToken || payment.status !== 'approved') return { sent: false, reason: payment.status !== 'approved' ? 'payment_not_approved' : 'meta_not_configured' };
   const quantity = Math.max(1, Number(payment.metadata?.quantity) || 1);
   const value = Number(payment.transaction_amount);
   const eventId = `mp_payment_${payment.id}`;
   const email = hash(payment.metadata?.customer_email || payment.payer?.email);
   const phone = hash(String(payment.metadata?.customer_phone || payment.payer?.phone?.number || '').replace(/\D/g, ''));
+  const firstName = hash(payment.metadata?.customer_first_name);
+  const lastName = hash(payment.metadata?.customer_last_name);
+  const city = hash(payment.metadata?.customer_city);
+  const state = hash(payment.metadata?.customer_state);
+  const zip = hash(String(payment.metadata?.customer_zip || '').replace(/\D/g, ''));
+  const externalId = hash(payment.external_reference);
+  const approvedAt = Date.parse(payment.date_approved || payment.date_created || '') || Date.now();
   const event = {
     event_name: 'Purchase',
-    event_time: Math.floor(Date.now() / 1000),
+    event_time: Math.floor(approvedAt / 1000),
     event_id: eventId,
     action_source: 'website',
-    event_source_url: String(process.env.PUBLIC_BASE_URL || '').replace(/\/$/, ''),
+    event_source_url: String(payment.metadata?.meta_source_url || process.env.PUBLIC_BASE_URL || '').replace(/\/$/, ''),
     user_data: {
       ...(email ? { em: [email] } : {}),
-      ...(phone ? { ph: [phone] } : {})
+      ...(phone ? { ph: [phone] } : {}),
+      ...(firstName ? { fn: [firstName] } : {}),
+      ...(lastName ? { ln: [lastName] } : {}),
+      ...(city ? { ct: [city] } : {}),
+      ...(state ? { st: [state] } : {}),
+      ...(zip ? { zp: [zip] } : {}),
+      ...(externalId ? { external_id: [externalId] } : {}),
+      ...(payment.metadata?.meta_fbp ? { fbp: String(payment.metadata.meta_fbp) } : {}),
+      ...(payment.metadata?.meta_fbc ? { fbc: String(payment.metadata.meta_fbc) } : {}),
+      ...(payment.metadata?.meta_client_ip ? { client_ip_address: String(payment.metadata.meta_client_ip) } : {}),
+      client_user_agent: String(payment.metadata?.meta_client_user_agent || 'Newboox-MercadoPago-Webhook/1.0')
     },
     custom_data: {
       currency: String(payment.currency_id || 'BRL'),
       value,
+      order_id: String(payment.external_reference || payment.id),
       content_type: 'product',
       content_ids: [String(payment.metadata?.product_id || 'toyadent-1')],
       contents: [{ id: String(payment.metadata?.product_id || 'toyadent-1'), quantity, item_price: Number((value / quantity).toFixed(2)) }]
@@ -42,8 +60,16 @@ export async function sendMetaPurchase(payment) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    return { sent: response.ok, eventId };
-  } catch {
-    return { sent: false, eventId };
+    const result = await response.json().catch(() => ({}));
+    return {
+      sent: response.ok && Number(result.events_received || 0) > 0,
+      eventId,
+      status: response.status,
+      eventsReceived: Number(result.events_received || 0),
+      fbtraceId: String(result.fbtrace_id || ''),
+      error: result.error ? { code: result.error.code, subcode: result.error.error_subcode, message: result.error.message } : null
+    };
+  } catch (error) {
+    return { sent: false, eventId, status: 0, eventsReceived: 0, error: { message: error.message } };
   }
 }

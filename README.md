@@ -15,6 +15,8 @@ O kit escolhido fica salvo no navegador até a finalização. A landing page, o 
 
 O checkout usa os componentes oficiais do Mercado Pago para cartão, Pix e saldo Mercado Pago. Os campos de cartão são hospedados/tokenizados pelo Mercado Pago: este projeto não grava número de cartão, CVV ou senha.
 
+As compras aprovadas são enviadas à Meta pela Conversions API com deduplicação por `event_id`. A atribuição preserva `_fbp`, `_fbc`/`fbclid`, navegador, IP e dados de contato normalizados. Não mantenha `META_TEST_EVENT_CODE` configurado no ambiente de produção.
+
 ## Oferta
 
 - Preço de referência: **R$ 37,20 por unidade**.

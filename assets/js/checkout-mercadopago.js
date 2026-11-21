@@ -58,6 +58,7 @@
     quantity,
     productId: selectedProduct.id,
     shippingService: Storefront.shippingServiceFor(cart),
+    attribution: window.MetaPixel?.attribution?.() || {},
     customer: {
       name: customer.name,
       email: customer.email,
