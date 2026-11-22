@@ -35,7 +35,27 @@
     s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
   }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
   fbq('init', PIXEL_ID);
-  if (window.META_AUTO_PAGEVIEW !== false) fbq('track', 'PageView');
+  if (window.META_AUTO_PAGEVIEW !== false && location.pathname === '/') {
+    const eventId = `pv_${window.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`}`;
+    const attribution = captureAttribution();
+    fbq('track', 'PageView', {}, { eventID: eventId });
+    const payload = {
+      eventId,
+      eventSourceUrl: `${location.origin}/`,
+      fbp: attribution.fbp,
+      fbc: attribution.fbc
+    };
+    const sendPageView = () => fetch('/api/meta/pageview', {
+      method: 'POST',
+      credentials: 'same-origin',
+      keepalive: true,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    sendPageView().then(response => {
+      if (response.status >= 500) setTimeout(() => { sendPageView().catch(() => {}); }, 700);
+    }).catch(() => { setTimeout(() => { sendPageView().catch(() => {}); }, 700); });
+  }
   const content = product => ({ content_ids: [product.id], content_name: product.title, content_type: 'product', currency: product.currency || 'BRL', value: Number(product.price) });
   window.MetaPixel = { track: (event, parameters = {}, eventId) => eventId ? window.fbq?.('track', event, parameters, { eventID: eventId }) : window.fbq?.('track', event, parameters), trackCustom: (event, parameters = {}) => window.fbq?.('trackCustom', event, parameters), content, attribution: captureAttribution };
   window.dispatchEvent(new Event('meta-pixel-ready'));

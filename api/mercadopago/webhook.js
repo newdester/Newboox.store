@@ -29,14 +29,29 @@ export default async function handler(request, response) {
   if (!quota.allowed) return response.status(429).json({ error: 'Limite de notificações excedido.' });
   if (!signatureIsValid(request)) return response.status(401).json({ error: 'Assinatura de webhook inválida.' });
   const paymentId = request.query?.['data.id'] || request.body?.data?.id;
-  if (!paymentId || !process.env.MP_ACCESS_TOKEN) return response.status(200).json({ received: true });
+  if (!paymentId) return response.status(200).json({ received: true });
+  if (!process.env.MP_ACCESS_TOKEN) return response.status(503).json({ error: 'Consulta de pagamento temporariamente indisponível.' });
   try {
-    const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(paymentId)}`, { headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` } });
-    if (paymentResponse.ok) {
-      const meta = await sendMetaPurchase(await paymentResponse.json());
-      if (meta.sent) console.info('Meta Purchase accepted', { eventId: meta.eventId, eventsReceived: meta.eventsReceived, fbtraceId: meta.fbtraceId });
-      else console.error('Meta Purchase rejected', { eventId: meta.eventId, status: meta.status, reason: meta.reason, error: meta.error, fbtraceId: meta.fbtraceId });
-    } else console.error('Mercado Pago payment lookup failed', { paymentId, status: paymentResponse.status });
-  } catch { /* Confirmação ao Mercado Pago não deve depender do Meta. */ }
-  return response.status(200).json({ received: true });
+    const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(paymentId)}`, {
+      headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` },
+      signal: AbortSignal.timeout(7000)
+    });
+    if (!paymentResponse.ok) {
+      console.error('Mercado Pago payment lookup failed', { paymentId, status: paymentResponse.status });
+      return response.status(503).json({ error: 'Consulta de pagamento temporariamente indisponível.' });
+    }
+    const payment = await paymentResponse.json();
+    if (payment.status !== 'approved') return response.status(200).json({ received: true });
+
+    const meta = await sendMetaPurchase(payment);
+    if (!meta.sent) {
+      console.error('Meta Purchase rejected; webhook will be retried', { eventId: meta.eventId, status: meta.status, reason: meta.reason, error: meta.error, fbtraceId: meta.fbtraceId });
+      return response.status(503).json({ error: 'Registro da conversão temporariamente indisponível.' });
+    }
+    console.info('Meta Purchase accepted', { eventId: meta.eventId, eventsReceived: meta.eventsReceived, fbtraceId: meta.fbtraceId });
+    return response.status(200).json({ received: true });
+  } catch (error) {
+    console.error('Mercado Pago webhook processing failed; webhook will be retried', { paymentId, reason: error.message });
+    return response.status(503).json({ error: 'Processamento temporariamente indisponível.' });
+  }
 }

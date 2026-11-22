@@ -4,7 +4,7 @@ responsiveCss.href = '/assets/css/responsive.css';
 document.head.append(responsiveCss);
 if (!window.MetaPixel && !document.querySelector('script[src*="assets/js/meta-pixel.js"]')) {
   const metaPixel = document.createElement('script');
-  metaPixel.src = '/assets/js/meta-pixel.js?v=20261120-newboox';
+  metaPixel.src = '/assets/js/meta-pixel.js?v=20261122-server-pageview';
   document.head.append(metaPixel);
 }
 

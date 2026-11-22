@@ -1,9 +1,11 @@
 import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
-import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import adminOverview from './api/admin/overview.js';
+import metaPageView from './api/meta/pageview.js';
+import mercadoPagoWebhook from './api/mercadopago/webhook.js';
 import { paymentAmount, shippingAmount, shippingServiceFrom, storeProduct, storeProducts } from './api/_lib/catalog.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
@@ -19,15 +21,6 @@ const allowRequest = (req, scope, limit, windowMs) => {
   return { allowed: current.count <= limit, remaining: Math.max(0, limit - current.count), retryAfter: Math.ceil((current.resetAt - now) / 1000) };
 };
 const applyRate = (res, quota) => { res.setHeader('X-RateLimit-Remaining', String(quota.remaining)); if (!quota.allowed) res.setHeader('Retry-After', String(quota.retryAfter)); };
-const validWebhook = (req, url, body) => {
-  if (!config.webhookSecret) return false;
-  const values = Object.fromEntries(String(req.headers['x-signature'] || '').split(',').map(value => value.trim().split('=')));
-  const requestId = String(req.headers['x-request-id'] || '');
-  const dataId = String(url.searchParams.get('data.id') || body?.data?.id || '').toLowerCase();
-  if (!values.ts || !values.v1 || !requestId || !dataId) return false;
-  const expected = createHmac('sha256', config.webhookSecret).update(`id:${dataId};request-id:${requestId};ts:${values.ts};`).digest('hex');
-  try { return timingSafeEqual(Buffer.from(expected), Buffer.from(values.v1)); } catch { return false; }
-};
 const product = storeProduct();
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
 const reply = (res, status, body) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(body)); };
@@ -90,7 +83,7 @@ async function processPayment(req, res) {
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  if (req.method === 'GET' && url.pathname === '/api/config') return reply(res, 200, { publicKey: config.publicKey, paymentEnabled: Boolean(config.accessToken && config.publicKey), webhookConfigured: Boolean(config.webhookSecret), metaCapiEnabled: Boolean(env.META_PIXEL_ID && env.META_ACCESS_TOKEN), metaTestMode: Boolean(env.META_TEST_EVENT_CODE), sedexConfigured: true, shipping: { standard: { carrier: 'Correios', price: 0, minDays: 8, maxDays: 12 }, sedex: { carrier: 'SEDEX', price: 12.36, minDays: 2, maxDays: 3 } }, product, kits: storeProducts() });
+  if (req.method === 'GET' && url.pathname === '/api/config') return reply(res, 200, { publicKey: config.publicKey, paymentEnabled: Boolean(config.accessToken && config.publicKey), webhookConfigured: Boolean(config.webhookSecret), metaCapiEnabled: Boolean(env.META_PIXEL_ID && env.META_ACCESS_TOKEN), metaPixelMatchesBrowser: Boolean(env.META_PIXEL_ID === '1806290673851071'), metaTestMode: Boolean(env.META_TEST_EVENT_CODE), sedexConfigured: true, shipping: { standard: { carrier: 'Correios', price: 0, minDays: 8, maxDays: 12 }, sedex: { carrier: 'SEDEX', price: 12.36, minDays: 2, maxDays: 3 } }, product, kits: storeProducts() });
   if (req.method === 'GET' && url.pathname === '/api/locale') return reply(res, 200, { country: 'BR', city: '', region: '' });
   if (req.method === 'GET' && url.pathname === '/api/payment-status') {
     const quota = allowRequest(req, 'payment-status', 30, 60_000); applyRate(res, quota);
@@ -124,10 +117,30 @@ http.createServer(async (req, res) => {
     return adminOverview(request, response);
   }
   if (req.method === 'POST' && url.pathname === '/api/process_payment') return processPayment(req, res);
+  if (req.method === 'POST' && url.pathname === '/api/meta/pageview') {
+    try {
+      const body = await readBody(req);
+      const request = { method: req.method, headers: req.headers, socket: req.socket, body };
+      const response = {
+        setHeader: (name, value) => res.setHeader(name, value),
+        status(code) { this.code = code; return this; },
+        json(payload) { return reply(res, this.code || 200, payload); }
+      };
+      return metaPageView(request, response);
+    } catch { return reply(res, 400, { error: 'Corpo inválido.' }); }
+  }
   if (req.method === 'POST' && url.pathname === '/api/mercadopago/webhook') {
-    const quota = allowRequest(req, 'webhook', 120, 60_000); applyRate(res, quota);
-    if (!quota.allowed) return reply(res, 429, { error: 'Limite de notificações excedido.' });
-    try { const body = await readBody(req); if (!validWebhook(req, url, body)) return reply(res, 401, { error: 'Assinatura de webhook inválida.' }); return reply(res, 200, { received: true }); } catch { return reply(res, 400, { error: 'Corpo inválido.' }); }
+    try {
+      const body = await readBody(req);
+      const request = { method: req.method, headers: req.headers, socket: req.socket, query: Object.fromEntries(url.searchParams), body };
+      const response = {
+        setHeader: (name, value) => res.setHeader(name, value),
+        status(code) { this.code = code; return this; },
+        json(payload) { return reply(res, this.code || 200, payload); },
+        end() { res.writeHead(this.code || 200); res.end(); }
+      };
+      return mercadoPagoWebhook(request, response);
+    } catch { return reply(res, 400, { error: 'Corpo inválido.' }); }
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') return reply(res, 405, { error: 'Método não permitido.' });
   const routeFiles = {

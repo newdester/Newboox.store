@@ -58,7 +58,48 @@ export async function sendMetaPurchase(payment) {
     const response = await fetch(META_ENDPOINT(pixelId), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(6500)
+    });
+    const result = await response.json().catch(() => ({}));
+    return {
+      sent: response.ok && Number(result.events_received || 0) > 0,
+      eventId,
+      status: response.status,
+      eventsReceived: Number(result.events_received || 0),
+      fbtraceId: String(result.fbtrace_id || ''),
+      error: result.error ? { code: result.error.code, subcode: result.error.error_subcode, message: result.error.message } : null
+    };
+  } catch (error) {
+    return { sent: false, eventId, status: 0, eventsReceived: 0, error: { message: error.message } };
+  }
+}
+
+export async function sendMetaPageView({ eventId, eventSourceUrl, fbp, fbc, clientIp, userAgent }) {
+  const pixelId = process.env.META_PIXEL_ID;
+  const accessToken = process.env.META_ACCESS_TOKEN;
+  if (!pixelId || !accessToken) return { sent: false, reason: 'meta_not_configured' };
+  const event = {
+    event_name: 'PageView',
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: eventId,
+    action_source: 'website',
+    event_source_url: eventSourceUrl,
+    user_data: {
+      ...(fbp ? { fbp: String(fbp).slice(0, 200) } : {}),
+      ...(fbc ? { fbc: String(fbc).slice(0, 500) } : {}),
+      ...(clientIp ? { client_ip_address: String(clientIp).slice(0, 64) } : {}),
+      client_user_agent: String(userAgent || 'Newboox-Website/1.0').slice(0, 500)
+    }
+  };
+  try {
+    const body = { data: [event], access_token: accessToken };
+    if (process.env.META_TEST_EVENT_CODE) body.test_event_code = process.env.META_TEST_EVENT_CODE;
+    const response = await fetch(META_ENDPOINT(pixelId), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(6500)
     });
     const result = await response.json().catch(() => ({}));
     return {
