@@ -1,5 +1,6 @@
 import { rateLimit, sendRateHeaders } from '../_lib/rate-limit.js';
 import { sendMetaPageView } from '../_lib/meta-capi.js';
+import { recordFunnelEvent } from '../_lib/funnel-store.js';
 
 const allowedOrigins = () => {
   const origins = new Set(['https://newboox.store', 'https://www.newboox.store']);
@@ -29,7 +30,7 @@ export default async function handler(request, response) {
   let sourceUrl;
   try { sourceUrl = new URL(String(request.body?.eventSourceUrl || '')); } catch {}
   if (!sourceUrl || sourceUrl.pathname !== '/' || sourceUrl.search || sourceUrl.hash
-    || !allowedOrigins().has(sourceUrl.origin)) {
+    || (!allowedOrigins().has(sourceUrl.origin) && !isLocalOrigin(sourceUrl.origin))) {
     return response.status(400).json({ error: 'O PageView só é aceito na página principal.' });
   }
 
@@ -42,10 +43,15 @@ export default async function handler(request, response) {
     clientIp,
     userAgent: request.headers['user-agent']
   });
+  const analytics = await recordFunnelEvent({
+    eventName: 'PageView', eventId, eventTime: Date.now(), path: '/', value: 0, currency: 'BRL',
+    fbp: Boolean(request.body?.fbp), fbc: Boolean(request.body?.fbc), metaAccepted: result.sent
+  });
+  if (analytics.configured && !analytics.stored && !analytics.duplicate) console.error('PageView analytics storage failed', { eventId, reason: analytics.reason });
   if (!result.sent) {
     console.error('Meta PageView rejected', { eventId: result.eventId, status: result.status, reason: result.reason, error: result.error, fbtraceId: result.fbtraceId });
-    return response.status(502).json({ received: false, error: 'Não foi possível registrar o PageView.' });
+    return response.status(502).json({ received: false, analyticsStored: analytics.stored, error: 'Não foi possível registrar o PageView.' });
   }
   console.info('Meta PageView accepted', { eventId: result.eventId, eventsReceived: result.eventsReceived, fbtraceId: result.fbtraceId });
-  return response.status(200).json({ received: true, eventId: result.eventId, eventsReceived: result.eventsReceived });
+  return response.status(200).json({ received: true, analyticsStored: analytics.stored, eventId: result.eventId, eventsReceived: result.eventsReceived });
 }

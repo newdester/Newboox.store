@@ -50,12 +50,30 @@
   }
 
   function renderFunnel(data) {
-    const events = data.funnel.trackedEvents.map(event => `<li>${escape(event)}</li>`).join('');
-    $('#funnel').innerHTML = `<ul class="funnel-events">${events}</ul><p class="funnel-empty">Os eventos estão instrumentados no site e enviados ao Meta. As contagens próprias de visualização, carrinho e checkout ainda precisam de armazenamento de analytics para aparecerem aqui como conversão de funil.</p>`;
+    const funnel = data.funnel;
+    if (!funnel.available) {
+      $('#funnel').innerHTML = `<p class="funnel-empty">${escape(funnel.current?.reason || 'O histórico do funil ainda não está disponível.')}</p><ul class="funnel-events">${funnel.trackedEvents.map(event => `<li>${escape(event)}</li>`).join('')}</ul>`;
+      return;
+    }
+    const events = funnel.current.events || {};
+    const previousEvents = funnel.previous?.events || {};
+    const labels = { PageView: 'PageView · página inicial', ViewContent: 'ViewContent · produto', AddToCart: 'AddToCart · carrinho', InitiateCheckout: 'InitiateCheckout · checkout', AddPaymentInfo: 'AddPaymentInfo · dados de pagamento', Purchase: 'Purchase · CAPI' };
+    const rows = funnel.trackedEvents.map((name, index, names) => {
+      const item = events[name] || {};
+      const previous = previousEvents[name] || {};
+      const metaRate = Number(item.observed) ? `${Math.round((Number(item.metaAccepted || 0) / Number(item.observed)) * 100)}%` : '—';
+      const priorCount = Number(previous.observed || 0);
+      const priorRatio = Number(previousEvents[names[index - 1]]?.observed || 0);
+      const stepRatio = index === 0 ? '—' : priorRatio ? `${Math.round((Number(item.observed || 0) / priorRatio) * 100)}%` : '—';
+      return `<tr><td>${escape(labels[name] || name)}</td><td>${Number(item.observed || 0)}</td><td>${Number(item.metaAccepted || 0)} <small>(${metaRate})</small></td><td>${priorCount}</td><td>${Number(item.withFbc || 0)}</td><td>${stepRatio}</td></tr>`;
+    }).join('');
+    const recent = (funnel.current.recent || []).slice(0, 10);
+    const recentHtml = recent.length ? `<h3 class="funnel-subtitle">Últimos eventos recebidos</h3><div class="table-wrap"><table class="funnel-table"><thead><tr><th>Horário</th><th>Evento</th><th>Página</th><th>Meta</th><th>FBC</th></tr></thead><tbody>${recent.map(item => `<tr><td>${time(item.eventTime)}</td><td>${escape(item.eventName)}</td><td>${escape(item.path)}</td><td><span class="badge ${item.metaAccepted ? 'badge-approved' : 'badge-rejected'}">${item.metaAccepted ? 'aceito' : 'não aceito'}</span></td><td>${item.fbc ? 'sim' : 'não'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">Ainda não há eventos recentes no período salvo.</p>';
+    $('#funnel').innerHTML = `<div class="funnel-kpis"><span><b>Compras aprovadas no Mercado Pago</b><strong>${Number(funnel.approvedPurchases || 0)}</strong></span><span><b>Eventos do site observados</b><strong>${Object.values(events).reduce((sum, item) => sum + Number(item.observed || 0), 0)}</strong></span><span><b>Eventos com FBC</b><strong>${Object.values(events).reduce((sum, item) => sum + Number(item.withFbc || 0), 0)}</strong></span></div><div class="table-wrap"><table class="funnel-table"><thead><tr><th>Etapa</th><th>Site recebeu</th><th>Meta aceitou</th><th>Período anterior</th><th>Com FBC</th><th>Eventos / etapa anterior</th></tr></thead><tbody>${rows}</tbody></table></div>${recentHtml}<p class="muted">“Meta aceitou” significa que a API de eventos respondeu com sucesso; isso não garante atribuição a um anúncio. FBC indica que havia identificador de clique disponível. As taxas comparam ocorrências de eventos, não pessoas únicas.</p>`;
   }
 
   function renderRecommendations(data) { $('#recommendations').innerHTML = data.recommendations.map(item => `<li class="priority-${item.priority}"><b>${escape(item.title)}</b><span>${escape(item.detail)}</span></li>`).join(''); }
-  function renderIntegrations(data) { const labels = { mercadoPago: 'Mercado Pago', webhook: 'Webhook assinado', metaCapi: 'Meta CAPI', metaAds: 'Meta Ads Insights', firstPartyFunnelStorage: 'Banco de funil próprio' }; $('#integrations').innerHTML = Object.entries(labels).map(([key, label]) => `<div class="integration"><span>${label}</span><b class="${data.integrations[key] ? 'ok' : 'pending'}">${data.integrations[key] ? 'Conectado' : 'Pendente'}</b></div>`).join(''); }
+  function renderIntegrations(data) { const labels = { mercadoPago: 'Mercado Pago', webhook: 'Webhook assinado', metaCapi: 'Meta CAPI', metaPixelMatchesBrowser: 'Pixel navegador/servidor', metaAds: 'Meta Ads Insights', firstPartyFunnelStorage: 'Banco do funil' }; $('#integrations').innerHTML = Object.entries(labels).map(([key, label]) => `<div class="integration"><span>${label}</span><b class="${data.integrations[key] ? 'ok' : 'pending'}">${data.integrations[key] ? 'Conectado' : 'Pendente'}</b></div>`).join(''); }
   function renderOrders(data) { const orders = data.current.recent; $('#orders').innerHTML = orders.length ? orders.map(item => `<tr><td>${time(item.createdAt)}</td><td>${escape(item.id)}</td><td>${escape(item.method.replaceAll('_', ' '))}</td><td>${item.installments}x</td><td><span class="badge badge-${escape(item.status)}">${escape(item.status)}</span></td><td>${money(item.amount)}</td></tr>`).join('') : '<tr><td colspan="6">Nenhuma tentativa de pagamento no período selecionado.</td></tr>'; }
   function renderContacts(data) {
     const detail = data.contacts;

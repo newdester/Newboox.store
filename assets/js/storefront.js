@@ -4,7 +4,7 @@ responsiveCss.href = '/assets/css/responsive.css';
 document.head.append(responsiveCss);
 if (!window.MetaPixel && !document.querySelector('script[src*="assets/js/meta-pixel.js"]')) {
   const metaPixel = document.createElement('script');
-  metaPixel.src = '/assets/js/meta-pixel.js?v=20261122-server-pageview';
+  metaPixel.src = '/assets/js/meta-pixel.js?v=20261122-funnel-capi';
   document.head.append(metaPixel);
 }
 
@@ -112,7 +112,7 @@ const Storefront = (() => {
   const renderThankYou = async () => {
     let payment = JSON.parse(sessionStorage.getItem(PAYMENT) || 'null');
     const query = new URLSearchParams(location.search);
-    const returnedId = query.get('payment_id') || query.get('collection_id');
+    const returnedId = query.get('payment_id') || query.get('collection_id') || payment?.paymentId;
     if (returnedId && /^\d+$/.test(returnedId)) {
       try {
         const response = await fetch(`/api/payment-status?paymentId=${encodeURIComponent(returnedId)}`, { cache: 'no-store' });

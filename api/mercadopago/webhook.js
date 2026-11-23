@@ -27,7 +27,14 @@ export default async function handler(request, response) {
   const quota = rateLimit(request, 'webhook', { limit: 120, windowMs: 60_000 });
   sendRateHeaders(response, quota);
   if (!quota.allowed) return response.status(429).json({ error: 'Limite de notificações excedido.' });
-  if (!signatureIsValid(request)) return response.status(401).json({ error: 'Assinatura de webhook inválida.' });
+  if (!signatureIsValid(request)) {
+    console.error('Mercado Pago webhook rejected: invalid signature', {
+      hasSignature: Boolean(header(request, 'x-signature')),
+      hasRequestId: Boolean(header(request, 'x-request-id')),
+      hasPaymentId: Boolean(request.query?.['data.id'] || request.body?.data?.id)
+    });
+    return response.status(401).json({ error: 'Assinatura de webhook inválida.' });
+  }
   const paymentId = request.query?.['data.id'] || request.body?.data?.id;
   if (!paymentId) return response.status(200).json({ received: true });
   if (!process.env.MP_ACCESS_TOKEN) return response.status(503).json({ error: 'Consulta de pagamento temporariamente indisponível.' });

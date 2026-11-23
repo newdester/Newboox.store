@@ -4,9 +4,11 @@ import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import adminOverview from './api/admin/overview.js';
+import metaFunnelEvent from './api/meta/event.js';
 import metaPageView from './api/meta/pageview.js';
 import mercadoPagoWebhook from './api/mercadopago/webhook.js';
 import { paymentAmount, shippingAmount, shippingServiceFrom, storeProduct, storeProducts } from './api/_lib/catalog.js';
+import { sendMetaPurchase } from './api/_lib/meta-capi.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const env = Object.fromEntries((await readFile(path.join(root, '.env'), 'utf8').catch(() => '')).split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#')).map(line => { const i = line.indexOf('='); return [line.slice(0, i), line.slice(i + 1)]; }));
@@ -91,7 +93,8 @@ http.createServer(async (req, res) => {
     try {
       const payment = await safePaymentStatus(url.searchParams.get('paymentId'));
       if (!payment) return reply(res, 404, { error: 'Pagamento não encontrado.' });
-      return reply(res, 200, { paymentId: payment.id, status: payment.status, statusDetail: payment.status_detail, amount: payment.transaction_amount, pix: payment.point_of_interaction?.transaction_data || null });
+      const meta = payment.status === 'approved' ? await sendMetaPurchase(payment) : null;
+      return reply(res, 200, { paymentId: payment.id, status: payment.status, statusDetail: payment.status_detail, amount: payment.transaction_amount, pix: payment.point_of_interaction?.transaction_data || null, ...(meta ? { metaAccepted: Boolean(meta.sent) } : {}) });
     } catch { return reply(res, 502, { error: 'Não foi possível consultar o pagamento.' }); }
   }
   if (req.method === 'POST' && url.pathname === '/api/cancel-payment') {
@@ -127,6 +130,18 @@ http.createServer(async (req, res) => {
         json(payload) { return reply(res, this.code || 200, payload); }
       };
       return metaPageView(request, response);
+    } catch { return reply(res, 400, { error: 'Corpo inválido.' }); }
+  }
+  if (req.method === 'POST' && url.pathname === '/api/meta/event') {
+    try {
+      const body = await readBody(req);
+      const request = { method: req.method, headers: req.headers, socket: req.socket, body };
+      const response = {
+        setHeader: (name, value) => res.setHeader(name, value),
+        status(code) { this.code = code; return this; },
+        json(payload) { return reply(res, this.code || 200, payload); }
+      };
+      return metaFunnelEvent(request, response);
     } catch { return reply(res, 400, { error: 'Corpo inválido.' }); }
   }
   if (req.method === 'POST' && url.pathname === '/api/mercadopago/webhook') {

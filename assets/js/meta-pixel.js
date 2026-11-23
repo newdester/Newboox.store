@@ -57,6 +57,38 @@
     }).catch(() => { setTimeout(() => { sendPageView().catch(() => {}); }, 700); });
   }
   const content = product => ({ content_ids: [product.id], content_name: product.title, content_type: 'product', currency: product.currency || 'BRL', value: Number(product.price) });
-  window.MetaPixel = { track: (event, parameters = {}, eventId) => eventId ? window.fbq?.('track', event, parameters, { eventID: eventId }) : window.fbq?.('track', event, parameters), trackCustom: (event, parameters = {}) => window.fbq?.('trackCustom', event, parameters), content, attribution: captureAttribution };
+  const funnelEvents = new Set(['ViewContent', 'AddToCart', 'InitiateCheckout', 'AddPaymentInfo']);
+  const createEventId = () => `evt_${window.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`}`;
+  const sendFunnelEvent = (event, parameters, eventId) => {
+    const attribution = captureAttribution();
+    const payload = {
+      eventName: event,
+      eventId,
+      eventSourceUrl: `${location.origin}${location.pathname}`,
+      parameters,
+      fbp: attribution.fbp,
+      fbc: attribution.fbc
+    };
+    const send = () => fetch('/api/meta/event', {
+      method: 'POST',
+      credentials: 'same-origin',
+      keepalive: true,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    send().then(response => {
+      if (response.status >= 500) setTimeout(() => { send().catch(() => {}); }, 700);
+    }).catch(() => { setTimeout(() => { send().catch(() => {}); }, 700); });
+  };
+  window.MetaPixel = {
+    track: (event, parameters = {}, eventId = createEventId()) => {
+      window.fbq?.('track', event, parameters, { eventID: eventId });
+      if (funnelEvents.has(event)) sendFunnelEvent(event, parameters, eventId);
+      return eventId;
+    },
+    trackCustom: (event, parameters = {}) => window.fbq?.('trackCustom', event, parameters),
+    content,
+    attribution: captureAttribution
+  };
   window.dispatchEvent(new Event('meta-pixel-ready'));
 })();

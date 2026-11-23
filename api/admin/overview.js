@@ -1,5 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
 import { rateLimit, sendRateHeaders } from '../_lib/rate-limit.js';
+import { getFunnelData } from '../_lib/funnel-store.js';
 
 const PRODUCT_ID = 'toyadent';
 const MAX_PAYMENTS = 500;
@@ -236,10 +237,12 @@ async function fetchMetaCampaigns(range) {
   }
 }
 
-function recommendations(current, integrations) {
+function recommendations(current, integrations, funnel) {
   const suggestions = [];
   if (!integrations.metaAds) suggestions.push({ priority: 'alta', title: 'Conectar dados de campanha', detail: 'Adicione as credenciais de leitura da Meta para comparar investimento, CTR, CPC e compras por campanha.' });
-  suggestions.push({ priority: 'alta', title: 'Completar o funil próprio', detail: 'O Pixel registra PageView, ViewContent, AddToCart, InitiateCheckout, AddPaymentInfo e Purchase, mas o projeto ainda não persiste as contagens. Conecte um banco de analytics para medir abandono com precisão.' });
+  if (!integrations.firstPartyFunnelStorage) suggestions.push({ priority: 'alta', title: 'Ativar histórico do funil', detail: 'Configure UPSTASH_REDIS_REST_URL e UPSTASH_REDIS_REST_TOKEN na Vercel para salvar eventos agregados sem dados pessoais.' });
+  else if (!funnel.available) suggestions.push({ priority: 'alta', title: 'Verificar banco do funil', detail: funnel.reason || 'A base Redis configurada não respondeu ao painel.' });
+  else if (current.totals.approved > 0 && Number(funnel.events.InitiateCheckout?.observed || 0) === 0) suggestions.push({ priority: 'alta', title: 'Revisar início do checkout', detail: 'Há pagamentos aprovados, mas nenhum InitiateCheckout registrado neste período. Compare a data do deploy e a configuração do armazenamento do funil.' });
   if (current.totals.pending > 0) suggestions.push({ priority: 'média', title: 'Recuperar Pix pendentes', detail: `${current.totals.pending} pagamento(s) aguardam conclusão. Automatize lembretes após a criação do Pix e antes da expiração.` });
   if (current.totals.attempts >= 5 && number(current.totals.approvalRate) < 65) suggestions.push({ priority: 'média', title: 'Reduzir recusas de pagamento', detail: `A aprovação entre tentativas está em ${current.totals.approvalRate}%. Revise mensagens de confiança, CPF/CEP e destaque Pix como alternativa.` });
   if (!current.totals.attempts) suggestions.push({ priority: 'baixa', title: 'Aguardando dados de venda', detail: 'Não há pagamentos deste produto no período selecionado. Confirme as datas ou aguarde as primeiras transações.' });
@@ -255,24 +258,26 @@ export default async function handler(request, response) {
   if (!periods) return response.status(422).json({ error: 'Use períodos entre 1 e 365 dias.' });
 
   try {
-    const [currentPayments, previousPayments, currentCampaigns, previousCampaigns] = await Promise.all([
-      fetchPayments(periods.current), fetchPayments(periods.previous), fetchMetaCampaigns(periods.current), fetchMetaCampaigns(periods.previous)
+    const [currentPayments, previousPayments, currentCampaigns, previousCampaigns, currentFunnel, previousFunnel] = await Promise.all([
+      fetchPayments(periods.current), fetchPayments(periods.previous), fetchMetaCampaigns(periods.current), fetchMetaCampaigns(periods.previous),
+      getFunnelData(periods.current), getFunnelData(periods.previous)
     ]);
     const current = aggregate(currentPayments, periods.current);
     const previous = aggregate(previousPayments, periods.previous);
     const integrations = {
       mercadoPago: Boolean(process.env.MP_ACCESS_TOKEN), webhook: Boolean(process.env.MP_WEBHOOK_SECRET),
       metaCapi: Boolean(process.env.META_PIXEL_ID && process.env.META_ACCESS_TOKEN),
-      metaAds: currentCampaigns.connected, firstPartyFunnelStorage: false, customerRecords: Boolean(process.env.ADMIN_DASHBOARD_TOKEN)
+      metaPixelMatchesBrowser: Boolean(process.env.META_PIXEL_ID === '1806290673851071'),
+      metaAds: currentCampaigns.connected, firstPartyFunnelStorage: currentFunnel.available, customerRecords: Boolean(process.env.ADMIN_DASHBOARD_TOKEN)
     };
     response.setHeader('Cache-Control', 'no-store');
     return response.status(200).json({
       generatedAt: new Date().toISOString(), periods: { current: periods.current, previous: periods.previous }, current, previous,
       comparison: { revenue: change(current.totals.revenue, previous.totals.revenue), approved: change(current.totals.approved, previous.totals.approved), attempts: change(current.totals.attempts, previous.totals.attempts) },
       campaigns: { current: currentCampaigns, previous: previousCampaigns }, integrations,
-      funnel: { available: false, trackedEvents: ['PageView', 'ViewContent', 'AddToCart', 'InitiateCheckout', 'AddPaymentInfo', 'Purchase'] },
+      funnel: { available: currentFunnel.available, configured: currentFunnel.configured, current: currentFunnel, previous: previousFunnel, approvedPurchases: current.totals.approved, trackedEvents: ['PageView', 'ViewContent', 'AddToCart', 'InitiateCheckout', 'AddPaymentInfo', 'Purchase'] },
       contacts: contacts(currentPayments, canViewContacts(request)),
-      recommendations: recommendations(current, integrations), limitations: ['Os pagamentos são consultados diretamente no Mercado Pago.', 'A API de pagamentos retorna até 12 meses de histórico.', 'Nome, e-mail e telefone só ficam disponíveis após autenticação do administrador. CPF, endereço, cartão e chaves não são exibidos.']
+      recommendations: recommendations(current, integrations, currentFunnel), limitations: ['Pagamentos e valores aprovados vêm diretamente do Mercado Pago; eventos do funil são agregados e não identificam pessoas.', 'O histórico de pagamentos e do funil depende da retenção disponível em cada integração.', 'Nome, e-mail e telefone só ficam disponíveis após autenticação do administrador. CPF, endereço, cartão e chaves não são exibidos.']
     });
   } catch (error) {
     return response.status(502).json({ error: error.message || 'Não foi possível carregar os dados do painel.' });
