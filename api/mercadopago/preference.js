@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { paymentAmount, quantityFrom, shippingAmount, shippingServiceFrom, storeProduct } from '../_lib/catalog.js';
+import { itemCount, normalizeOrderItems, paymentAmount, shippingAmount, shippingServiceFrom, unitPriceForQuantity } from '../_lib/catalog.js';
 import { rateLimit, sendRateHeaders } from '../_lib/rate-limit.js';
 
 const publicBaseUrl = () => String(process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '');
@@ -11,15 +11,17 @@ export default async function handler(request, response) {
   if (!quota.allowed) return response.status(429).json({ error: 'Muitas tentativas. Aguarde um minuto.' });
   if (!process.env.MP_ACCESS_TOKEN || !publicBaseUrl()) return response.status(503).json({ error: 'Mercado Pago ainda não configurado.' });
 
-  const product = storeProduct(request.body?.productId);
-  const quantity = quantityFrom(request.body?.quantity);
+  let items;
+  try { items = normalizeOrderItems(request.body?.items); }
+  catch (error) { return response.status(422).json({ error: error.message }); }
+  const quantity = itemCount(items);
   const shippingService = shippingServiceFrom(request.body?.shippingService);
-  const shipping = shippingAmount(product, quantity, shippingService);
+  const shipping = shippingAmount(items, shippingService);
   const carrier = shippingService === 'sedex' ? 'SEDEX' : 'Correios - Entrega Padrão';
   const reference = `NB-WALLET-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const payload = {
     purpose: 'wallet_purchase',
-    items: [{ id: product.id, title: product.title, quantity, currency_id: 'BRL', unit_price: product.price }],
+    items: items.map(row => ({ id: row.productId, title: row.product.title, quantity: row.quantity, currency_id: 'BRL', unit_price: unitPriceForQuantity(quantity) })),
     shipments: { cost: shipping, mode: 'not_specified' },
     external_reference: reference,
     back_urls: {
@@ -30,7 +32,16 @@ export default async function handler(request, response) {
     auto_return: 'approved',
     notification_url: `${publicBaseUrl()}/api/mercadopago/webhook`,
     payment_methods: { excluded_payment_types: [{ id: 'ticket' }], installments: 1 },
-    metadata: { product_id: product.id, quantity: product.units * quantity, kit_quantity: quantity, shipping, shipping_service: shippingService, carrier, checkout_price: paymentAmount(product, quantity, shippingService) }
+    metadata: {
+      product_id: items[0].productId,
+      product_ids: items.map(row => row.productId).join(','),
+      items_json: JSON.stringify(items.map(row => ({ id: row.productId, quantity: row.quantity }))),
+      quantity,
+      shipping,
+      shipping_service: shippingService,
+      carrier,
+      checkout_price: paymentAmount(items, shippingService)
+    }
   };
 
   try {
@@ -41,7 +52,7 @@ export default async function handler(request, response) {
     });
     const data = await result.json().catch(() => ({}));
     if (!result.ok || !data.id) return response.status(422).json({ error: data.message || 'Não foi possível iniciar o pagamento com saldo Mercado Pago.' });
-    return response.status(200).json({ id: data.id, initPoint: data.init_point, amount: paymentAmount(product, quantity, shippingService) });
+    return response.status(200).json({ id: data.id, initPoint: data.init_point, amount: paymentAmount(items, shippingService) });
   } catch {
     return response.status(502).json({ error: 'Não foi possível comunicar com o Mercado Pago.' });
   }

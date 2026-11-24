@@ -13,6 +13,14 @@ export async function sendMetaPurchase(payment) {
   if (payment.status !== 'approved') return { sent: false, reason: 'payment_not_approved' };
   const quantity = Math.max(1, Number(payment.metadata?.quantity) || 1);
   const value = Number(payment.transaction_amount);
+  const itemPrice = Number(((value - (Number(payment.metadata?.shipping) || 0)) / quantity).toFixed(2));
+  let orderItems = [];
+  try {
+    const parsed = JSON.parse(String(payment.metadata?.items_json || '[]'));
+    if (Array.isArray(parsed)) orderItems = parsed.filter(item => /^terco-[a-z0-9-]+$/.test(String(item?.id || '')) && Number(item?.quantity) > 0);
+  } catch {}
+  if (!orderItems.length) orderItems = [{ id: String(payment.metadata?.product_id || 'terco-sao-miguel'), quantity }];
+  const contentIds = [...new Set(orderItems.map(item => String(item.id)))];
   const eventId = `mp_payment_${payment.id}`;
   const approvedAt = Date.parse(payment.date_approved || payment.date_created || '') || Date.now();
   const sourceUrl = String(payment.metadata?.meta_source_url || process.env.PUBLIC_BASE_URL || 'https://newboox.store/');
@@ -63,8 +71,8 @@ export async function sendMetaPurchase(payment) {
       value,
       order_id: String(payment.external_reference || payment.id),
       content_type: 'product',
-      content_ids: [String(payment.metadata?.product_id || 'toyadent-1')],
-      contents: [{ id: String(payment.metadata?.product_id || 'toyadent-1'), quantity, item_price: Number((value / quantity).toFixed(2)) }]
+      content_ids: contentIds,
+      contents: orderItems.map(item => ({ id: String(item.id), quantity: Number(item.quantity) || 1, item_price: itemPrice }))
     }
   };
   try {

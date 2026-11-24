@@ -2,7 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { rateLimit, sendRateHeaders } from '../_lib/rate-limit.js';
 import { getFunnelData } from '../_lib/funnel-store.js';
 
-const PRODUCT_ID = 'toyadent';
+const PRODUCT_ID = 'terco';
 const MAX_PAYMENTS = 500;
 const MAX_SCANNED_PAYMENTS = 500;
 const DAY = 86_400_000;
@@ -51,12 +51,39 @@ function belongsToStore(payment) {
   return reference.startsWith('NB-') || fingerprint.includes(PRODUCT_ID) || fingerprint.includes('toque duplo');
 }
 
-function productFor(payment) {
+const PRODUCT_NAMES = {
+  'terco-sao-miguel': 'Terço de São Miguel Arcanjo',
+  'terco-aparecida': 'Terço de Nossa Senhora Aparecida',
+  'terco-divino-espirito': 'Terço do Divino Espírito Santo',
+  'toyadent-1': 'Oferta anterior · Toyadent kit 1',
+  'toyadent-2': 'Oferta anterior · Toyadent kit 2',
+  'toyadent-3': 'Oferta anterior · Toyadent kit 3',
+  legacy: 'Oferta anterior'
+};
+
+function productRows(payment) {
+  let rows = [];
+  try {
+    const parsed = JSON.parse(String(payment.metadata?.items_json || '[]'));
+    if (Array.isArray(parsed)) rows = parsed
+      .filter(item => PRODUCT_NAMES[String(item?.id || '')] && Number(item?.quantity) > 0)
+      .map(item => ({ id: String(item.id), name: PRODUCT_NAMES[String(item.id)], quantity: Math.max(1, Number.parseInt(item.quantity, 10) || 1) }));
+  } catch {}
+  if (rows.length) return rows;
   const value = String(payment.metadata?.product_id || '').toLowerCase();
+  if (PRODUCT_NAMES[value]) return [{ id: value, name: PRODUCT_NAMES[value], quantity: Math.max(1, Number(payment.metadata?.quantity) || 1) }];
   const match = value.match(/^toyadent-([123])$/);
-  if (match) return { id: value, name: `TOYADENT · Kit ${match[1]}` };
-  if (value === 'toque-duplo' || /toque duplo/i.test(String(payment.description || ''))) return { id: 'legacy', name: 'Oferta anterior' };
-  return { id: 'toyadent-1', name: 'TOYADENT · Kit 1' };
+  if (match) return [{ id: value, name: 'Oferta anterior · Toyadent kit ' + match[1], quantity: Math.max(1, Number(payment.metadata?.quantity) || 1) }];
+  if (value === 'toque-duplo' || /toque duplo/i.test(String(payment.description || ''))) return [{ id: 'legacy', name: 'Oferta anterior', quantity: Math.max(1, Number(payment.metadata?.quantity) || 1) }];
+  return [{ id: 'legacy', name: 'Oferta anterior', quantity: Math.max(1, Number(payment.metadata?.quantity) || 1) }];
+}
+
+function productFor(payment) {
+  const rows = productRows(payment);
+  return {
+    id: rows.length === 1 ? rows[0].id : 'mixed',
+    name: rows.map(row => row.name + ' × ' + row.quantity).join(' + ')
+  };
 }
 
 function contactFor(payment) {
@@ -128,11 +155,14 @@ function aggregate(payments, range) {
   }
   const methods = { pix: { orders: 0, revenue: 0 }, cartao: { orders: 0, revenue: 0 }, saldo_mercado_pago: { orders: 0, revenue: 0 }, outro: { orders: 0, revenue: 0 } };
   const products = Object.fromEntries([
-    ['toyadent-1', 'TOYADENT · Kit 1'],
-    ['toyadent-2', 'TOYADENT · Kit 2'],
-    ['toyadent-3', 'TOYADENT · Kit 3'],
+    ['terco-sao-miguel', 'Terço de São Miguel Arcanjo'],
+    ['terco-aparecida', 'Terço de Nossa Senhora Aparecida'],
+    ['terco-divino-espirito', 'Terço do Divino Espírito Santo'],
+    ['toyadent-1', 'Oferta anterior · Toyadent kit 1'],
+    ['toyadent-2', 'Oferta anterior · Toyadent kit 2'],
+    ['toyadent-3', 'Oferta anterior · Toyadent kit 3'],
     ['legacy', 'Oferta anterior']
-  ].map(([id, name]) => [id, { id, name, attempts: 0, approved: 0, pending: 0, failed: 0, revenue: 0 }]));
+  ].map(([id, name]) => [id, { id, name, attempts: 0, approved: 0, pending: 0, failed: 0, other: 0, revenue: 0 }]));
   const installments = Array.from({ length: 12 }, (_, index) => ({ installments: index + 1, orders: 0 }));
   const totals = { attempts: 0, approved: 0, pending: 0, failed: 0, other: 0, revenue: 0, refunded: 0, pendingValue: 0 };
   const safePayments = payments.sort((left, right) => new Date(right.date_created) - new Date(left.date_created));
@@ -144,18 +174,25 @@ function aggregate(payments, range) {
     const amount = brl(payment.transaction_amount);
     const status = statusBucket(payment.status);
     const method = publicMethod(payment);
-    const product = productFor(payment);
-    const productTotals = products[product.id];
+    const productItems = productRows(payment);
+    const totalProductQuantity = Math.max(1, productItems.reduce((sum, row) => sum + row.quantity, 0));
     totals.attempts += 1;
     totals[status] += 1;
-    productTotals.attempts += 1;
-    productTotals[status] += 1;
+    productItems.forEach(row => {
+      if (!products[row.id]) products[row.id] = { id: row.id, name: row.name, attempts: 0, approved: 0, pending: 0, failed: 0, other: 0, revenue: 0 };
+      products[row.id].attempts += 1;
+      products[row.id][status] += 1;
+    });
     if (day) day.attempts += 1;
     if (status === 'approved') {
       const refunded = brl(payment.transaction_amount_refunded);
       totals.revenue = brl(totals.revenue + amount - refunded);
       totals.refunded = brl(totals.refunded + refunded);
-      productTotals.revenue = brl(productTotals.revenue + amount - refunded);
+      const merchandise = Math.max(0, amount - number(payment.metadata?.shipping));
+      productItems.forEach(row => {
+        const share = row.quantity / totalProductQuantity;
+        products[row.id].revenue = brl(products[row.id].revenue + (merchandise - refunded) * share);
+      });
       methods[method].orders += 1;
       methods[method].revenue = brl(methods[method].revenue + amount - refunded);
       if (day) { day.approved += 1; day.revenue = brl(day.revenue + amount - refunded); }

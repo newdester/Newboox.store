@@ -56,7 +56,23 @@
       if (response.status >= 500) setTimeout(() => { sendPageView().catch(() => {}); }, 700);
     }).catch(() => { setTimeout(() => { sendPageView().catch(() => {}); }, 700); });
   }
-  const content = product => ({ content_ids: [product.id], content_name: product.title, content_type: 'product', currency: product.currency || 'BRL', value: Number(product.price) });
+  const content = value => {
+    const rows = Array.isArray(value?.items) ? value.items : [{ id: value?.id, title: value?.title, quantity: 1, unitPrice: value?.price }];
+    const contents = rows.filter(row => row?.id).map(row => ({ id: String(row.id), quantity: Math.max(1, Number(row.quantity) || 1), item_price: Number(row.unitPrice) || 0 }));
+    const ids = [...new Set(contents.map(row => row.id))];
+    const count = contents.reduce((sum, row) => sum + row.quantity, 0);
+    const names = rows.map(row => row.title).filter(Boolean);
+    const price = Number(value?.total ?? value?.value ?? value?.price ?? 0);
+    return {
+      content_ids: ids,
+      content_name: names.join(', '),
+      content_type: 'product',
+      contents,
+      num_items: count,
+      currency: value?.currency || 'BRL',
+      value: Number.isFinite(price) ? price : 0
+    };
+  };
   const funnelEvents = new Set(['ViewContent', 'AddToCart', 'InitiateCheckout', 'AddPaymentInfo']);
   const createEventId = () => `evt_${window.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`}`;
   const sendFunnelEvent = (event, parameters, eventId) => {

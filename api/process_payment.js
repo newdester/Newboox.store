@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { rateLimit, sendRateHeaders } from './_lib/rate-limit.js';
-import { paymentAmount, quantityFrom, shippingAmount, shippingServiceFrom, storeProduct } from './_lib/catalog.js';
+import { itemCount, normalizeOrderItems, paymentAmount, shippingAmount, shippingServiceFrom } from './_lib/catalog.js';
 const baseUrl = () => String(process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '');
 const safeMeta = (value, max = 250) => String(value || '').trim().slice(0, max);
 const clientIp = request => String(request.headers?.['x-forwarded-for'] || request.socket?.remoteAddress || '').split(',')[0].trim().slice(0, 64);
@@ -13,10 +13,13 @@ export default async function handler(request, response) {
   if (!process.env.MP_ACCESS_TOKEN || !process.env.MP_PUBLIC_KEY) return response.status(503).json({ error: 'Pagamento ainda não configurado.' });
 
   const { formData = {}, customer = {}, attribution = {} } = request.body || {};
-  const quantity = quantityFrom(request.body?.quantity);
-  const product = storeProduct(request.body?.productId);
+  let items;
+  try { items = normalizeOrderItems(request.body?.items); }
+  catch (error) { return response.status(422).json({ error: error.message }); }
+  const quantity = itemCount(items);
+  const product = items[0].product;
   const shippingService = shippingServiceFrom(request.body?.shippingService);
-  const shipping = shippingAmount(product, quantity, shippingService);
+  const shipping = shippingAmount(items, shippingService);
   const carrier = shippingService === 'sedex' ? 'SEDEX' : 'Correios - Entrega Padrão';
   const email = String(formData.payer?.email || '').trim();
   if (!formData.payment_method_id || !/^\S+@\S+\.\S+$/.test(email)) return response.status(422).json({ error: 'Dados de pagamento incompletos.' });
@@ -29,9 +32,9 @@ export default async function handler(request, response) {
   const orderId = `NB-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const nameParts = safeMeta(customer.name, 120).split(/\s+/).filter(Boolean);
   const payload = {
-    transaction_amount: paymentAmount(product, quantity, shippingService),
+    transaction_amount: paymentAmount(items, shippingService),
     token: formData.token,
-    description: `${product.title} × ${quantity} · ${shippingService === 'sedex' ? 'SEDEX' : 'frete grátis'}`,
+    description: `Terços devocionais · ${quantity} unidade(s) · ${shippingService === 'sedex' ? 'SEDEX' : 'frete grátis'}`,
     installments: paymentType === 'credit_card' ? Math.min(product.maxInstallments, Math.max(1, Number(formData.installments) || 1)) : 1,
     payment_method_id: formData.payment_method_id,
     issuer_id: formData.issuer_id,
@@ -39,8 +42,9 @@ export default async function handler(request, response) {
     external_reference: orderId,
     metadata: {
       product_id: product.id,
-      quantity: product.units * quantity,
-      kit_quantity: quantity,
+      product_ids: items.map(row => row.productId).join(','),
+      items_json: JSON.stringify(items.map(row => ({ id: row.productId, quantity: row.quantity }))),
+      quantity,
       shipping,
       shipping_service: shippingService,
       carrier,

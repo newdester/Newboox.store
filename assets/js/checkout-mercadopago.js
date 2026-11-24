@@ -2,10 +2,9 @@
   const cart = Storefront.getCart();
   if (!cart) { location.replace('/cart'); return; }
   const $ = id => document.getElementById(id);
-  const quantity = Storefront.kitQuantityFor(cart);
+  const quantity = Storefront.quantityFor(cart);
   const brl = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   let config;
-  let selectedProduct;
   let customer;
   let cardBrick;
   let activeStep = 1;
@@ -56,7 +55,7 @@
   const payloadBase = formData => ({
     formData,
     quantity,
-    productId: selectedProduct.id,
+    items: cart.items.map(item => ({ productId: item.id, quantity: item.quantity })),
     shippingService: Storefront.shippingServiceFor(cart),
     attribution: window.MetaPixel?.attribution?.() || {},
     customer: {
@@ -77,14 +76,16 @@
     const total = Storefront.totalFor(cart);
     const subtotal = Storefront.subtotalFor(cart);
     const shipping = Storefront.extrasFor(cart);
-    const totalUnits = selectedProduct.units * quantity;
+    const totalUnits = quantity;
     const isSedex = Storefront.shippingServiceFor(cart) === 'sedex';
     const deliveryText = isSedex ? 'SEDEX · 2 a 3 dias úteis' : (cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis');
-    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="TOYADENT"><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g · ${quantity} ${quantity === 1 ? 'kit' : 'kits'}</span><span class="cart-meta">${deliveryText}</span></div><b class="cart-price">${brl(subtotal)}</b></div>`;
+    $('checkoutItem').innerHTML = cart.items.map(item => {
+      const model = Storefront.modelById(item.id);
+      return '<div class="cart-line"><div class="product-thumb" aria-hidden="true">📿</div><div><p class="cart-name">' + (model?.title || 'Terço') + '</p><span class="cart-meta">' + item.quantity + ' unidade(s) · ' + brl(Storefront.priceForQuantity(totalUnits)) + ' cada</span><span class="cart-meta"><a href="' + (model?.tiktokUrl || 'https://www.tiktok.com/@tercosdesing') + '" target="_blank" rel="noopener">Ver vídeo do modelo no TikTok</a></span></div><b class="cart-price">' + brl(Storefront.linePrice(cart, item)) + '</b></div>';
+    }).join('') + '<p class="cart-meta">' + deliveryText + '</p>';
     $('productSubtotal').textContent = brl(subtotal);
     $('checkoutShipping').textContent = shipping ? brl(shipping) : 'GRÁTIS';
     $('shippingLabel').textContent = isSedex ? 'SEDEX' : 'Entrega padrão';
-    $('checkoutTotal').textContent = brl(total);
     $('checkoutTotalBottom').textContent = brl(total);
     document.querySelectorAll('[data-payment-total]').forEach(node => { node.textContent = brl(total); });
     $('footerCurrency').textContent = `${deliveryText} · Pagamento em BRL`;
@@ -233,17 +234,17 @@
   async function initialize() {
     config = await fetch('/api/config', { cache: 'no-store' }).then(response => response.json());
     if (!config.paymentEnabled || !config.publicKey) throw new Error('Mercado Pago ainda não está ativo neste deploy.');
-    selectedProduct = config.kits?.find(product => product.id === cart.id) || config.product;
+    if (!Array.isArray(config.models) || !config.models.length) throw new Error('Não foi possível carregar os modelos do pedido.');
     document.querySelectorAll('input[name="shippingService"]').forEach(input => {
       input.checked = input.value === Storefront.shippingServiceFor(cart);
       input.closest('.delivery-choice')?.classList.toggle('selected', input.checked);
     });
     renderSummary();
-    $('cartCount').textContent = String(selectedProduct.units * quantity);
+    $('cartCount').textContent = String(quantity);
     Storefront.track?.('InitiateCheckout', cart, {
       value: Storefront.totalFor(cart),
       currency: 'BRL',
-      num_items: selectedProduct.units * quantity
+      num_items: quantity
     });
   }
 
@@ -255,7 +256,7 @@
     Storefront.track?.('AddPaymentInfo', cart, {
       value: Storefront.totalFor(cart),
       currency: 'BRL',
-      num_items: selectedProduct.units * quantity
+      num_items: quantity
     });
     event.currentTarget.classList.add('hidden');
     $('paymentArea').classList.remove('hidden');
@@ -286,7 +287,7 @@
   $('payWithMercadoPago').addEventListener('click', async () => {
     try {
       setStatus('Abrindo ambiente seguro do Mercado Pago…');
-      const response = await fetch('/api/mercadopago/preference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity, productId: selectedProduct.id, shippingService: Storefront.shippingServiceFor(cart) }) });
+      const response = await fetch('/api/mercadopago/preference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: cart.items.map(item => ({ productId: item.id, quantity: item.quantity })), shippingService: Storefront.shippingServiceFor(cart) }) });
       const result = await response.json();
       if (!response.ok || !result.initPoint) throw new Error(result.error || 'Não foi possível abrir o Mercado Pago.');
       location.assign(result.initPoint);
