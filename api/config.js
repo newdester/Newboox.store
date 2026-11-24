@@ -1,11 +1,10 @@
-import { catalogConfig, storeProduct } from './_lib/catalog.js';
+import { storeProduct, storeProducts } from './_lib/catalog.js';
 
 const BROWSER_PIXEL_ID = '1806290673851071';
 
 export default async function handler(request, response) {
   response.setHeader('Cache-Control', 'no-store');
   const product = storeProduct();
-  const catalog = catalogConfig();
   return response.status(200).json({
     publicKey: String(process.env.MP_PUBLIC_KEY || '').trim(),
     paymentEnabled: Boolean(process.env.MP_PUBLIC_KEY && process.env.MP_ACCESS_TOKEN),
@@ -14,10 +13,8 @@ export default async function handler(request, response) {
     metaPixelMatchesBrowser: Boolean(process.env.META_PIXEL_ID && process.env.META_PIXEL_ID === BROWSER_PIXEL_ID),
     metaTestMode: Boolean(process.env.META_TEST_EVENT_CODE),
     sedexConfigured: true,
-    shipping: catalog.shipping,
+    shipping: { standard: { carrier: 'Correios', price: 0, minDays: 8, maxDays: 12 }, sedex: { carrier: 'SEDEX', price: 12.36, minDays: 2, maxDays: 3 } },
     product,
-    models: catalog.models,
-    pricingTiers: catalog.pricingTiers,
-    maxOrderQuantity: catalog.maxOrderQuantity
+    kits: storeProducts()
   });
 }
