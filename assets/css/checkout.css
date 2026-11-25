@@ -18,3 +18,48 @@ body{font-size:16px}.field label,.section-heading span,.checkline,.payment-intro
 .payment-method-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 20px}.payment-method-tabs button{min-height:52px;border:1px solid #d7dbe2;border-radius:12px;background:#fff;font:inherit;font-weight:700;cursor:pointer;padding:10px}.payment-method-tabs button.active{border:2px solid #168f83;background:#eefbf8;color:#086b62}.pix-result{display:grid;gap:12px;margin-top:18px}.pix-result img{width:220px;max-width:100%;margin:auto;border-radius:12px}.pix-result textarea{min-height:100px;resize:none;border:1px solid #d7dbe2;border-radius:12px;padding:12px}.button--secondary{background:#fff!important;color:#111!important;border:1px solid #111!important}.mp-wallet-button{background:#009ee3!important}.order-panel del{color:#7c8491}.hidden{display:none!important}@media(max-width:640px){.payment-method-tabs{grid-template-columns:1fr}.payment-method-tabs button{min-height:46px}}
 .brand-wordmark{color:#604976;font-size:17px;font-weight:900;letter-spacing:.22em}.checkout-header{border-top:4px solid #604976}.payment-method-tabs button.active{border-color:#604976;background:#f5eef8;color:#47355a}.webview-notice{display:none;gap:5px;margin:16px 0 -6px;padding:12px 14px;border:1px solid #dcc7ee;border-radius:12px;background:#fbf7ff;color:#47355a;font-size:13px;line-height:1.4}.embedded-browser .webview-notice{display:grid}.webview-notice strong{font-size:13px}
 .checkout-progress{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;max-width:510px;margin:0 0 22px;padding:0;list-style:none}.checkout-progress li{display:grid;justify-items:center;gap:5px;color:#8a9199;font-size:11px;text-align:center}.checkout-progress li span{display:grid;place-items:center;width:27px;height:27px;border:1px solid #d4d8dc;border-radius:50%;background:#fff;font-weight:800}.checkout-progress li.active{color:#604976;font-weight:800}.checkout-progress li.active span{border-color:#604976;background:#604976;color:#fff}.checkout-progress li.complete{color:#168456}.checkout-progress li.complete span{border-color:#168456;background:#e8f7ef;color:#168456}.form-grid--personal{margin-top:10px}.step-button{margin-top:20px}.step-actions{display:grid;grid-template-columns:.72fr 1.28fr;gap:10px;margin-top:20px}.delivery-choice{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;margin:10px 0;padding:15px;border:2px solid #d9dde1;border-radius:12px;background:#fff;cursor:pointer}.delivery-choice.selected{border-color:#168456;background:#f2fbf6}.delivery-choice input{width:18px;height:18px}.delivery-choice span{display:grid;gap:3px}.delivery-choice small{color:var(--muted)}.delivery-choice>strong{font-size:12px;color:#168456}.delivery-choice--disabled{cursor:not-allowed;opacity:.68}.delivery-choice--disabled>strong{color:#604976}@media(max-width:520px){.checkout-progress li{font-size:10px}.step-actions{grid-template-columns:1fr}.step-actions .button--secondary{order:2}}
+
+.checkout-header--compact {
+  justify-content: space-between;
+  gap: 12px;
+  height: auto;
+  min-height: 64px;
+  padding-inline: max(16px, calc((100% - 1100px) / 2));
+  border-top: 0;
+}
+.checkout-header--compact .brand {
+  display: inline-flex;
+  gap: 9px;
+  color: #182536;
+  font-size: 20px;
+  font-weight: 750;
+  letter-spacing: -.025em;
+}
+.checkout-header--compact .brand .newboox-brand-mark { width: 32px; height: 32px; border-radius: 7px; }
+.checkout-header--compact .bag {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding-inline: 3px;
+  color: #0046ac;
+  font-size: 14px;
+  font-weight: 650;
+}
+.checkout-header--compact .bag span {
+  min-width: 22px;
+  padding: 1px 4px;
+  border-radius: 999px;
+  background: #eaf2ff;
+  text-align: center;
+  font: inherit;
+}
+.checkout-header--compact .bag:hover { text-decoration: underline; }
+#checkoutLink { background: #0059d8; box-shadow: none; }
+#checkoutLink:hover { background: #0046ac; }
+#zipFeedback { min-height: 0; margin: 2px 0 0; }
+#zipFeedback:empty { margin: 0; }
+@media (max-width: 740px) {
+  .checkout-header--compact { min-height: 52px; }
+}

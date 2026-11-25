@@ -327,35 +327,79 @@ import { Storefront } from './storefront.js?v=soarfly-4';
   });
 
   $('tax').addEventListener('input', event => { event.target.value = event.target.value.replace(/\D/g, '').slice(0, 11); });
-  $('zip').addEventListener('input', event => { const digits = event.target.value.replace(/\D/g, '').slice(0, 8); event.target.value = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits; });
-  $('zip').addEventListener('blur', async event => {
-    const zip = event.target.value.replace(/\D/g, '');
+  const zipField = $('zip');
+  const zipFeedback = $('zipFeedback');
+  const zipFields = [['address', 'logradouro'], ['city', 'localidade'], ['district', 'uf']];
+  const autofilled = new Map();
+  let lastZip = '';
+  let zipLookup;
+
+  function saveShippingEstimate(estimate) {
+    cart.deliveryEstimate = estimate;
+    Storefront.putCart(cart);
+    renderSummary();
+  }
+
+  function addressEstimate() {
+    const city = $('city').value.trim();
+    const state = $('district').value.trim();
+    return city && state ? `Entrega padrão grátis para ${city} - ${state} · 8 a 12 dias úteis` : '';
+  }
+
+  async function lookupZip() {
+    const zip = zipField.value.replace(/\D/g, '').slice(0, 8);
+    const formatted = zip.length > 5 ? `${zip.slice(0, 5)}-${zip.slice(5)}` : zip;
+    if (zipField.value !== formatted) zipField.value = formatted;
+    if (zip === lastZip) return;
+    zipLookup?.abort();
+    zipLookup = null;
+    for (const [field, value] of autofilled) {
+      if (field.value === value) field.value = '';
+    }
+    autofilled.clear();
+    if (lastZip.length === 8) saveShippingEstimate('');
+    lastZip = zip;
+    zipFeedback.textContent = '';
     if (zip.length !== 8) return;
-    $('zipFeedback').textContent = 'Buscando endereço…';
+
+    const controller = new AbortController();
+    zipLookup = controller;
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const fields = zipFields.map(([id, key]) => ({ field: $(id), key, before: $(id).value }));
+    zipFeedback.textContent = 'Buscando endereço…';
     try {
-      const address = await fetch(`https://viacep.com.br/ws/${zip}/json/`).then(response => response.json());
-      if (address.erro) throw new Error();
-      $('address').value = address.logradouro || $('address').value;
-      $('city').value = address.localidade || $('city').value;
-      $('district').value = address.uf || $('district').value;
-      cart.deliveryEstimate = `Entrega padrão grátis para ${address.localidade} - ${address.uf} · 8 a 12 dias úteis`;
-      Storefront.putCart(cart);
-      renderSummary();
-      $('zipFeedback').textContent = 'Endereço preenchido automaticamente. Confira o número e o complemento.';
-      $('number').focus();
-    } catch { $('zipFeedback').textContent = 'Não foi possível localizar o CEP. Preencha o endereço manualmente.'; }
-  });
+      const response = await fetch(`https://viacep.com.br/ws/${zip}/json/`, { signal: controller.signal });
+      if (!response.ok) throw new Error();
+      const address = await response.json();
+      if (controller !== zipLookup) return;
+      if (address.erro || !address.localidade || !address.uf) throw new Error();
+      for (const { field, key, before } of fields) {
+        if (address[key] && field.value === before) {
+          field.value = address[key];
+          autofilled.set(field, address[key]);
+        }
+      }
+      saveShippingEstimate(addressEstimate());
+      zipFeedback.textContent = $('address').value
+        ? 'Confira o endereço e informe o número.'
+        : 'Cidade e estado localizados. Informe a rua e o número.';
+    } catch {
+      if (controller === zipLookup) zipFeedback.textContent = 'Confira o CEP ou preencha o endereço manualmente.';
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  zipField.addEventListener('input', lookupZip);
+  zipField.addEventListener('change', lookupZip);
 
   document.querySelectorAll('input[name="shippingService"]').forEach(input => input.addEventListener('change', event => {
     cart.shippingService = event.target.value === 'sedex' ? 'sedex' : 'standard';
-    if (cart.shippingService === 'sedex') cart.deliveryEstimate = 'SEDEX · 2 a 3 dias úteis';
-    else cart.deliveryEstimate = $('city').value ? `Entrega padrão grátis para ${$('city').value} - ${$('district').value} · 8 a 12 dias úteis` : 'Entrega padrão grátis · 8 a 12 dias úteis';
-    Storefront.putCart(cart);
     document.querySelectorAll('.delivery-choice').forEach(label => label.classList.toggle('selected', label.contains(event.target)));
-    renderSummary();
+    saveShippingEstimate(addressEstimate());
   }));
 
-  try { const saved = JSON.parse(localStorage.getItem(Storefront.CUSTOMER) || '{}'); Object.entries(saved).forEach(([key, value]) => { if ($(key)) $(key).value = value; }); if ($('zip').value) $('zip').dispatchEvent(new Event('blur')); } catch {}
+  try { const saved = JSON.parse(localStorage.getItem(Storefront.CUSTOMER) || '{}'); Object.entries(saved).forEach(([key, value]) => { if ($(key)) $(key).value = value; }); if (zipField.value) lookupZip(); } catch {}
   if (window.StoreWebview?.isEmbeddedBrowser) $('webviewNotice').classList.remove('hidden');
   showStep(1);
   $('continueButton').disabled = true;
