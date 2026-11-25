@@ -1,4 +1,4 @@
-import { Storefront } from './storefront.js?v=soarfly-3';
+import { Storefront } from './storefront.js?v=soarfly-4';
 
 (() => {
   const cart = Storefront.getCart();
@@ -87,6 +87,9 @@ import { Storefront } from './storefront.js?v=soarfly-3';
     $('productSubtotal').textContent = brl(subtotal);
     $('checkoutShipping').textContent = shipping ? brl(shipping) : 'GRÁTIS';
     $('shippingLabel').textContent = isSedex ? 'SEDEX' : 'Entrega padrão';
+    const expressPrice = $('expressShippingPrice');
+    expressPrice.classList.toggle('hidden', !isSedex);
+    expressPrice.textContent = isSedex ? brl(shipping) : '';
     $('checkoutTotalBottom').textContent = brl(total);
     document.querySelectorAll('[data-payment-total]').forEach(node => { node.textContent = brl(total); });
     $('footerCurrency').textContent = `${deliveryText} · Pagamento em BRL`;

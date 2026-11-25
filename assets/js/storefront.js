@@ -71,10 +71,8 @@ export const Storefront = (() => {
     set('#cartTitle', 'Seu carrinho');
     set('#summaryTitle', 'Resumo do pedido');
     set('#subtotalLabel', 'Produtos');
-    set('#shippingLabel', 'Frete');
-    set('#totalLabel', 'Total');
-    set('#paymentNotice', 'Pagamento protegido pelo Mercado Pago. Cartão, Pix ou saldo Mercado Pago.');
-    set('#footerHome', 'Início');
+    set('#shippingLabel', 'Entrega padrão');
+    set('#totalLabel', 'Total com entrega padrão');
     if (!cart || !root) {
       document.querySelector('#empty')?.classList.remove('hidden');
       document.querySelector('#checkoutLink')?.classList.add('hidden');
@@ -86,16 +84,17 @@ export const Storefront = (() => {
     putCart(cart);
     const totalUnits = kit.units * cart.kitQuantity;
     const subtotal = subtotalFor(cart);
-    const shipping = extrasFor(cart);
+    const standardEstimate = cart.shippingService === 'standard' && cart.deliveryEstimate
+      ? cart.deliveryEstimate
+      : 'Entrega padrão grátis · 8 a 12 dias úteis';
     set('#cartCount', String(totalUnits));
-    set('#deliveryWindow', cart.shippingService === 'sedex' ? 'SEDEX · 2 a 3 dias úteis' : (cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis'));
-    set('#footerCurrency', 'Pagamento processado em BRL');
+    set('#deliveryWindow', standardEstimate);
     document.querySelector('#checkoutLink')?.setAttribute('href', PAYMENT_URL);
     root.innerHTML = `<div class="cart-line"><img src="${image}" alt="Lavadora SOARFLY"><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} · ${brl(kit.price)} por unidade</span><div class="cart-quantity" aria-label="Quantidade"><button type="button" data-decrease aria-label="Diminuir quantidade">−</button><strong>${cart.kitQuantity}</strong><button type="button" data-increase aria-label="Aumentar quantidade">+</button></div><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     set('#subtotal', brl(subtotal));
-    set('#shippingFree', shipping ? brl(shipping) : 'GRÁTIS');
-    set('#total', brl(totalFor(cart)));
-    set('#chargedNote', cart.deliveryEstimate || 'Prazo calculado conforme o CEP informado');
+    set('#shippingFree', 'GRÁTIS');
+    set('#total', brl(subtotal));
+    set('#chargedNote', 'Consulte e escolha o frete expresso no checkout.');
     root.querySelector('[data-remove]')?.addEventListener('click', () => {
       localStorage.removeItem(CART);
       location.reload();
