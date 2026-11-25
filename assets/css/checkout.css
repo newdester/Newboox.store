@@ -60,6 +60,7 @@ body{font-size:16px}.field label,.section-heading span,.checkline,.payment-intro
 #checkoutLink:hover { background: #0046ac; }
 #zipFeedback { min-height: 0; margin: 2px 0 0; }
 #zipFeedback:empty { margin: 0; }
+body, button, input, select, textarea { font-family: var(--store-font, Helvetica, Arial, sans-serif); }
 @media (max-width: 740px) {
   .checkout-header--compact { min-height: 52px; }
 }

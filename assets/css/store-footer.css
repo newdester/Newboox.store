@@ -6,7 +6,7 @@
   border-top: 1px solid var(--footer-line);
   background: #f8f9fa;
   color: var(--footer-ink);
-  font: 0.875rem/1.5 Arial, Helvetica, sans-serif;
+  font: 0.875rem/1.5 var(--store-font, Helvetica, Arial, sans-serif);
 }
 
 .store-footer__inner {
