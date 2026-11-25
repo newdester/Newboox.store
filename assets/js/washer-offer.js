@@ -1,14 +1,26 @@
-import { Storefront } from './storefront.js?v=soarfly-1';
-import { WASHER_VARIANTS } from './washer-catalog.js';
+import { Storefront } from './storefront.js?v=soarfly-2';
+import { WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-2';
 
 const form = document.querySelector('#offer');
 const variants = document.querySelector('#variants');
 const quantity = document.querySelector('#quantity');
+const unitPrice = document.querySelector('#unit-price');
+const installmentCopy = document.querySelector('#installment-copy');
 const total = document.querySelector('#total');
 const status = document.querySelector('#offer-status');
 const actions = form.querySelectorAll('button[type="submit"]');
 const currentVariant = () => Storefront.kitById(new FormData(form).get('voltage'));
 let deliveryEstimate = '';
+
+const photos = [...document.querySelectorAll('[data-photo]')];
+const galleryImage = document.querySelector('#gallery-image');
+const photoCounter = document.querySelector('#photo-counter');
+photos.forEach((button, index) => button.addEventListener('click', () => {
+  galleryImage.src = '/assets/images/soarfly/' + button.dataset.photo + '.webp';
+  galleryImage.alt = button.dataset.alt;
+  photoCounter.textContent = (index + 1) + ' de ' + photos.length;
+  photos.forEach(photo => photo.setAttribute('aria-pressed', String(photo === button)));
+}));
 
 function renderVariants(products) {
   for (const product of products) {
@@ -37,6 +49,11 @@ function renderVariants(products) {
 function updateTotal() {
   const variant = currentVariant();
   const count = Storefront.kitQuantityFor({ kitQuantity: quantity.value });
+  unitPrice.textContent = variant ? Storefront.brl(variant.price) : 'A partir de ' + Storefront.brl(WASHER_VARIANTS[0].price);
+  const installments = variant?.maxInstallments || WASHER_VARIANTS[0].maxInstallments;
+  const evenInstallments = variant && Math.round(variant.price * 100) % installments === 0;
+  const installmentValue = evenInstallments ? ' de ' + Storefront.brl(variant.price / installments) : '';
+  installmentCopy.textContent = 'Até ' + installments + 'x' + installmentValue + ' sem juros no cartão, conforme as opções do Mercado Pago';
   total.textContent = variant ? Storefront.brl(Storefront.subtotalFor({ ...variant, kitQuantity: count })) : 'Escolha uma voltagem';
   actions.forEach(button => { button.disabled = !variant; });
   status.textContent = '';

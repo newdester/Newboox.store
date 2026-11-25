@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#121519">
   <title>Lavadora de Alta Pressão SOARFLY | Newboox</title>
-  <meta name="description" content="Lavadora de alta pressão SOARFLY com carretel. Escolha 127 V ou 220 V por R$ 189,00. Entrega padrão grátis.">
+  <meta name="description" content="Lavadora de alta pressão SOARFLY com carretel. Escolha 127 V ou 220 V por R$ 189,00 ou bivolt (127/220 V) por R$ 232,10. Entrega padrão grátis.">
   <meta property="og:title" content="Lavadora de Alta Pressão SOARFLY | Newboox">
   <meta property="og:image" content="https://newboox.store/assets/images/soarfly/lavadora.webp">
   <meta property="product:price:amount" content="189.00">
   <meta property="product:price:currency" content="BRL">
-  <link rel="stylesheet" href="/assets/css/washer.css?v=soarfly-1">
+  <link rel="stylesheet" href="/assets/css/washer.css?v=soarfly-2">
 </head>
 <body>
   <div class="announcement">Entrega padrão grátis · 8 a 12 dias úteis</div>
@@ -19,16 +19,34 @@
     <a class="cart-link" href="/cart">Carrinho <span data-cart-count>0</span></a>
   </header>
   <main class="shell">
+    <nav class="section-nav" aria-label="Nesta página">
+      <a href="#offer">Oferta</a>
+      <a href="#especificacoes">Ficha técnica</a>
+      <a href="#avaliacoes">Avaliações</a>
+      <a href="#entrega">Entrega e pagamento</a>
+    </nav>
     <section class="product" aria-labelledby="product-title">
-      <div class="product-photo">
-        <img src="/assets/images/soarfly/lavadora.webp" alt="Lavadora de alta pressão SOARFLY amarela com carretel e acessórios" width="900" height="900" fetchpriority="high">
+      <div class="product-gallery" aria-label="Fotos da lavadora">
+        <div class="product-photo">
+          <img id="gallery-image" src="/assets/images/soarfly/lavadora.webp" alt="Lavadora SOARFLY amarela com carretel e acessórios" width="900" height="900" fetchpriority="high">
+          <span class="photo-counter" id="photo-counter" aria-live="polite">1 de 5</span>
+        </div>
+        <div class="gallery-thumbs" aria-label="Escolher foto">
+          <button type="button" class="gallery-thumb" data-photo="lavadora" data-alt="Lavadora SOARFLY amarela com carretel e acessórios" aria-label="Lavadora e acessórios" aria-pressed="true"><img src="/assets/images/soarfly/lavadora-mini.webp" alt="" width="144" height="144"></button>
+          <button type="button" class="gallery-thumb" data-photo="carretel" data-alt="Detalhe do carretel integrado e das rodas da lavadora" aria-label="Carretel e rodas" aria-pressed="false"><img src="/assets/images/soarfly/carretel-mini.webp" alt="" width="144" height="144"></button>
+          <button type="button" class="gallery-thumb" data-photo="componentes" data-alt="Pistola, mangueira, carretel e outros componentes da lavadora" aria-label="Componentes da lavadora" aria-pressed="false"><img src="/assets/images/soarfly/componentes-mini.webp" alt="" width="144" height="144"></button>
+          <button type="button" class="gallery-thumb" data-photo="entrada-de-agua" data-alt="Conexão da lavadora a uma torneira ou a um reservatório" aria-label="Entrada de água" aria-pressed="false"><img src="/assets/images/soarfly/entrada-de-agua-mini.webp" alt="" width="144" height="144"></button>
+          <button type="button" class="gallery-thumb" data-photo="aplicacoes" data-alt="Exemplos de limpeza de motos, pisos, muros e escadas" aria-label="Exemplos de uso" aria-pressed="false"><img src="/assets/images/soarfly/aplicacoes-mini.webp" alt="" width="144" height="144"></button>
+        </div>
       </div>
       <div class="product-copy">
-        <p class="eyebrow">Limpeza externa</p>
+        <p class="eyebrow">SOARFLY · Lavadora com carretel</p>
         <h1 id="product-title">Lavadora de alta pressão SOARFLY</h1>
-        <p class="description">Carretel para organizar a mangueira e bico ajustável para lavar carros, pisos e áreas externas.</p>
-        <div class="price">R$ 189,00</div>
-        <p class="payment-copy">Até 12x de R$ 15,75 sem juros no cartão, conforme as opções do Mercado Pago</p>
+        <p class="description">Limpe carros, calçadas e áreas externas com jato ajustável. A mangueira de 7 m dá alcance para se movimentar, e o carretel ajuda a guardar tudo depois do uso.</p>
+        <div class="price-panel">
+          <div class="price" id="unit-price">A partir de R$ 189,00</div>
+          <p class="payment-copy" id="installment-copy">Até 12x sem juros no cartão, conforme as opções do Mercado Pago</p>
+        </div>
         <form id="offer">
           <fieldset>
             <legend>Escolha a voltagem</legend>
@@ -42,32 +60,72 @@
             </select>
           </label>
           <div class="order-total" aria-live="polite"><span>Total dos produtos</span><strong id="total">Escolha uma voltagem</strong></div>
-          <button class="action action-primary" type="submit" value="/checkout" disabled>Comprar agora</button>
-          <button class="action action-secondary" type="submit" value="/cart" disabled>Adicionar ao carrinho</button>
+          <div class="action-row">
+            <button class="action action-primary" type="submit" value="/checkout" disabled>Comprar agora</button>
+            <button class="action action-secondary" type="submit" value="/cart" disabled>Adicionar ao carrinho</button>
+          </div>
           <p id="offer-status" role="status"></p>
         </form>
         <p id="delivery">Entrega padrão grátis. Escolha o SEDEX no checkout, se preferir.</p>
-        <p class="payment-copy">Cartão de crédito, Pix ou saldo Mercado Pago</p>
+        <div class="checkout-trust">
+          <strong>Pagamento processado pelo Mercado Pago</strong>
+          <span>Cartão de crédito · Pix · Saldo Mercado Pago</span>
+        </div>
       </div>
     </section>
-    <section class="details" aria-labelledby="spec-title">
-      <h2 id="spec-title">Conheça a lavadora</h2>
+
+    <section class="details" id="especificacoes" aria-labelledby="spec-title">
+      <h2 id="spec-title">Ficha técnica</h2>
+      <p class="section-lead">Dados do modelo de 5.800 W de pico no anúncio de referência.</p>
       <dl class="specs">
-        <div><dt>Potência nominal</dt><dd>2.000 W (5.800 W de pico)</dd></div>
-        <div><dt>Mangueira de alta pressão</dt><dd>7 metros</dd></div>
-        <div><dt>Motor</dt><dd>Indução, 60 Hz</dd></div>
+        <div><dt>Marca</dt><dd>SOARFLY</dd></div>
+        <div><dt>Potência</dt><dd>2.000 W nominal · 5.800 W de pico</dd></div>
+        <div><dt>Motor e frequência</dt><dd>Indução · 60 Hz</dd></div>
+        <div><dt>Pressão e vazão máximas</dt><dd>180 bar · 12 L/min</dd></div>
+        <div><dt>Mangueiras</dt><dd>7 m de alta pressão · 1,8 m de entrada</dd></div>
         <div><dt>Entrada de água</dt><dd>Torneira ou reservatório</dd></div>
+        <div><dt>Dimensões</dt><dd>49 × 30 × 23 cm</dd></div>
+        <div><dt>Peso informado</dt><dd>7,3 kg</dd></div>
       </dl>
-      <details><summary>Qual voltagem devo escolher?</summary><p>Escolha 127 V ou 220 V de acordo com a tomada que você vai usar. Confira também a etiqueta do equipamento antes de ligar.</p></details>
-      <details><summary>Quais são as opções de entrega?</summary><p>Entrega padrão grátis em 8 a 12 dias úteis. No checkout você também pode escolher SEDEX por R$ 12,36, com prazo estimado de 2 a 3 dias úteis.</p></details>
+      <div class="section-columns">
+        <div class="info-card"><h3>O que vem na caixa</h3><ul class="box-items">
+          <li>Lavadora SOARFLY com carretel</li><li>Pistola de alta pressão e lança de extensão</li>
+          <li>Mangueiras de entrada e de alta pressão</li><li>Frasco para espuma e filtro de entrada</li>
+          <li>Conectores, adaptador e manual</li>
+        </ul></div>
+        <div class="info-card"><h3>Onde usar</h3><p>Use em superfícies externas adequadas para lavagem a pressão, como pisos, calçadas e veículos. Ajuste a abertura do jato conforme a superfície e siga as instruções do manual.</p></div>
+      </div>
+    </section>
+
+    <section class="details review-section" id="avaliacoes" aria-labelledby="reviews-title">
+      <div>
+        <h2 id="reviews-title">Avaliações do produto</h2>
+        <p>Veja os comentários e as fotos disponíveis no anúncio original da Shopee. As avaliações são de compradores do marketplace e o anúncio reúne diferentes versões da lavadora.</p>
+      </div>
+      <a class="outline-link" href="https://shopee.com.br/product/1875136748/57566773708" target="_blank" rel="noopener noreferrer">Ver no anúncio da Shopee ↗</a>
+    </section>
+
+    <section class="details" id="entrega" aria-labelledby="delivery-title">
+      <h2 id="delivery-title">Entrega e pagamento</h2>
+      <div class="section-columns">
+        <div class="info-card"><h3>Entrega padrão grátis</h3><p>Previsão de 8 a 12 dias úteis. Se preferir, escolha SEDEX no checkout por R$ 12,36, com previsão de 2 a 3 dias úteis.</p></div>
+        <div class="info-card"><h3>Processamento pelo Mercado Pago</h3><p>Pague com Pix, cartão de crédito ou saldo do Mercado Pago. A compra é feita na Newboox. Confira o total do pedido e as parcelas antes de pagar.</p></div>
+      </div>
+    </section>
+    <section class="details" aria-labelledby="faq-title">
+      <h2 id="faq-title">Perguntas frequentes</h2>
+      <details><summary>Qual voltagem devo escolher?</summary><p>Escolha 127 V ou 220 V de acordo com a tensão da tomada. A versão bivolt aceita as duas tensões. Confira a etiqueta e o manual antes de ligar.</p></details>
+      <details><summary>Preciso conectar a uma torneira?</summary><p>O modelo aceita entrada pela torneira ou por autoaspiração em reservatório, seguindo as orientações do fabricante.</p></details>
+      <details><summary>De quanto é o parcelamento?</summary><p>O cartão oferece até 12 parcelas sem juros, conforme as condições que o Mercado Pago confirmar para o seu cartão. O valor final aparece antes de pagar.</p></details>
+      <details><summary>Onde encontro as condições de troca e devolução?</summary><p>Consulte os <a href="/terms">Termos de Compra</a> da Newboox.</p></details>
     </section>
   </main>
   <footer class="site-footer shell">
-    <span>© 2026 Newboox</span>
+    <div class="footer-brand"><strong>Newboox</strong><span>Pagamento processado pelo Mercado Pago</span><small>© 2026 Newboox</small></div>
     <nav aria-label="Informações legais"><a href="/privacy">Privacidade</a><a href="/terms">Termos</a></nav>
   </footer>
   <script>window.META_AUTO_PAGEVIEW = true;</script>
   <script defer src="/assets/js/meta-pixel.js?v=20261122-funnel-capi"></script>
-  <script type="module" src="/assets/js/washer-offer.js?v=soarfly-1"></script>
+  <script type="module" src="/assets/js/washer-offer.js?v=soarfly-2"></script>
 </body>
 </html>

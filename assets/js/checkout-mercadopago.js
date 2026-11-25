@@ -1,4 +1,4 @@
-import { Storefront } from './storefront.js?v=soarfly-1';
+import { Storefront } from './storefront.js?v=soarfly-2';
 
 (() => {
   const cart = Storefront.getCart();
