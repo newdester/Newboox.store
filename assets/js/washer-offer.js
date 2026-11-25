@@ -1,5 +1,5 @@
-import { Storefront } from './storefront.js?v=soarfly-2';
-import { WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-2';
+import { Storefront } from './storefront.js?v=soarfly-3';
+import { WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-3';
 
 const form = document.querySelector('#offer');
 const variants = document.querySelector('#variants');

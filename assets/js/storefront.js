@@ -1,4 +1,4 @@
-import { WASHER_IMAGE, WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-2';
+import { WASHER_IMAGE, WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-3';
 
 const responsiveCss = document.createElement('link');
 responsiveCss.rel = 'stylesheet';
