@@ -11,7 +11,8 @@ export default async function handler(request, response) {
   if (!quota.allowed) return response.status(429).json({ error: 'Muitas tentativas. Aguarde um minuto.' });
   if (!process.env.MP_ACCESS_TOKEN || !publicBaseUrl()) return response.status(503).json({ error: 'Mercado Pago ainda não configurado.' });
 
-  const product = storeProduct(request.body?.productId);
+  const product = storeProduct(request.body?.productId || '');
+  if (!product) return response.status(422).json({ error: 'Selecione uma voltagem disponível antes de pagar.' });
   const quantity = quantityFrom(request.body?.quantity);
   const shippingService = shippingServiceFrom(request.body?.shippingService);
   const shipping = shippingAmount(product, quantity, shippingService);
@@ -30,7 +31,7 @@ export default async function handler(request, response) {
     auto_return: 'approved',
     notification_url: `${publicBaseUrl()}/api/mercadopago/webhook`,
     payment_methods: { excluded_payment_types: [{ id: 'ticket' }], installments: 1 },
-    metadata: { product_id: product.id, quantity: product.units * quantity, kit_quantity: quantity, shipping, shipping_service: shippingService, carrier, checkout_price: paymentAmount(product, quantity, shippingService) }
+    metadata: { product_id: product.id, voltage: product.voltage, quantity: product.units * quantity, kit_quantity: quantity, shipping, shipping_service: shippingService, carrier, checkout_price: paymentAmount(product, quantity, shippingService) }
   };
 
   try {

@@ -1,3 +1,5 @@
+import { WASHER_IMAGE, WASHER_VARIANTS } from './washer-catalog.js';
+
 const responsiveCss = document.createElement('link');
 responsiveCss.rel = 'stylesheet';
 responsiveCss.href = '/assets/css/responsive.css';
@@ -8,24 +10,19 @@ if (!window.MetaPixel && !document.querySelector('script[src*="assets/js/meta-pi
   document.head.append(metaPixel);
 }
 
-const Storefront = (() => {
-  const CART = 'chefpro_cart_v1';
+export const Storefront = (() => {
+  const CART = 'newboox_soarfly_cart_v1';
   const CUSTOMER = 'chefpro_customer_v1';
   const PAYMENT = 'chefpro_payment_v1';
   const PAYMENT_URL = '/checkout';
   const SEDEX_RATE = 12.36;
-  const defaultKits = [
-    { id: 'toyadent-1', units: 1, title: 'TOYADENT · Kit com 1 unidade', price: 22.90, originalPrice: 37.20 },
-    { id: 'toyadent-2', units: 2, title: 'TOYADENT · Kit com 2 unidades', price: 39.90, originalPrice: 74.40 },
-    { id: 'toyadent-3', units: 3, title: 'TOYADENT · Kit com 3 unidades', price: 44.90, originalPrice: 111.60 }
-  ];
-  let kits = defaultKits;
-  const image = '/assets/images/toyadent/hero.webp';
+  let kits = WASHER_VARIANTS;
+  const image = WASHER_IMAGE;
   const brl = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
-  const kitById = id => kits.find(kit => kit.id === id) || kits[2];
-  const unitPrice = id => kitById(id).price;
+  const kitById = id => kits.find(kit => kit.id === id && kit.available);
+  const unitPrice = id => kitById(id)?.price ?? 0;
   const kitQuantityFor = cart => Math.min(10, Math.max(1, Number.parseInt(cart?.kitQuantity, 10) || 1));
-  const subtotalFor = cart => Number((kitById(cart?.id).price * kitQuantityFor(cart)).toFixed(2));
+  const subtotalFor = cart => Number((unitPrice(cart?.id) * kitQuantityFor(cart)).toFixed(2));
   const shippingServiceFor = cart => cart?.shippingService === 'sedex' ? 'sedex' : 'standard';
   const extrasFor = cart => shippingServiceFor(cart) === 'sedex' ? SEDEX_RATE : 0;
   const totalFor = cart => {
@@ -35,41 +32,40 @@ const Storefront = (() => {
   const getCart = () => {
     try {
       const stored = JSON.parse(localStorage.getItem(CART));
-      if (stored && /^toyadent-[123]$/.test(String(stored.id))) return { ...stored, kitQuantity: kitQuantityFor(stored), shippingService: shippingServiceFor(stored), image };
-      if (!stored) return null;
-      const migrated = { ...defaultKits[2], image, kitQuantity: 1, shippingService: 'standard', currency: 'BRL' };
-      localStorage.setItem(CART, JSON.stringify(migrated));
-      return migrated;
+      const variant = kitById(stored?.id);
+      if (!variant) return null;
+      return { ...variant, image, kitQuantity: kitQuantityFor(stored), shippingService: shippingServiceFor(stored), deliveryEstimate: String(stored.deliveryEstimate || '') };
     } catch {
       return null;
     }
   };
   const putCart = cart => localStorage.setItem(CART, JSON.stringify({ ...cart, kitQuantity: kitQuantityFor(cart), shippingService: shippingServiceFor(cart) }));
-  const applyBrand = () => {
-    document.title = document.title.replace(/Toque Duplo|Motor Scent|MaxLar|ChefPro/g, 'TOYADENT');
-  };
-
   async function loadConfig() {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
     try {
-      const config = await fetch('/api/config', { cache: 'no-store' }).then(response => response.json());
-      if (Array.isArray(config.kits) && config.kits.length === 3) kits = config.kits;
+      const response = await fetch('/api/config', { cache: 'no-store', signal: controller.signal });
+      if (!response.ok) throw new Error('Falha ao consultar o catálogo.');
+      const config = await response.json();
+      if (Array.isArray(config.kits) && config.kits.some(product => product.id === WASHER_VARIANTS[0].id)) kits = config.kits;
       return config;
     } catch {
-      return { product: defaultKits[0], kits };
+      return { product: WASHER_VARIANTS[0], kits };
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
   const renderCart = async () => {
-    let cart = getCart();
     const root = document.querySelector('#cartItem');
-    applyBrand();
     await loadConfig();
+    let cart = getCart();
     const set = (selector, value) => {
       const node = document.querySelector(selector);
       if (node) node.textContent = value;
     };
     document.documentElement.lang = 'pt-BR';
-    document.title = 'Carrinho — TOYADENT';
+    document.title = 'Carrinho — Newboox';
     set('#continueShopping', 'Continuar comprando');
     set('#shippingIncluded', 'Frete grátis · 8 a 12 dias úteis');
     set('#cartTitle', 'Seu carrinho');
@@ -79,7 +75,6 @@ const Storefront = (() => {
     set('#totalLabel', 'Total');
     set('#paymentNotice', 'Pagamento protegido pelo Mercado Pago. Cartão, Pix ou saldo Mercado Pago.');
     set('#footerHome', 'Início');
-    set('#footerLegal', 'Privacidade · Termos');
     if (!cart || !root) {
       document.querySelector('#empty')?.classList.remove('hidden');
       document.querySelector('#checkoutLink')?.classList.add('hidden');
@@ -96,7 +91,7 @@ const Storefront = (() => {
     set('#deliveryWindow', cart.shippingService === 'sedex' ? 'SEDEX · 2 a 3 dias úteis' : (cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis'));
     set('#footerCurrency', 'Pagamento processado em BRL');
     document.querySelector('#checkoutLink')?.setAttribute('href', PAYMENT_URL);
-    root.innerHTML = `<div class="cart-line"><img src="${image}" alt="TOYADENT"><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g</span><span class="cart-meta">${cart.shippingService === 'sedex' ? 'SEDEX · 2 a 3 dias úteis' : (cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis')}</span><div class="cart-quantity" aria-label="Quantidade de kits"><button type="button" data-decrease aria-label="Diminuir quantidade">−</button><strong>${cart.kitQuantity}</strong><button type="button" data-increase aria-label="Aumentar quantidade">+</button></div><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(subtotal)}</b></div>`;
+    root.innerHTML = `<div class="cart-line"><img src="${image}" alt="Lavadora SOARFLY"><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} · ${brl(kit.price)} por unidade</span><div class="cart-quantity" aria-label="Quantidade"><button type="button" data-decrease aria-label="Diminuir quantidade">−</button><strong>${cart.kitQuantity}</strong><button type="button" data-increase aria-label="Aumentar quantidade">+</button></div><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     set('#subtotal', brl(subtotal));
     set('#shippingFree', shipping ? brl(shipping) : 'GRÁTIS');
     set('#total', brl(totalFor(cart)));
@@ -122,13 +117,12 @@ const Storefront = (() => {
     const status = payment?.status || query.get('status') || query.get('collection_status') || 'pending';
     const title = document.querySelector('#thanksTitle');
     const copyNode = document.querySelector('#thanksCopy');
-    applyBrand();
     if (status === 'approved' || status === 'paid') {
       if (title) title.textContent = 'Pagamento aprovado';
-      if (copyNode) copyNode.textContent = 'Obrigado! Seu pedido TOYADENT foi confirmado e seguirá pelos Correios.';
+      if (copyNode) copyNode.textContent = 'Obrigado! Seu pedido foi confirmado e seguirá pelos Correios.';
       document.querySelector('#orderReference')?.replaceChildren(`Pedido ${payment?.orderId || ''} · Pagamento ${payment?.paymentId || returnedId || ''}`);
       const paymentId = payment?.paymentId || returnedId;
-      if (paymentId) track('Purchase', getCart() || kitById('toyadent-1'), { value: Number(payment?.amount) || totalFor(getCart()), currency: 'BRL', order_id: payment?.orderId || '' }, `mp_payment_${paymentId}`);
+      if (paymentId && getCart()) track('Purchase', getCart(), { value: Number(payment?.amount) || totalFor(getCart()), currency: 'BRL', order_id: payment?.orderId || '' }, `mp_payment_${paymentId}`);
       localStorage.removeItem(CART);
       return;
     }
@@ -143,5 +137,5 @@ const Storefront = (() => {
     else window.addEventListener('meta-pixel-ready', send, { once: true });
   };
 
-  return { CART, CUSTOMER, PAYMENT, PAYMENT_URL, brl, unitPrice, shippingServiceFor, extrasFor, subtotalFor, totalFor, kitQuantityFor, getCart, putCart, applyBrand, loadConfig, kitById, renderCart, renderThankYou, track };
+  return { CART, CUSTOMER, PAYMENT, PAYMENT_URL, brl, unitPrice, shippingServiceFor, extrasFor, subtotalFor, totalFor, kitQuantityFor, getCart, putCart, loadConfig, kitById, renderCart, renderThankYou, track };
 })();

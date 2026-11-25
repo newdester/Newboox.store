@@ -1,6 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { rateLimit, sendRateHeaders } from '../_lib/rate-limit.js';
 import { getFunnelData } from '../_lib/funnel-store.js';
+import { WASHER_VARIANTS } from '../../assets/js/washer-catalog.js';
 
 const PRODUCT_ID = 'toyadent';
 const MAX_PAYMENTS = 500;
@@ -48,11 +49,13 @@ function periodFrom(query) {
 function belongsToStore(payment) {
   const reference = String(payment.external_reference || '');
   const fingerprint = [reference, payment.description, payment.metadata?.product_id].join(' ').toLowerCase();
-  return reference.startsWith('NB-') || fingerprint.includes(PRODUCT_ID) || fingerprint.includes('toque duplo');
+  return reference.startsWith('NB-') || fingerprint.includes('soarfly') || fingerprint.includes(PRODUCT_ID) || fingerprint.includes('toque duplo');
 }
 
 function productFor(payment) {
   const value = String(payment.metadata?.product_id || '').toLowerCase();
+  const washer = WASHER_VARIANTS.find(variant => variant.id === value);
+  if (washer) return { id: washer.id, name: washer.title };
   const match = value.match(/^toyadent-([123])$/);
   if (match) return { id: value, name: `TOYADENT · Kit ${match[1]}` };
   if (value === 'toque-duplo' || /toque duplo/i.test(String(payment.description || ''))) return { id: 'legacy', name: 'Oferta anterior' };
@@ -128,6 +131,7 @@ function aggregate(payments, range) {
   }
   const methods = { pix: { orders: 0, revenue: 0 }, cartao: { orders: 0, revenue: 0 }, saldo_mercado_pago: { orders: 0, revenue: 0 }, outro: { orders: 0, revenue: 0 } };
   const products = Object.fromEntries([
+    ...WASHER_VARIANTS.map(variant => [variant.id, variant.title]),
     ['toyadent-1', 'TOYADENT · Kit 1'],
     ['toyadent-2', 'TOYADENT · Kit 2'],
     ['toyadent-3', 'TOYADENT · Kit 3'],

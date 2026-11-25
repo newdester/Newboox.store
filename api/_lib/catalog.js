@@ -1,32 +1,24 @@
-const KIT_DEFINITIONS = [
-  { id: 'toyadent-1', units: 1, price: 22.90 },
-  { id: 'toyadent-2', units: 2, price: 39.90 },
-  { id: 'toyadent-3', units: 3, price: 44.90 }
-];
-const ORIGINAL_UNIT_PRICE = 37.20;
+import { WASHER_VARIANTS } from '../../assets/js/washer-catalog.js';
+
 const SEDEX_RATE = 12.36;
 
-const asProduct = kit => ({
-  ...kit,
-  title: `TOYADENT · Kit com ${kit.units} ${kit.units === 1 ? 'unidade' : 'unidades'}`,
-  currency: 'BRL',
-  originalPrice: Number((kit.units * ORIGINAL_UNIT_PRICE).toFixed(2)),
-  cardPrice: kit.price,
-  cashPrice: kit.price,
+const asProduct = variant => ({
+  ...variant,
+  cardPrice: variant.price,
+  cashPrice: variant.price,
   shipping: 0,
-  total: kit.price,
-  maxInstallments: 1,
+  total: variant.price,
   deliveryMinDays: 8,
   deliveryMaxDays: 12,
   carrier: 'Correios - Entrega Padrão'
 });
 
 export function storeProducts() {
-  return KIT_DEFINITIONS.map(asProduct);
+  return WASHER_VARIANTS.map(asProduct);
 }
 
-export function storeProduct(productId = 'toyadent-1') {
-  return storeProducts().find(product => product.id === String(productId || '')) || storeProducts()[0];
+export function storeProduct(productId = 'soarfly-127v') {
+  return storeProducts().find(product => product.id === productId && product.available) || null;
 }
 
 export const quantityFrom = value => Math.min(10, Math.max(1, Number.parseInt(value, 10) || 1));

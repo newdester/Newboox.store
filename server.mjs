@@ -43,7 +43,8 @@ async function processPayment(req, res) {
   try {
     const body = await readBody(req);
     const quantity = safeQuantity(body.quantity);
-    const selectedProduct = storeProduct(body.productId);
+    const selectedProduct = storeProduct(body.productId || '');
+    if (!selectedProduct) return reply(res, 422, { error: 'Selecione uma voltagem disponível antes de pagar.' });
     const shippingService = shippingServiceFrom(body.shippingService);
     const shipping = shippingAmount(selectedProduct, quantity, shippingService);
     const carrier = shippingService === 'sedex' ? 'SEDEX' : 'Correios - Entrega Padrão';
@@ -52,18 +53,23 @@ async function processPayment(req, res) {
     if (!form.payment_method_id || !/^\S+@\S+\.\S+$/.test(email)) return reply(res, 422, { error: 'Dados de pagamento incompletos.' });
     const paymentType = form.payment_type_id || (form.payment_method_id === 'pix' ? 'bank_transfer' : 'credit_card');
     if (!['credit_card', 'bank_transfer'].includes(paymentType)) return reply(res, 422, { error: 'Este meio de pagamento não está disponível.' });
+    const installments = paymentType === 'credit_card' ? Number(form.installments ?? 1) : 1;
+    if (!Number.isInteger(installments) || installments < 1 || installments > selectedProduct.maxInstallments) {
+      return reply(res, 422, { error: 'Selecione uma opção válida de parcelamento.' });
+    }
     const orderId = `NB-${Date.now()}-${randomUUID().slice(0, 8)}`;
     const payload = {
       transaction_amount: paymentAmount(selectedProduct, quantity, shippingService),
       token: form.token,
       description: `${selectedProduct.title} × ${quantity} · ${shippingService === 'sedex' ? 'SEDEX' : 'frete grátis'}`,
-      installments: paymentType === 'credit_card' ? Math.min(selectedProduct.maxInstallments, Math.max(1, Number(form.installments) || 1)) : 1,
+      installments,
       payment_method_id: form.payment_method_id,
       issuer_id: form.issuer_id,
       payer: { ...form.payer, email },
       external_reference: orderId,
       metadata: {
         product_id: selectedProduct.id,
+        voltage: selectedProduct.voltage,
         quantity: selectedProduct.units * quantity,
         kit_quantity: quantity,
         shipping,

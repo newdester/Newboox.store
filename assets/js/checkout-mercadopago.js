@@ -1,3 +1,5 @@
+import { Storefront } from './storefront.js?v=soarfly-1';
+
 (() => {
   const cart = Storefront.getCart();
   if (!cart) { location.replace('/cart'); return; }
@@ -74,17 +76,17 @@
   });
 
   function renderSummary() {
+    if (!selectedProduct) return;
     const total = Storefront.totalFor(cart);
     const subtotal = Storefront.subtotalFor(cart);
     const shipping = Storefront.extrasFor(cart);
     const totalUnits = selectedProduct.units * quantity;
     const isSedex = Storefront.shippingServiceFor(cart) === 'sedex';
     const deliveryText = isSedex ? 'SEDEX · 2 a 3 dias úteis' : (cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis');
-    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="TOYADENT"><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} de 90g · ${quantity} ${quantity === 1 ? 'kit' : 'kits'}</span><span class="cart-meta">${deliveryText}</span></div><b class="cart-price">${brl(subtotal)}</b></div>`;
+    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="Lavadora SOARFLY"><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} · ${brl(selectedProduct.price)} por unidade</span></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     $('productSubtotal').textContent = brl(subtotal);
     $('checkoutShipping').textContent = shipping ? brl(shipping) : 'GRÁTIS';
     $('shippingLabel').textContent = isSedex ? 'SEDEX' : 'Entrega padrão';
-    $('checkoutTotal').textContent = brl(total);
     $('checkoutTotalBottom').textContent = brl(total);
     document.querySelectorAll('[data-payment-total]').forEach(node => { node.textContent = brl(total); });
     $('footerCurrency').textContent = `${deliveryText} · Pagamento em BRL`;
@@ -200,15 +202,41 @@
       throw new Error(window.StoreWebview?.isEmbeddedBrowser ? window.StoreWebview.paymentFallback : 'Não foi possível carregar o pagamento. Atualize a página ou tente novamente.');
     }
     const mp = new MercadoPago(config.publicKey, { locale: 'pt-BR' });
+    const amount = Storefront.totalFor(cart);
     cardBrick = await mp.bricks().create('cardPayment', 'cardPaymentBrick', {
       initialization: {
-        amount: Storefront.totalFor(cart),
+        amount,
         payer: { email: customer.email, identification: { type: 'CPF', number: String(customer.tax || '').replace(/\D/g, '') } }
       },
-      customization: { paymentMethods: { minInstallments: 1, maxInstallments: 1 } },
+      customization: { paymentMethods: { minInstallments: 1, maxInstallments: selectedProduct.maxInstallments, types: { included: ['credit_card'] } } },
       callbacks: {
         onReady: () => setStatus('Cartão carregado com segurança pelo Mercado Pago.'),
-        onSubmit: formData => postPayment(formData).catch(error => { setStatus(error.message, true); throw error; }),
+        onSubmit: async (formData, additionalData) => {
+          try {
+            const installmentCount = Number(formData.installments);
+            if (installmentCount > 1) {
+              setStatus('Conferindo o valor das parcelas…');
+              const bin = String(additionalData?.bin || '');
+              const availableQuotes = /^\d{6,8}$/.test(bin)
+                ? await mp.getInstallments({ amount: amount.toFixed(2), bin, processingMode: 'aggregator' }).catch(() => [])
+                : [];
+              const eligiblePlans = (Array.isArray(availableQuotes) ? availableQuotes : [])
+                .filter(quote => quote.payment_method_id === formData.payment_method_id)
+                .flatMap(quote => quote.payer_costs || [])
+                .filter(plan => plan.installments === installmentCount && (
+                  !formData.payment_method_option_id || plan.payment_method_option_id === formData.payment_method_option_id
+                ));
+              const cents = Math.round(amount * 100);
+              if (!eligiblePlans.length || eligiblePlans.some(plan => Math.round(Number(plan.total_amount) * 100) !== cents)) {
+                throw new Error('Essa condição sem juros não pôde ser confirmada para o cartão. Selecione outra parcela sem acréscimo ou pague à vista.');
+              }
+            }
+            await postPayment(formData);
+          } catch (error) {
+            setStatus(error.message, true);
+            throw error;
+          }
+        },
         onError: () => setStatus('Confira os dados do cartão e tente novamente.', true)
       }
     });
@@ -231,9 +259,10 @@
   }
 
   async function initialize() {
-    config = await fetch('/api/config', { cache: 'no-store' }).then(response => response.json());
+    config = await Storefront.loadConfig();
     if (!config.paymentEnabled || !config.publicKey) throw new Error('Mercado Pago ainda não está ativo neste deploy.');
-    selectedProduct = config.kits?.find(product => product.id === cart.id) || config.product;
+    selectedProduct = config.kits?.find(product => product.id === cart.id && product.available);
+    if (!selectedProduct) throw new Error('Volte ao carrinho e escolha uma voltagem disponível.');
     document.querySelectorAll('input[name="shippingService"]').forEach(input => {
       input.checked = input.value === Storefront.shippingServiceFor(cart);
       input.closest('.delivery-choice')?.classList.toggle('selected', input.checked);
@@ -249,6 +278,7 @@
 
   $('customerForm').addEventListener('submit', async event => {
     event.preventDefault();
+    if (!selectedProduct) return;
     if (!event.currentTarget.checkValidity()) return event.currentTarget.reportValidity();
     customer = Object.fromEntries(new FormData(event.currentTarget).entries());
     localStorage.setItem(Storefront.CUSTOMER, JSON.stringify(customer));
@@ -325,5 +355,6 @@
   try { const saved = JSON.parse(localStorage.getItem(Storefront.CUSTOMER) || '{}'); Object.entries(saved).forEach(([key, value]) => { if ($(key)) $(key).value = value; }); if ($('zip').value) $('zip').dispatchEvent(new Event('blur')); } catch {}
   if (window.StoreWebview?.isEmbeddedBrowser) $('webviewNotice').classList.remove('hidden');
   showStep(1);
-  initialize().catch(error => { $('continueButton').disabled = true; $('checkoutStatus').textContent = error.message; $('checkoutStatus').classList.add('show'); $('checkoutStatus').dataset.error = 'true'; });
+  $('continueButton').disabled = true;
+  initialize().then(() => { $('continueButton').disabled = false; }).catch(error => { $('continueButton').disabled = true; $('checkoutStatus').textContent = error.message; $('checkoutStatus').classList.add('show'); $('checkoutStatus').dataset.error = 'true'; });
 })();

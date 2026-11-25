@@ -14,7 +14,8 @@ export default async function handler(request, response) {
 
   const { formData = {}, customer = {}, attribution = {} } = request.body || {};
   const quantity = quantityFrom(request.body?.quantity);
-  const product = storeProduct(request.body?.productId);
+  const product = storeProduct(request.body?.productId || '');
+  if (!product) return response.status(422).json({ error: 'Selecione uma voltagem disponível antes de pagar.' });
   const shippingService = shippingServiceFrom(request.body?.shippingService);
   const shipping = shippingAmount(product, quantity, shippingService);
   const carrier = shippingService === 'sedex' ? 'SEDEX' : 'Correios - Entrega Padrão';
@@ -26,19 +27,24 @@ export default async function handler(request, response) {
   }
 
   const paymentType = formData.payment_type_id || (formData.payment_method_id === 'pix' ? 'bank_transfer' : 'credit_card');
+  const installments = paymentType === 'credit_card' ? Number(formData.installments ?? 1) : 1;
+  if (!Number.isInteger(installments) || installments < 1 || installments > product.maxInstallments) {
+    return response.status(422).json({ error: 'Selecione uma opção válida de parcelamento.' });
+  }
   const orderId = `NB-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const nameParts = safeMeta(customer.name, 120).split(/\s+/).filter(Boolean);
   const payload = {
     transaction_amount: paymentAmount(product, quantity, shippingService),
     token: formData.token,
     description: `${product.title} × ${quantity} · ${shippingService === 'sedex' ? 'SEDEX' : 'frete grátis'}`,
-    installments: paymentType === 'credit_card' ? Math.min(product.maxInstallments, Math.max(1, Number(formData.installments) || 1)) : 1,
+    installments,
     payment_method_id: formData.payment_method_id,
     issuer_id: formData.issuer_id,
     payer: { ...formData.payer, email },
     external_reference: orderId,
     metadata: {
       product_id: product.id,
+      voltage: product.voltage,
       quantity: product.units * quantity,
       kit_quantity: quantity,
       shipping,

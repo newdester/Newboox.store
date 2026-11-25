@@ -63,8 +63,14 @@ export async function sendMetaPurchase(payment) {
       value,
       order_id: String(payment.external_reference || payment.id),
       content_type: 'product',
-      content_ids: [String(payment.metadata?.product_id || 'toyadent-1')],
-      contents: [{ id: String(payment.metadata?.product_id || 'toyadent-1'), quantity, item_price: Number((value / quantity).toFixed(2)) }]
+      ...(payment.metadata?.product_id ? {
+        content_ids: [String(payment.metadata.product_id)],
+        contents: [{
+          id: String(payment.metadata.product_id),
+          quantity,
+          item_price: Number(((value - (Number(payment.metadata.shipping) || 0)) / quantity).toFixed(2))
+        }]
+      } : {})
     }
   };
   try {
