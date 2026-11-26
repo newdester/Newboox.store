@@ -1,5 +1,22 @@
 import { Storefront } from './storefront.js?v=soarfly-4';
 
+const cardBrickErrors = {
+  get_payment_methods_failed: 'Não foi possível consultar os cartões aceitos pelo Mercado Pago. Tente novamente.',
+  get_card_bin_payment_methods_failed: 'O Mercado Pago não conseguiu identificar o cartão. Confira o número ou tente outro cartão de crédito.',
+  get_card_issuers_failed: 'O Mercado Pago não conseguiu consultar o emissor. Tente novamente ou use outro cartão de crédito.',
+  get_payment_installments_failed: 'Não foi possível consultar as parcelas deste cartão. Confira o número e tente novamente.',
+  card_token_creation_failed: 'Confira a validade e o código de segurança ou tente novamente.',
+  fields_setup_failed: 'Os campos seguros do Mercado Pago não carregaram. Atualize a página e tente novamente.'
+};
+
+const cardDeclines = {
+  cc_rejected_bad_filled_card_number: 'Confira o número do cartão e tente novamente.',
+  cc_rejected_bad_filled_date: 'Confira a validade do cartão e tente novamente.',
+  cc_rejected_bad_filled_security_code: 'Confira o código de segurança e tente novamente.',
+  cc_rejected_insufficient_amount: 'O pagamento não foi autorizado por falta de limite. Use outro cartão ou Pix.',
+  cc_rejected_invalid_installments: 'O cartão não aceitou o parcelamento escolhido. Selecione outra opção ou pague à vista.'
+};
+
 (() => {
   const cart = Storefront.getCart();
   if (!cart) { location.replace('/cart'); return; }
@@ -100,6 +117,9 @@ import { Storefront } from './storefront.js?v=soarfly-4';
     const response = await fetch('/api/process_payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payloadBase(formData)) });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.cause || result.error || 'Pagamento não autorizado.');
+    if (formData.payment_method_id !== 'pix' && result.status === 'rejected') {
+      throw new Error(cardDeclines[result.statusDetail] || 'Pagamento recusado. Tente outro cartão ou escolha Pix.');
+    }
     sessionStorage.setItem(Storefront.PAYMENT, JSON.stringify(result));
     if (formData.payment_method_id === 'pix') {
       if (!['pending', 'in_process', 'authorized'].includes(result.status)) throw new Error('Não foi possível gerar este Pix. Tente novamente.');
@@ -200,20 +220,27 @@ import { Storefront } from './storefront.js?v=soarfly-4';
   }
 
   async function renderCardBrick() {
-    if (cardBrick) return;
+    if (cardBrick) return cardBrick;
     if (typeof window.MercadoPago !== 'function') {
       throw new Error(window.StoreWebview?.isEmbeddedBrowser ? window.StoreWebview.paymentFallback : 'Não foi possível carregar o pagamento. Atualize a página ou tente novamente.');
     }
     const mp = new MercadoPago(config.publicKey, { locale: 'pt-BR' });
     const amount = Storefront.totalFor(cart);
-    cardBrick = await mp.bricks().create('cardPayment', 'cardPaymentBrick', {
+    cardBrick = mp.bricks().create('cardPayment', 'cardPaymentBrick', {
       initialization: {
         amount,
         payer: { email: customer.email, identification: { type: 'CPF', number: String(customer.tax || '').replace(/\D/g, '') } }
       },
-      customization: { paymentMethods: { minInstallments: 1, maxInstallments: selectedProduct.maxInstallments, types: { included: ['credit_card'] } } },
+      customization: {
+        visual: { texts: { formTitle: 'Cartão de crédito', installmentsSectionTitle: 'Número de parcelas' } },
+        paymentMethods: {
+          minInstallments: 1,
+          maxInstallments: selectedProduct.maxInstallments,
+          types: { excluded: ['debit_card', 'prepaid_card'] }
+        }
+      },
       callbacks: {
-        onReady: () => setStatus('Cartão carregado com segurança pelo Mercado Pago.'),
+        onReady: () => { if (activeMethod === 'card') setStatus(''); },
         onSubmit: async (formData, additionalData) => {
           try {
             const installmentCount = Number(formData.installments);
@@ -234,20 +261,31 @@ import { Storefront } from './storefront.js?v=soarfly-4';
                 throw new Error('Essa condição sem juros não pôde ser confirmada para o cartão. Selecione outra parcela sem acréscimo ou pague à vista.');
               }
             }
-            await postPayment(formData);
+            await postPayment({ ...formData, payer: { ...formData.payer, email: customer.email } });
           } catch (error) {
             setStatus(error.message, true);
             throw error;
           }
         },
-        onError: () => setStatus('Confira os dados do cartão e tente novamente.', true)
+        onError: error => {
+          if (activeMethod !== 'card') return;
+          const message = cardBrickErrors[error?.cause];
+          if (message || $('paymentStatus').dataset.error !== 'true') {
+            setStatus(message || 'Confira os dados do cartão e tente novamente.', true);
+          }
+        }
       }
+    }).catch(error => {
+      cardBrick = null;
+      throw error;
     });
+    return cardBrick;
   }
 
   async function selectMethod(method, autoGeneratePix = false) {
     if (method !== 'pix' && pixGenerating) throw new Error('Aguarde alguns segundos enquanto o Pix é gerado. Depois você poderá trocar o pagamento.');
     if (method === activeMethod) {
+      if (method === 'card') await renderCardBrick();
       if (method === 'pix' && autoGeneratePix && !pendingPixPaymentId) await generatePix();
       return;
     }
@@ -257,7 +295,7 @@ import { Storefront } from './storefront.js?v=soarfly-4';
     document.querySelectorAll('[data-method-panel]').forEach(panel => panel.classList.toggle('hidden', panel.dataset.methodPanel !== method));
     renderSummary();
     setStatus('');
-    if (method === 'card') renderCardBrick().catch(error => setStatus(error.message || 'Não foi possível carregar o pagamento.', true));
+    if (method === 'card') await renderCardBrick();
     if (method === 'pix' && autoGeneratePix && !pendingPixPaymentId) await generatePix();
   }
 
@@ -300,7 +338,7 @@ import { Storefront } from './storefront.js?v=soarfly-4';
 
   document.querySelectorAll('[data-method]').forEach(button => button.addEventListener('click', async () => {
     try { await selectMethod(button.dataset.method, button.dataset.method === 'pix'); }
-    catch (error) { setStatus(error.message, true); }
+    catch (error) { setStatus(error.message || 'Não foi possível abrir este meio de pagamento. Tente novamente.', true); }
   }));
   document.querySelectorAll('[data-next-step]').forEach(button => button.addEventListener('click', () => { if (validateStep(activeStep)) showStep(Number(button.dataset.nextStep)); }));
   document.querySelectorAll('[data-back-step]').forEach(button => button.addEventListener('click', () => showStep(Number(button.dataset.backStep))));
