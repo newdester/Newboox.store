@@ -34,6 +34,7 @@ const cardDeclines = {
   let pendingPixPaymentId = null;
   let pixPollVersion = 0;
   let pixGenerating = false;
+  let pixCancelling = false;
   let paymentTracked = false;
 
   const showStep = step => {
@@ -233,7 +234,7 @@ const cardDeclines = {
   }
 
   async function generatePix() {
-    if (pixGenerating || pendingPixPaymentId) return;
+    if (activeMethod !== 'pix' || pixGenerating || pendingPixPaymentId) return;
     pixGenerating = true;
     $('generatePix').disabled = true;
     $('generatePix').textContent = 'Gerando Pix…';
@@ -314,21 +315,30 @@ const cardDeclines = {
     return cardBrick;
   }
 
-  async function selectMethod(method, autoGeneratePix = false) {
+  async function selectMethod(method) {
+    if (pixCancelling) return;
     if (method !== 'pix' && pixGenerating) throw new Error('Aguarde alguns segundos enquanto o Pix é gerado. Depois você poderá trocar o pagamento.');
-    if (method === activeMethod) {
-      if (method === 'card') await renderCardBrick();
-      if (method === 'pix' && autoGeneratePix && !pendingPixPaymentId) await generatePix();
-      return;
+    if (method !== activeMethod) {
+      if (method !== 'pix' && pendingPixPaymentId) {
+        pixCancelling = true;
+        try {
+          await cancelPendingPix();
+        } finally {
+          pixCancelling = false;
+        }
+      }
+      activeMethod = method;
+      document.querySelectorAll('[data-method]').forEach(button => {
+        const selected = button.dataset.method === method;
+        button.classList.toggle('active', selected);
+        button.setAttribute('aria-pressed', String(selected));
+      });
+      document.querySelectorAll('[data-method-panel]').forEach(panel => panel.classList.toggle('hidden', panel.dataset.methodPanel !== method));
+      renderSummary();
+      setStatus('');
     }
-    if (method !== 'pix' && pendingPixPaymentId) await cancelPendingPix();
-    activeMethod = method;
-    document.querySelectorAll('[data-method]').forEach(button => button.classList.toggle('active', button.dataset.method === method));
-    document.querySelectorAll('[data-method-panel]').forEach(panel => panel.classList.toggle('hidden', panel.dataset.methodPanel !== method));
-    renderSummary();
-    setStatus('');
     if (method === 'card') await renderCardBrick();
-    if (method === 'pix' && autoGeneratePix && !pendingPixPaymentId) await generatePix();
+    if (method === 'pix') await generatePix();
   }
 
   async function initialize() {
@@ -344,22 +354,22 @@ const cardDeclines = {
     $('cartCount').textContent = String(selectedProduct.units * quantity);
   }
 
-  $('customerForm').addEventListener('submit', async event => {
+  $('customerForm').addEventListener('submit', event => {
     event.preventDefault();
-    if (!selectedProduct) return;
+    if (!selectedProduct || activeStep !== 3) return;
     if (!event.currentTarget.checkValidity()) return event.currentTarget.reportValidity();
     customer = Object.fromEntries(new FormData(event.currentTarget).entries());
     localStorage.setItem(Storefront.CUSTOMER, JSON.stringify(customer));
+    activeStep = 4;
     event.currentTarget.classList.add('hidden');
     $('paymentArea').classList.remove('hidden');
     document.querySelectorAll('[data-progress]').forEach(item => { const value = Number(item.dataset.progress); item.classList.toggle('active', value === 4); item.classList.toggle('complete', value < 4); });
-    await selectMethod('pix');
+    $('paymentTitle').focus({ preventScroll: true });
     $('paymentArea').scrollIntoView({ behavior: 'smooth' });
-    await generatePix();
   });
 
   document.querySelectorAll('[data-method]').forEach(button => button.addEventListener('click', async () => {
-    try { await selectMethod(button.dataset.method, button.dataset.method === 'pix'); }
+    try { await selectMethod(button.dataset.method); }
     catch (error) { setStatus(error.message || 'Não foi possível abrir este meio de pagamento. Tente novamente.', true); }
   }));
   document.querySelectorAll('[data-next-step]').forEach(button => button.addEventListener('click', () => { if (validateStep(activeStep)) showStep(Number(button.dataset.nextStep)); }));
@@ -377,6 +387,7 @@ const cardDeclines = {
     $('copyPix').textContent = 'Código copiado';
   });
   $('payWithMercadoPago').addEventListener('click', async () => {
+    if (activeMethod !== 'wallet') return;
     try {
       setStatus('Abrindo ambiente seguro do Mercado Pago…');
       const response = await fetch('/api/mercadopago/preference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity, productId: selectedProduct.id, shippingService: Storefront.shippingServiceFor(cart) }) });
