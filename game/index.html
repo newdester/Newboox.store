@@ -14,11 +14,18 @@
   <link rel="preload" as="font" href="/assets/fonts/inter-latin-variable.woff2" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/css/typography.css?v=1">
   <link rel="stylesheet" href="/assets/css/washer.css?v=shop-1">
-  <link rel="stylesheet" href="/assets/css/game.css?v=1">
+  <link rel="stylesheet" href="/assets/css/game.css?v=2">
   <link rel="stylesheet" href="/assets/css/store-footer.css?v=4">
   <link rel="icon" type="image/png" sizes="128x128" href="/assets/images/trust/newboox-logo-blue.png">
 </head>
 <body>
+  <div class="black-friday-banner">
+    <div class="shell black-friday-banner__inner">
+      <div class="black-friday-banner__offer"><strong>Black Friday</strong><span>Oferta do Game R36S</span></div>
+      <div class="black-friday-banner__deadline"><span>Condições promocionais até meia-noite (Brasília)</span><span class="black-friday-banner__clock" id="black-friday-countdown" role="timer" aria-label="Tempo até o fim da oferta do dia" hidden></span></div>
+    </div>
+  </div>
+
   <header class="site-header">
     <div class="shell site-header__inner">
       <a class="wordmark newboox-brand-lockup" href="/"><img class="newboox-brand-mark" src="/assets/images/trust/newboox-logo-blue.png" alt="" width="32" height="32" decoding="async"><span>Newboox</span></a>
@@ -29,23 +36,29 @@
 
   <main class="shell page-sections game-page">
     <section class="product" aria-labelledby="product-title">
-      <div class="game-gallery">
-        <div class="game-photo">
-          <img id="game-image" src="/assets/images/game/r36s-front.jpg" alt="Vista frontal do console portátil R36S" width="960" height="1280" fetchpriority="high">
+      <div class="product-gallery" role="group" aria-label="Fotos do console portátil">
+        <div class="product-photo">
+          <img id="gallery-image" src="/assets/images/game/r36s-front.jpg" alt="Vista frontal do console portátil R36S" width="960" height="1280" fetchpriority="high">
+          <span class="photo-counter" id="photo-counter" aria-live="polite">1 de 2</span>
         </div>
-        <div class="game-gallery__controls" role="group" aria-label="Fotos do console">
-          <button type="button" data-photo="/assets/images/game/r36s-front.jpg" data-alt="Vista frontal do console portátil R36S" aria-pressed="true">Frente</button>
-          <button type="button" data-photo="/assets/images/game/r36s-back.jpg" data-alt="Vista traseira do R36S com os quatro botões superiores" aria-pressed="false">Verso</button>
+        <div class="gallery-thumbs" role="group" aria-label="Escolher foto">
+          <button type="button" class="gallery-thumb" data-photo="/assets/images/game/r36s-front.jpg" data-alt="Vista frontal do console portátil R36S" aria-label="Vista frontal" aria-pressed="true"><img src="/assets/images/game/r36s-front.jpg" alt="" width="144" height="144"></button>
+          <button type="button" class="gallery-thumb" data-photo="/assets/images/game/r36s-back.jpg" data-alt="Vista traseira do R36S com os quatro botões superiores" aria-label="Vista traseira" aria-pressed="false"><img src="/assets/images/game/r36s-back.jpg" alt="" width="144" height="144"></button>
         </div>
       </div>
-      <div class="product-copy">
+
+      <div class="product-copy" id="comprar">
         <h1 id="product-title">Game R36S</h1>
-        <p class="game-intro">Console portátil com tela IPS de 3,5″, sistema Linux e cartão de 64 GB.</p>
-        <div class="game-prices">
-          <div class="game-prices__card"><strong id="game-price">R$ 78,41</strong><span id="game-installments">No cartão em até 3x sem juros</span></div>
-          <div class="game-prices__pix"><strong id="game-pix">R$ 70,57</strong><span>10% de desconto no Pix</span></div>
+        <p class="product-spec">Console portátil com tela IPS de 3,5″, Linux e cartão de 64 GB</p>
+        <a class="product-reviews-link" href="#descricao"><span aria-hidden="true">★</span><strong>Modelo R36S</strong> · detalhes completos abaixo</a>
+        <div class="price-panel">
+          <div class="price-row">
+            <div class="price"><div class="price-context"><span class="reference-price">Preço promocional</span></div><span id="game-price">R$ 78,41</span></div>
+            <p class="pix-offer" id="game-pix-offer"><strong id="game-pix">R$ 70,57</strong><span>10% de desconto no Pix</span></p>
+          </div>
+          <div class="price-meta"><p class="payment-copy" id="game-installments">Até 3x sem juros no cartão</p><span class="free-shipping">Frete padrão grátis</span></div>
         </div>
-        <p class="game-delivery"><strong>Frete padrão grátis</strong> · 8 a 12 dias úteis</p>
+
         <form id="game-offer">
           <div class="offer-order">
             <label class="offer-quantity" for="game-quantity">Quantidade
@@ -54,21 +67,31 @@
                 <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
               </select>
             </label>
-            <div class="order-total" id="game-total" aria-live="polite" hidden>
-              <span>Total dos produtos</span><strong id="game-order-total"></strong><span id="game-order-pix"></span>
-            </div>
+            <div class="order-total" id="game-total" aria-live="polite" hidden><span>Total dos produtos</span><strong id="game-order-total"></strong><span id="game-order-pix"></span></div>
           </div>
           <p class="cart-replacement-note" id="game-cart-note" hidden>Adicionar o Game troca o produto que está no carrinho. Cada pedido aceita um modelo.</p>
           <button class="add-to-cart" type="submit" disabled>Adicionar ao carrinho</button>
           <p id="offer-status" role="status"></p>
         </form>
+
         <div class="purchase-info">
+          <div class="purchase-info__row"><span id="delivery">Entrega padrão grátis em 8 a 12 dias úteis. SEDEX no checkout.</span></div>
           <div class="purchase-info__row"><img src="/assets/images/trust/mercado-pago.png" alt="Mercado Pago" width="1049" height="426" decoding="async"><span>Pix, cartão de crédito ou saldo Mercado Pago</span></div>
         </div>
       </div>
     </section>
 
-    <section class="details" aria-labelledby="game-specs">
+    <section class="details" id="descricao" aria-labelledby="description-title">
+      <h2 id="description-title">Conheça o Game R36S</h2>
+      <p class="section-lead">Um console portátil vertical para jogar com controles físicos. O modelo reúne tela IPS de 3,5 polegadas, sistema Linux e armazenamento em cartão microSD de 64 GB.</p>
+      <div class="section-columns game-feature-grid">
+        <article class="info-card"><h3>Tela IPS</h3><p>Painel de 3,5 polegadas com resolução de 640 × 480 para visualizar os menus e jogos compatíveis.</p></article>
+        <article class="info-card"><h3>Controles físicos</h3><p>Dois analógicos, direcional, botões frontais e gatilhos superiores em um formato portátil.</p></article>
+        <article class="info-card"><h3>Sistema Linux</h3><p>O console usa sistema Linux. Verifique os conteúdos e instruções que acompanham o seu lote ao receber o pedido.</p></article>
+      </div>
+    </section>
+
+    <section class="details" id="especificacoes" aria-labelledby="game-specs">
       <h2 id="game-specs">Ficha técnica</h2>
       <dl class="specs">
         <div><dt>Modelo</dt><dd>R36S</dd></div>
@@ -80,12 +103,21 @@
       </dl>
       <p class="game-image-credit">Fotos de referência do modelo. <a href="https://commons.wikimedia.org/wiki/Category:Anbernic_R36S">KittyTeggie, Wikimedia Commons</a>.</p>
     </section>
-    <section class="details" aria-labelledby="game-help">
+
+    <section class="details" id="entrega" aria-labelledby="game-help">
       <h2 id="game-help">Entrega e pagamento</h2>
       <div class="section-columns">
-        <div class="info-card"><h3>Opções de frete</h3><p>Entrega padrão grátis em 8 a 12 dias úteis. Se preferir, consulte o SEDEX no checkout.</p></div>
-        <div class="info-card"><h3>Como pagar</h3><p>Escolha Pix com 10% de desconto nos produtos, cartão de crédito em até 3x sem juros ou saldo Mercado Pago. O checkout mostra as parcelas disponíveis para o cartão informado.</p></div>
+        <div class="info-card"><h3>Entrega padrão grátis</h3><p>Previsão de 8 a 12 dias úteis. Caso esteja disponível para o seu endereço, a opção SEDEX aparece no checkout com prazo e valor próprios.</p></div>
+        <div class="info-card"><h3>Pagamento protegido</h3><p>Escolha Pix com 10% de desconto nos produtos, cartão de crédito em até 3x sem juros ou saldo Mercado Pago. As opções são escolhidas somente na etapa de pagamento.</p></div>
       </div>
+    </section>
+
+    <section class="details faq-section" aria-labelledby="faq-title">
+      <h2 id="faq-title">Perguntas frequentes</h2>
+      <details><summary>O que acompanha o console?</summary><p>Os itens e conteúdos podem variar conforme o lote. Confira a embalagem e as instruções que acompanham o seu pedido ao receber.</p></details>
+      <details><summary>O Game R36S aceita cartão de memória?</summary><p>O produto é anunciado com cartão microSD de 64 GB. Para qualquer alteração no armazenamento, siga a documentação do sistema e mantenha uma cópia de segurança dos seus arquivos.</p></details>
+      <details><summary>Como funciona o parcelamento?</summary><p>No cartão de crédito, o valor pode ser dividido em até 3 parcelas sem juros. As condições disponíveis são mostradas antes de finalizar o pagamento.</p></details>
+      <details><summary>Onde encontro as regras de troca e devolução?</summary><p>Consulte os <a href="/terms">Termos de Compra</a> e a <a href="/privacy">Política de Privacidade</a> da Newboox.</p></details>
     </section>
   </main>
 
@@ -93,21 +125,26 @@
     <div class="store-footer__inner">
       <div class="store-footer__columns">
         <div>
-          <a class="store-footer__wordmark newboox-brand-lockup" href="/"><img class="newboox-brand-mark" src="/assets/images/trust/newboox-logo-blue.png" alt="" width="32" height="32" decoding="async"><span>Newboox</span></a>
+          <a class="store-footer__wordmark newboox-brand-lockup" href="/"><img class="newboox-brand-mark" src="/assets/images/trust/newboox-logo-blue.png" alt="" width="38" height="38" decoding="async"><span>Newboox</span></a>
           <p>CNPJ 57.025.021/0001-89</p>
         </div>
         <nav aria-label="Informações da loja">
           <h2 class="store-footer__title">Informações</h2>
-          <ul><li><a href="/terms">Termos de compra</a></li><li><a href="/privacy">Política de privacidade</a></li></ul>
+          <ul><li><a href="#entrega">Entrega e pagamento</a></li><li><a href="#faq-title">Perguntas frequentes</a></li><li><a href="/terms">Termos de compra</a></li><li><a href="/privacy">Política de privacidade</a></li></ul>
         </nav>
         <div class="store-footer__payments">
           <h2 class="store-footer__title">Pagamento processado por</h2>
           <img class="store-footer__payment-logo" src="/assets/images/trust/mercado-pago.png" alt="Mercado Pago" width="1049" height="426" loading="lazy" decoding="async">
+          <p>Pix, cartão de crédito e saldo Mercado Pago</p>
+          <ul class="payment-brands" aria-label="Bandeiras de cartão processadas pelo Mercado Pago"><li><img src="/assets/images/trust/visa.png" alt="Visa" loading="lazy" decoding="async"></li><li><img src="/assets/images/trust/mastercard.png" alt="Mastercard" loading="lazy" decoding="async"></li><li><img src="/assets/images/trust/amex.svg" alt="American Express" loading="lazy" decoding="async"></li></ul>
+          <div class="store-footer__security"><span class="store-footer__https"><span class="store-footer__lock" aria-hidden="true"></span>Conexão HTTPS</span><a href="https://www.reclameaqui.com.br/detector-site-confiavel/" target="_blank" rel="noopener noreferrer">Consultar no Reclame AQUI ↗</a></div>
         </div>
       </div>
+      <div class="store-footer__legal">© 2026 Newboox</div>
     </div>
   </footer>
+  <script>window.META_AUTO_PAGEVIEW = true;</script>
   <script defer src="/assets/js/meta-pixel.js?v=20261126-game"></script>
-  <script type="module" src="/assets/js/game-offer.js?v=1"></script>
+  <script type="module" src="/assets/js/game-offer.js?v=2"></script>
 </body>
 </html>

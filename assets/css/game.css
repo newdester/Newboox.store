@@ -1,38 +1,8 @@
-.game-page .product { align-items: center; gap: clamp(18px, 5vw, 64px); }
-.game-page .product-copy h1 { font-size: clamp(2rem, 5vw, 3.2rem); }
-.game-photo {
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  height: clamp(250px, 45vw, 500px);
-  border: 1px solid #ddd9ef;
-  border-radius: var(--radius-card);
-  background: #f1eef9;
-}
-.game-photo img { width: 100%; height: 100%; min-height: 0; object-fit: contain; }
-.game-gallery__controls { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
-.game-gallery__controls button {
-  min-height: 44px;
-  min-width: 76px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
-  color: var(--ink);
-  font-weight: 650;
-  cursor: pointer;
-}
-.game-gallery__controls button[aria-pressed="true"] { border-color: var(--blue); background: #edf4ff; color: var(--blue-dark); }
+.game-page .product-photo { background: #f5f7fb; }
+.game-page .product-photo img { object-fit: contain; }
+.game-feature-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .game-image-credit { margin: 5px 0 0; color: var(--muted); font-size: .8125rem; }
-.game-intro { margin: .5rem 0 1.25rem; color: var(--muted); }
-.game-prices { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px 30px; padding: 14px 0; border-block: 1px solid var(--line); }
-.game-prices strong { display: block; font-size: clamp(1.35rem, 3.5vw, 1.8rem); font-weight: 800; }
-.game-prices span { display: block; font-size: .875rem; }
-.game-prices__pix { color: #11633f; }
-.game-delivery { margin: 12px 0 0; color: #11633f; font-size: .875rem; }
-#game-order-pix { color: #11633f; font-weight: 650; }
+
 @media (max-width: 740px) {
-  .game-page .product { gap: 14px; }
-  .game-photo { height: clamp(200px, 54vw, 320px); }
-  .game-prices { display: grid; grid-template-columns: 1fr 1fr; column-gap: 12px; padding-block: 9px; }
-  .game-intro { margin: .4rem 0 .8rem; }
+  .game-feature-grid { grid-template-columns: minmax(0, 1fr); }
 }
