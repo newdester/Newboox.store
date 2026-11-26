@@ -25,6 +25,7 @@ export function setupGallery() {
   const counter = document.querySelector('#photo-counter');
   const frame = image.parentElement;
   let active = 0;
+  let photoChanged = false;
   let touchStart;
 
   function show(index) {
@@ -36,6 +37,7 @@ export function setupGallery() {
     photos[active].setAttribute('aria-pressed', 'false');
     photo.setAttribute('aria-pressed', 'true');
     active = index;
+    photoChanged = true;
     const strip = photo.parentElement;
     if (strip.scrollWidth > strip.clientWidth) {
       const buttonBox = photo.getBoundingClientRect();
@@ -80,5 +82,9 @@ export function setupGallery() {
   }, { passive: true });
   frame.addEventListener('touchcancel', () => { touchStart = null; }, { passive: true });
 
-  return { showImage: src => show(photos.findIndex(photo => photo.dataset.photo === src)) };
+  return {
+    showImage(src, { ifUntouched = false } = {}) {
+      if (!ifUntouched || !photoChanged) show(photos.findIndex(photo => photo.dataset.photo === src));
+    }
+  };
 }

@@ -1,7 +1,7 @@
 import { Storefront } from './storefront.js?v=editorial-3';
 import { GAME_VARIANTS } from './product-catalog.js?v=2';
 import { orderTotals, PIX_DISCOUNT_PERCENT } from './washer-catalog.js?v=soarfly-4';
-import { setupGallery } from './product-page.js?v=3';
+import { setupGallery } from './product-page.js?v=4';
 
 const gallery = setupGallery();
 const form = document.querySelector('#game-offer');
@@ -73,7 +73,7 @@ function updateOffer() {
 }
 
 if (initialVariant) {
-  gallery.showImage(initialVariant.image);
+  gallery.showImage(initialVariant.image, { ifUntouched: true });
   Storefront.track('ViewContent', initialVariant);
 }
 updateOffer();
