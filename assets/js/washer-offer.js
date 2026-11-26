@@ -1,4 +1,4 @@
-import { Storefront } from './storefront.js?v=editorial-2';
+import { Storefront } from './storefront.js?v=editorial-3';
 import { orderTotals, WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-4';
 import { setupGallery, startCountdown } from './product-page.js?v=1';
 

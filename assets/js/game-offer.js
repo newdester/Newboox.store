@@ -1,4 +1,4 @@
-import { Storefront } from './storefront.js?v=editorial-2';
+import { Storefront } from './storefront.js?v=editorial-3';
 import { GAME_VARIANTS } from './product-catalog.js?v=2';
 import { orderTotals, PIX_DISCOUNT_PERCENT } from './washer-catalog.js?v=soarfly-4';
 import { setupGallery } from './product-page.js?v=2';

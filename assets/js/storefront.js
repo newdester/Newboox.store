@@ -17,7 +17,8 @@ export const Storefront = (() => {
   bindOfferLinks(offer);
   const CART = `${legacyCartKey}:${offer}`;
   const CUSTOMER = 'chefpro_customer_v1';
-  const PAYMENT = `chefpro_payment_v1:${offer}`;
+  const legacyPaymentKey = 'chefpro_payment_v1';
+  const PAYMENT = `${legacyPaymentKey}:${offer}`;
   const paymentPath = route => offerUrl(route, offer);
   const CART_URL = paymentPath('/cart');
   const PAYMENT_URL = paymentPath('/checkout');
@@ -136,9 +137,16 @@ export const Storefront = (() => {
   };
 
   const renderThankYou = async () => {
-    let payment = JSON.parse(sessionStorage.getItem(PAYMENT) || 'null');
     const query = new URLSearchParams(location.search);
-    const returnedId = query.get('payment_id') || query.get('collection_id') || payment?.paymentId;
+    const gatewayId = query.get('payment_id') || query.get('collection_id');
+    let payment = null;
+    try {
+      let saved = sessionStorage.getItem(PAYMENT);
+      if (!saved && !query.has('oferta') && legacyCart()) saved = sessionStorage.getItem(legacyPaymentKey);
+      payment = JSON.parse(saved);
+    } catch {}
+    if (gatewayId && String(payment?.paymentId) !== gatewayId) payment = null;
+    const returnedId = gatewayId || payment?.paymentId;
     if (returnedId && /^\d+$/.test(returnedId)) {
       try {
         const response = await fetch(`/api/payment-status?paymentId=${encodeURIComponent(returnedId)}`, { cache: 'no-store' });

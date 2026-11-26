@@ -1,4 +1,4 @@
-import { Storefront } from './storefront.js?v=editorial-2';
+import { Storefront } from './storefront.js?v=editorial-3';
 
 const PAYMENT_TRACKING_KEY = `${Storefront.PAYMENT}:tracking`;
 
