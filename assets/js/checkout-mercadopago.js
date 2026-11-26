@@ -241,6 +241,7 @@ const cardDeclines = {
       },
       callbacks: {
         onReady: () => { if (activeMethod === 'card') setStatus(''); },
+        onBinChange: () => { if (activeMethod === 'card') setStatus(''); },
         onSubmit: async (formData, additionalData) => {
           try {
             const installmentCount = Number(formData.installments);
@@ -269,7 +270,9 @@ const cardDeclines = {
         },
         onError: error => {
           if (activeMethod !== 'card') return;
-          const message = cardBrickErrors[error?.cause];
+          const message = error?.message === 'payment_method_not_in_allowed_types'
+            ? 'Este cartão não está disponível para pagamento no crédito. Use um cartão de crédito ou pague por Pix.'
+            : cardBrickErrors[error?.cause];
           if (message || $('paymentStatus').dataset.error !== 'true') {
             setStatus(message || 'Confira os dados do cartão e tente novamente.', true);
           }
