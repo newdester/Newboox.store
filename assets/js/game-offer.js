@@ -1,96 +1,81 @@
-import { Storefront } from './storefront.js?v=shop-1';
-import { GAME_PRODUCT } from './product-catalog.js?v=1';
+import { Storefront } from './storefront.js?v=product-2';
+import { GAME_VARIANTS } from './product-catalog.js?v=2';
 import { orderTotals } from './washer-catalog.js?v=soarfly-4';
+import { setupGallery, startCountdown } from './product-page.js?v=1';
 
+startCountdown();
+const gallery = setupGallery();
 const form = document.querySelector('#game-offer');
-const quantity = form.elements.quantity;
+const options = document.querySelector('#game-colors');
 const submit = form.querySelector('button[type="submit"]');
 const status = document.querySelector('#offer-status');
-const photos = [...document.querySelectorAll('.gallery-thumb[data-photo]')];
-const image = document.querySelector('#gallery-image');
-const counter = document.querySelector('#photo-counter');
-const photoFrame = image.parentElement;
 const cartCount = document.querySelector('[data-cart-count]');
-let activePhoto = 0;
-let touchStart;
-
-const brazilianTime = new Intl.DateTimeFormat('pt-BR', {
-  timeZone: 'America/Sao_Paulo',
-  hourCycle: 'h23',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit'
-});
-const countdown = document.querySelector('#black-friday-countdown');
-const updateCountdown = () => {
-  const [hour, minute, second] = brazilianTime.format(new Date()).split(':').map(Number);
-  const secondsLeft = 24 * 3600 - (hour * 3600 + minute * 60 + second);
-  countdown.textContent = [
-    Math.floor(secondsLeft / 3600),
-    Math.floor(secondsLeft % 3600 / 60),
-    secondsLeft % 60
-  ].map(value => String(value).padStart(2, '0')).join(':');
-};
-updateCountdown();
-countdown.hidden = false;
-setInterval(updateCountdown, 1000);
-
-function showPhoto(index) {
-  if (index < 0 || index >= photos.length || index === activePhoto) return;
-  const photo = photos[index];
-  image.src = photo.dataset.photo;
-  image.alt = photo.dataset.alt;
-  counter.textContent = `${index + 1} de ${photos.length}`;
-  photos.forEach(button => button.setAttribute('aria-pressed', String(button === photo)));
-  activePhoto = index;
-}
-
-photos.forEach((button, index) => button.addEventListener('click', () => showPhoto(index)));
-photoFrame.addEventListener('touchstart', event => {
-  touchStart = event.touches.length === 1 ? event.touches[0] : null;
-}, { passive: true });
-photoFrame.addEventListener('touchend', event => {
-  if (!touchStart || event.touches.length) return;
-  const { clientX, clientY } = event.changedTouches[0];
-  const horizontal = clientX - touchStart.clientX;
-  const vertical = clientY - touchStart.clientY;
-  touchStart = null;
-  if (Math.abs(horizontal) > Math.max(40, Math.abs(vertical))) showPhoto(activePhoto - Math.sign(horizontal));
-}, { passive: true });
-photoFrame.addEventListener('touchcancel', () => { touchStart = null; }, { passive: true });
+const currentProduct = () => Storefront.kitById(form.elements.color?.value);
+const currentCount = () => Storefront.kitQuantityFor({ kitQuantity: form.elements.quantity.value });
 
 await Storefront.loadConfig();
-const product = Storefront.kitById(GAME_PRODUCT.id);
-const updateCart = () => {
-  const cart = Storefront.getCart();
-  cartCount.textContent = String(cart?.kitQuantity || 0);
-  document.querySelector('#game-cart-note').hidden = !cart || cart.id === GAME_PRODUCT.id;
-};
+const available = GAME_VARIANTS.map(variant => Storefront.kitById(variant.id)).filter(Boolean);
+const cart = Storefront.getCart();
+const initialVariant = available.find(variant => variant.id === cart?.id) || available[0];
+for (const variant of GAME_VARIANTS) {
+  const product = available.find(item => item.id === variant.id);
+  const label = document.createElement('label');
+  label.className = 'variant';
+  const radio = document.createElement('input');
+  radio.type = 'radio';
+  radio.name = 'color';
+  radio.value = variant.id;
+  radio.disabled = !product;
+  radio.checked = initialVariant?.id === variant.id;
+  const option = document.createElement('span');
+  option.className = 'variant-option variant-option--image';
+  const thumbnail = document.createElement('img');
+  thumbnail.src = variant.image.replace(/\.webp$/, '-mini.webp');
+  thumbnail.alt = '';
+  thumbnail.width = 40;
+  thumbnail.height = 40;
+  const name = document.createElement('span');
+  name.className = 'variant-name';
+  name.textContent = product ? variant.color : `${variant.color} · indisponível`;
+  option.append(thumbnail, name);
+  label.append(radio, option);
+  options.append(label);
+}
 
-if (product) {
+function updateOffer() {
+  const product = currentProduct();
+  const savedCart = Storefront.getCart();
+  cartCount.textContent = String(savedCart?.kitQuantity || 0);
+  document.querySelector('#game-cart-note').hidden = !savedCart || savedCart.id === product?.id;
+  submit.disabled = !product;
+  status.textContent = product ? '' : 'O Game R36S está indisponível no momento.';
+  if (!product) return;
+  const count = currentCount();
+  const { subtotal, pixTotal } = orderTotals(product.price, count);
   document.querySelector('#game-price').textContent = Storefront.brl(product.price);
   document.querySelector('#game-pix').textContent = Storefront.brl(orderTotals(product.price, 1).pixTotal);
   document.querySelector('#game-installments').textContent = `Até ${product.maxInstallments}x sem juros no cartão`;
-  submit.disabled = false;
-  Storefront.track('ViewContent', product);
-} else {
-  status.textContent = 'O Game R36S está indisponível no momento.';
-}
-updateCart();
-
-quantity.addEventListener('change', () => {
-  if (!product) return;
-  const count = Storefront.kitQuantityFor({ kitQuantity: quantity.value });
-  const { subtotal, pixTotal } = orderTotals(product.price, count);
   document.querySelector('#game-total').hidden = count === 1;
   document.querySelector('#game-order-total').textContent = Storefront.brl(subtotal);
   document.querySelector('#game-order-pix').textContent = `${Storefront.brl(pixTotal)} no Pix`;
+}
+
+if (initialVariant) {
+  gallery.showImage(initialVariant.image);
+  Storefront.track('ViewContent', initialVariant);
+}
+updateOffer();
+
+form.addEventListener('change', event => {
+  if (event.target.name === 'color') gallery.showImage(currentProduct()?.image);
+  updateOffer();
 });
 
 form.addEventListener('submit', event => {
   event.preventDefault();
+  const product = currentProduct();
   if (!product || submit.disabled) return;
-  const count = Storefront.kitQuantityFor({ kitQuantity: quantity.value });
+  const count = currentCount();
   const order = { ...product, kitQuantity: count, shippingService: 'standard' };
   try {
     Storefront.putCart(order);
@@ -108,21 +93,6 @@ form.addEventListener('submit', event => {
   location.assign('/cart');
 });
 
-fetch('/api/locale').then(response => response.json()).then(place => {
-  if (place.country !== 'BR' || !place.city) return;
-  const futureDate = days => {
-    const date = new Date();
-    while (days > 0) {
-      date.setDate(date.getDate() + 1);
-      if (date.getDay() !== 0 && date.getDay() !== 6) days -= 1;
-    }
-    return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(date);
-  };
-  document.querySelector('#delivery').textContent = `Previsão para ${place.city}: ${futureDate(8)} a ${futureDate(12)}. SEDEX no checkout.`;
-}).catch(() => {});
-
 window.addEventListener('pageshow', event => {
-  if (!event.persisted || !product) return;
-  updateCart();
-  submit.disabled = false;
+  if (event.persisted) updateOffer();
 });

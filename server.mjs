@@ -70,6 +70,7 @@ async function processPayment(req, res) {
       metadata: {
         product_id: selectedProduct.id,
         voltage: selectedProduct.voltage,
+        ...(selectedProduct.color ? { color: selectedProduct.color } : {}),
         quantity: selectedProduct.units * quantity,
         kit_quantity: quantity,
         shipping,

@@ -31,7 +31,17 @@ export default async function handler(request, response) {
     auto_return: 'approved',
     notification_url: `${publicBaseUrl()}/api/mercadopago/webhook`,
     payment_methods: { excluded_payment_types: [{ id: 'ticket' }], installments: 1 },
-    metadata: { product_id: product.id, voltage: product.voltage, quantity: product.units * quantity, kit_quantity: quantity, shipping, shipping_service: shippingService, carrier, checkout_price: paymentAmount(product, quantity, shippingService) }
+    metadata: {
+      product_id: product.id,
+      voltage: product.voltage,
+      ...(product.color ? { color: product.color } : {}),
+      quantity: product.units * quantity,
+      kit_quantity: quantity,
+      shipping,
+      shipping_service: shippingService,
+      carrier,
+      checkout_price: paymentAmount(product, quantity, shippingService)
+    }
   };
 
   try {

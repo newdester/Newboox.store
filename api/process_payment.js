@@ -44,6 +44,7 @@ export default async function handler(request, response) {
     metadata: {
       product_id: product.id,
       voltage: product.voltage,
+      ...(product.color ? { color: product.color } : {}),
       quantity: product.units * quantity,
       kit_quantity: quantity,
       shipping,

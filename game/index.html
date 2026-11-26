@@ -13,7 +13,7 @@
   <link rel="canonical" href="https://newboox.store/game">
   <link rel="preload" as="font" href="/assets/fonts/inter-latin-variable.woff2" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/css/typography.css?v=1">
-  <link rel="stylesheet" href="/assets/css/washer.css?v=shop-1">
+  <link rel="stylesheet" href="/assets/css/washer.css?v=product-2">
   <link rel="stylesheet" href="/assets/css/game.css?v=3">
   <link rel="stylesheet" href="/assets/css/store-footer.css?v=4">
   <link rel="icon" type="image/png" sizes="128x128" href="/assets/images/trust/newboox-logo-blue.png">
@@ -52,17 +52,21 @@
 
       <div class="product-copy" id="comprar">
         <h1 id="product-title">Game R36S</h1>
-        <p class="product-spec">Console portátil com tela IPS de 3,5″, Linux e cartão de 64 GB</p>
+        <p class="product-spec">Console portátil · IPS de 3,5″ · Linux · 64 GB</p>
         <a class="product-reviews-link" href="#avaliacoes">Ver avaliações do anúncio</a>
         <div class="price-panel">
           <div class="price-row">
             <div class="price"><div class="price-context"><span class="reference-price">Preço promocional</span></div><span id="game-price">R$ 78,41</span></div>
             <p class="pix-offer" id="game-pix-offer"><strong id="game-pix">R$ 70,57</strong><span>10% de desconto no Pix</span></p>
           </div>
-          <div class="price-meta"><p class="payment-copy" id="game-installments">Até 3x sem juros no cartão</p><span class="free-shipping">Frete padrão grátis</span></div>
+          <div class="price-meta"><p class="payment-copy" id="game-installments">Até 3x sem juros no cartão</p></div>
         </div>
 
         <form id="game-offer">
+          <fieldset>
+            <legend>Cor</legend>
+            <div class="variants" id="game-colors"></div>
+          </fieldset>
           <div class="offer-order">
             <label class="offer-quantity" for="game-quantity">Quantidade
               <select id="game-quantity" name="quantity">
@@ -72,13 +76,13 @@
             </label>
             <div class="order-total" id="game-total" aria-live="polite" hidden><span>Total dos produtos</span><strong id="game-order-total"></strong><span id="game-order-pix"></span></div>
           </div>
-          <p class="cart-replacement-note" id="game-cart-note" hidden>Adicionar o Game troca o produto que está no carrinho. Cada pedido aceita um modelo.</p>
+          <p class="cart-replacement-note" id="game-cart-note" hidden>Esta seleção substituirá o item que está no carrinho.</p>
           <button class="add-to-cart" type="submit" disabled>Adicionar ao carrinho</button>
           <p id="offer-status" role="status"></p>
         </form>
 
-        <div class="purchase-info">
-          <div class="purchase-info__row"><span id="delivery">Entrega padrão grátis em 8 a 12 dias úteis. SEDEX no checkout.</span></div>
+        <div class="purchase-info" id="entrega">
+          <p class="purchase-info__row">Informe o CEP no checkout para ver frete e prazo.</p>
           <div class="purchase-info__row"><img src="/assets/images/trust/mercado-pago.png" alt="Mercado Pago" width="1049" height="426" decoding="async"><span>Pix, cartão de crédito ou saldo Mercado Pago</span></div>
         </div>
       </div>
@@ -101,7 +105,7 @@
           <div class="feature-card__body"><h3>Formato portátil</h3><p>Console vertical com tela e controles no mesmo aparelho.</p></div>
         </article>
       </div>
-      <p class="game-image-credit">Imagens do anúncio de referência na Shopee. As cores são ilustrativas.</p>
+      <p class="game-image-credit">Imagens do anúncio de referência na Shopee.</p>
     </section>
 
     <section class="details" id="especificacoes" aria-labelledby="game-specs">
@@ -124,14 +128,6 @@
         </div>
       </div>
       <a class="outline-link" href="https://shopee.com.br/Console-Port%C3%A1til-R36S-de-15.000-Jogos-V%C3%ADdeo-Game-64g-Linux-Tela-IPS-3.5-Polegadas-a-Pronta-Entrega-i.1057319077.19997988825" target="_blank" rel="noopener noreferrer">Ver avaliações no anúncio original</a>
-    </section>
-
-    <section class="details" id="entrega" aria-labelledby="game-help">
-      <h2 id="game-help">Entrega e pagamento</h2>
-      <div class="section-columns">
-        <div class="info-card"><h3>Entrega padrão grátis</h3><p>Previsão de 8 a 12 dias úteis. Caso esteja disponível para o seu endereço, a opção SEDEX aparece no checkout com prazo e valor próprios.</p></div>
-        <div class="info-card"><h3>Pagamento protegido</h3><p>Escolha Pix com 10% de desconto nos produtos, cartão de crédito em até 3x sem juros ou saldo Mercado Pago. As opções são escolhidas somente na etapa de pagamento.</p></div>
-      </div>
     </section>
 
     <section class="details faq-section" aria-labelledby="faq-title">
@@ -167,6 +163,6 @@
   </footer>
   <script>window.META_AUTO_PAGEVIEW = true;</script>
   <script defer src="/assets/js/meta-pixel.js?v=20261126-game"></script>
-  <script type="module" src="/assets/js/game-offer.js?v=2"></script>
+  <script type="module" src="/assets/js/game-offer.js?v=product-2"></script>
 </body>
 </html>

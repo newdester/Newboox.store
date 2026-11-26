@@ -1,5 +1,5 @@
 import { orderTotals } from './washer-catalog.js?v=soarfly-4';
-import { STORE_PRODUCTS } from './product-catalog.js?v=1';
+import { STORE_PRODUCTS } from './product-catalog.js?v=2';
 
 const responsiveCss = document.createElement('link');
 responsiveCss.rel = 'stylesheet';
@@ -72,12 +72,11 @@ export const Storefront = (() => {
     document.documentElement.lang = 'pt-BR';
     document.title = 'Carrinho — Newboox';
     set('#continueShopping', 'Continuar comprando');
-    set('#shippingIncluded', 'Frete grátis · 8 a 12 dias úteis');
     set('#cartTitle', 'Seu carrinho');
     set('#summaryTitle', 'Resumo do pedido');
     set('#subtotalLabel', 'Produtos');
-    set('#shippingLabel', 'Entrega padrão');
-    set('#totalLabel', 'Total com entrega padrão');
+    set('#shippingLabel', 'Frete e prazo');
+    set('#totalLabel', 'Total dos produtos');
     if (!cart || !root) {
       document.querySelector('#empty')?.classList.remove('hidden');
       document.querySelector('#checkoutLink')?.classList.add('hidden');
@@ -90,19 +89,15 @@ export const Storefront = (() => {
     if (continueShopping) continueShopping.href = kit.url;
     const totalUnits = kit.units * cart.kitQuantity;
     const { subtotal, pixTotal } = totalsFor({ ...cart, shippingService: 'standard' });
-    const standardEstimate = cart.shippingService === 'standard' && cart.deliveryEstimate
-      ? cart.deliveryEstimate
-      : 'Entrega padrão grátis · 8 a 12 dias úteis';
     set('#cartCount', String(totalUnits));
-    set('#deliveryWindow', standardEstimate);
     document.querySelector('#checkoutLink')?.setAttribute('href', PAYMENT_URL);
     root.innerHTML = `<div class="cart-line"><img src="${kit.image}" alt=""><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} · ${brl(kit.price)} por unidade</span><div class="cart-quantity" aria-label="Quantidade"><button type="button" data-decrease aria-label="Diminuir quantidade">−</button><strong>${cart.kitQuantity}</strong><button type="button" data-increase aria-label="Aumentar quantidade">+</button></div><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     set('#subtotal', brl(subtotal));
-    set('#shippingFree', 'GRÁTIS');
+    set('#shippingFree', 'No checkout');
     set('#total', brl(subtotal));
     set('#cartPixTotal', brl(pixTotal));
     document.querySelector('#cartPixOffer')?.classList.remove('hidden');
-    set('#chargedNote', 'Consulte e escolha o frete expresso no checkout.');
+    set('#chargedNote', 'Confira as opções de entrega após informar o CEP.');
     root.querySelector('[data-remove]')?.addEventListener('click', () => {
       localStorage.removeItem(CART);
       location.reload();

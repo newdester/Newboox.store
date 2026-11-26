@@ -1,4 +1,4 @@
-import { Storefront } from './storefront.js?v=shop-1';
+import { Storefront } from './storefront.js?v=product-2';
 
 const PAYMENT_TRACKING_KEY = 'newboox_payment_tracking_v1';
 
@@ -45,6 +45,7 @@ const cardDeclines = {
       item.classList.toggle('active', value === step);
       item.classList.toggle('complete', value < step);
     });
+    renderSummary();
     document.querySelector('[data-checkout-step]:not(.hidden)')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -98,16 +99,18 @@ const cardDeclines = {
 
   function renderSummary() {
     if (!selectedProduct) return;
-    const { total, subtotal, pixDiscount, pixTotal } = Storefront.totalsFor(cart);
+    const showShipping = activeStep >= 3;
+    const order = showShipping ? cart : { ...cart, shippingService: 'standard' };
+    const { total, subtotal, pixDiscount, pixTotal } = Storefront.totalsFor(order);
     const payingPix = activeMethod === 'pix';
-    const shipping = Storefront.extrasFor(cart);
+    const shipping = Storefront.extrasFor(order);
     const totalUnits = selectedProduct.units * quantity;
-    const isSedex = Storefront.shippingServiceFor(cart) === 'sedex';
+    const isSedex = Storefront.shippingServiceFor(order) === 'sedex';
     const deliveryText = isSedex ? 'SEDEX · 2 a 3 dias úteis' : (cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis');
     $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt=""><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} · ${brl(selectedProduct.price)} por unidade</span></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     $('productSubtotal').textContent = brl(subtotal);
-    $('checkoutShipping').textContent = shipping ? brl(shipping) : 'GRÁTIS';
-    $('shippingLabel').textContent = isSedex ? 'SEDEX' : 'Entrega padrão';
+    $('checkoutShipping').textContent = showShipping ? (shipping ? brl(shipping) : 'GRÁTIS') : 'Após o CEP';
+    $('shippingLabel').textContent = showShipping ? (isSedex ? 'SEDEX' : 'Entrega padrão') : 'Frete';
     const expressPrice = $('expressShippingPrice');
     expressPrice.classList.toggle('hidden', !isSedex);
     expressPrice.textContent = isSedex ? brl(shipping) : '';
@@ -115,12 +118,12 @@ const cardDeclines = {
     $('checkoutPixDiscountValue').textContent = '−' + brl(pixDiscount);
     $('checkoutPixOffer').classList.toggle('hidden', payingPix);
     $('checkoutPixTotal').textContent = brl(pixTotal);
-    $('totalLabel').textContent = payingPix ? 'Total no Pix' : 'Total';
+    $('totalLabel').textContent = payingPix ? 'Total no Pix' : (showShipping ? 'Total' : 'Total dos produtos');
     $('checkoutTotalBottom').textContent = brl(payingPix ? pixTotal : total);
     document.querySelectorAll('[data-payment-total]').forEach(node => {
       node.textContent = brl(node.dataset.paymentTotal === 'pix' ? pixTotal : total);
     });
-    $('footerCurrency').textContent = `${deliveryText} · Pagamento em BRL`;
+    $('footerCurrency').textContent = showShipping ? `${deliveryText} · Pagamento em BRL` : 'Pagamento em BRL';
   }
 
   function trackPaymentStart(value) {

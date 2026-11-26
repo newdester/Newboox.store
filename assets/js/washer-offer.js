@@ -1,26 +1,9 @@
-import { Storefront } from './storefront.js?v=shop-1';
+import { Storefront } from './storefront.js?v=product-2';
 import { orderTotals, WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-4';
+import { setupGallery, startCountdown } from './product-page.js?v=1';
 
-const offerCountdown = document.getElementById('black-friday-countdown');
-const brasiliaClock = new Intl.DateTimeFormat('pt-BR', {
-  timeZone: 'America/Sao_Paulo',
-  hourCycle: 'h23',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit'
-});
-
-function updateOfferCountdown() {
-  const [hour, minute, second] = brasiliaClock.format(new Date()).split(':').map(Number);
-  const secondsLeft = 24 * 3600 - (hour * 3600 + minute * 60 + second);
-  offerCountdown.textContent = [
-    Math.floor(secondsLeft / 3600), Math.floor(secondsLeft % 3600 / 60), secondsLeft % 60
-  ].map(value => String(value).padStart(2, '0')).join(':');
-}
-
-updateOfferCountdown();
-offerCountdown.hidden = false;
-setInterval(updateOfferCountdown, 1000);
+startCountdown();
+setupGallery();
 
 const form = document.querySelector('#offer');
 const variants = document.querySelector('#variants');
@@ -38,38 +21,6 @@ const addToCart = form.querySelector('button[type="submit"]');
 const cartCount = document.querySelector('[data-cart-count]');
 const currentVariant = () => Storefront.kitById(variants.querySelector('input:checked')?.value);
 let baseOffer;
-let deliveryEstimate = '';
-
-const photos = [...document.querySelectorAll('[data-photo]')];
-const galleryImage = document.querySelector('#gallery-image');
-const photoCounter = document.querySelector('#photo-counter');
-const photoFrame = galleryImage.parentElement;
-let activePhoto = 0;
-let touchStart;
-
-function showPhoto(index) {
-  if (index < 0 || index >= photos.length || index === activePhoto) return;
-  const button = photos[index];
-  galleryImage.src = '/assets/images/soarfly/' + button.dataset.photo + '.webp';
-  galleryImage.alt = button.dataset.alt;
-  photoCounter.textContent = (index + 1) + ' de ' + photos.length;
-  photos.forEach(photo => photo.setAttribute('aria-pressed', String(photo === button)));
-  activePhoto = index;
-}
-
-photos.forEach((button, index) => button.addEventListener('click', () => showPhoto(index)));
-photoFrame.addEventListener('touchstart', event => {
-  touchStart = event.touches.length === 1 ? event.touches[0] : null;
-}, { passive: true });
-photoFrame.addEventListener('touchend', event => {
-  if (!touchStart || event.touches.length) return;
-  const { clientX, clientY } = event.changedTouches[0];
-  const horizontal = clientX - touchStart.clientX;
-  const vertical = clientY - touchStart.clientY;
-  touchStart = null;
-  if (Math.abs(horizontal) > Math.max(40, Math.abs(vertical))) showPhoto(activePhoto - Math.sign(horizontal));
-}, { passive: true });
-photoFrame.addEventListener('touchcancel', () => { touchStart = null; }, { passive: true });
 
 function renderVariants(products) {
   for (const product of products) {
@@ -127,7 +78,7 @@ form.addEventListener('submit', event => {
   const variant = currentVariant();
   if (!variant || addToCart.disabled) return;
   const count = Storefront.kitQuantityFor({ kitQuantity: quantity.value });
-  const cart = { ...variant, kitQuantity: count, shippingService: 'standard', deliveryEstimate };
+  const cart = { ...variant, kitQuantity: count, shippingService: 'standard' };
   try {
     Storefront.putCart(cart);
     addToCart.disabled = true;
@@ -159,17 +110,3 @@ window.addEventListener('pageshow', event => {
   }
 });
 if (baseOffer) Storefront.track('ViewContent', baseOffer);
-
-fetch('/api/locale').then(response => response.json()).then(place => {
-  if (place.country !== 'BR' || !place.city) return;
-  const dateAfter = days => {
-    const date = new Date();
-    while (days > 0) {
-      date.setDate(date.getDate() + 1);
-      if (date.getDay() !== 0 && date.getDay() !== 6) days -= 1;
-    }
-    return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(date);
-  };
-  deliveryEstimate = 'Previsão para ' + place.city + ': ' + dateAfter(8) + ' a ' + dateAfter(12);
-  document.querySelector('#delivery').textContent = deliveryEstimate + '. SEDEX no checkout.';
-}).catch(() => {});
