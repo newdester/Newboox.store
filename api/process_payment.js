@@ -21,12 +21,11 @@ export default async function handler(request, response) {
   const carrier = shippingService === 'sedex' ? 'SEDEX' : 'Correios - Entrega Padrão';
   const email = String(formData.payer?.email || '').trim();
   if (!formData.payment_method_id || !/^\S+@\S+\.\S+$/.test(email)) return response.status(422).json({ error: 'Dados de pagamento incompletos.' });
-  const allowedPaymentTypes = new Set(['credit_card', 'bank_transfer']);
-  if (formData.payment_type_id && !allowedPaymentTypes.has(formData.payment_type_id)) {
+  const paymentType = formData.payment_method_id === 'pix' ? 'bank_transfer' : 'credit_card';
+  if (formData.payment_type_id && formData.payment_type_id !== paymentType) {
     return response.status(422).json({ error: 'Este meio de pagamento não está disponível para esta compra.' });
   }
 
-  const paymentType = formData.payment_type_id || (formData.payment_method_id === 'pix' ? 'bank_transfer' : 'credit_card');
   const installments = paymentType === 'credit_card' ? Number(formData.installments ?? 1) : 1;
   if (!Number.isInteger(installments) || installments < 1 || installments > product.maxInstallments) {
     return response.status(422).json({ error: 'Selecione uma opção válida de parcelamento.' });
@@ -34,7 +33,7 @@ export default async function handler(request, response) {
   const orderId = `NB-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const nameParts = safeMeta(customer.name, 120).split(/\s+/).filter(Boolean);
   const payload = {
-    transaction_amount: paymentAmount(product, quantity, shippingService),
+    transaction_amount: paymentAmount(product, quantity, shippingService, formData.payment_method_id),
     token: formData.token,
     description: `${product.title} × ${quantity} · ${shippingService === 'sedex' ? 'SEDEX' : 'frete grátis'}`,
     installments,

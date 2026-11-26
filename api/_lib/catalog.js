@@ -1,4 +1,4 @@
-import { WASHER_VARIANTS } from '../../assets/js/washer-catalog.js';
+import { orderTotals, WASHER_VARIANTS } from '../../assets/js/washer-catalog.js';
 
 const SEDEX_RATE = 12.36;
 
@@ -29,7 +29,7 @@ export function shippingAmount(product, quantity = 1, shippingService = 'standar
   return shippingServiceFrom(shippingService) === 'sedex' ? SEDEX_RATE : 0;
 }
 
-export function paymentAmount(product, quantity = 1, shippingService = 'standard') {
-  const amount = Number(product.price) * quantityFrom(quantity);
-  return Number((amount + shippingAmount(product, quantity, shippingService)).toFixed(2));
+export function paymentAmount(product, quantity = 1, shippingService = 'standard', paymentMethod) {
+  const totals = orderTotals(product.price, quantityFrom(quantity), shippingAmount(product, quantity, shippingService));
+  return paymentMethod === 'pix' ? totals.pixTotal : totals.total;
 }

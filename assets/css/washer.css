@@ -44,8 +44,12 @@ h3 { margin: 0 0 5px; font-size: 1rem; }
 .product-reviews-link span { color: #82540a; }
 .product-reviews-link strong { color: var(--ink); }
 .price-panel { margin-block: 13px; padding-bottom: 11px; border-bottom: 1px solid var(--line); }
+.price-row { display: flex; align-items: end; justify-content: space-between; flex-wrap: wrap; gap: 7px 10px; }
 .price { font-size: clamp(1.55rem, 3.3vw, 2.15rem); font-weight: 750; line-height: 1.2; letter-spacing: -.03em; }
-.price-prefix { margin-right: 5px; color: var(--muted); font-size: .8rem; font-weight: 500; letter-spacing: 0; white-space: nowrap; }
+.price-prefix { color: var(--muted); font-size: .8rem; font-weight: 500; letter-spacing: 0; white-space: nowrap; }
+.price-prefix:not([hidden]) { display: block; }
+.pix-offer { margin: 0; color: #11633f; font-size: .75rem; line-height: 1.25; }
+.pix-offer strong { display: block; font-size: 1.1rem; }
 .price-meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 12px; margin-top: 3px; font-size: .8125rem; }
 .payment-copy { margin: 0; color: var(--muted); }
 .free-shipping { color: #11633f; font-weight: 650; }
@@ -69,6 +73,7 @@ legend { margin-bottom: 6px; padding: 0; font-size: .875rem; font-weight: 650; }
 .offer-quantity select { min-width: 51px; min-height: 44px; padding-inline: 8px 4px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: inherit; font-size: 1rem; }
 .order-total { margin-left: auto; color: var(--muted); font-size: .75rem; text-align: right; }
 .order-total strong { display: block; color: var(--ink); font-size: .9375rem; white-space: nowrap; }
+#total-pix { color: #11633f; font-weight: 650; }
 .add-to-cart { width: 100%; min-height: 48px; padding: 9px 12px; border: 1px solid var(--blue); border-radius: 9px; background: var(--blue); color: #fff; font-weight: 650; cursor: pointer; }
 .add-to-cart:not(:disabled):hover { border-color: var(--blue-dark); background: var(--blue-dark); }
 .add-to-cart:disabled { cursor: default; opacity: .58; }
@@ -126,7 +131,7 @@ details[open] p { padding-bottom: 13px; }
   .site-header__inner { min-height: 52px; }
   .page-sections { padding-top: 10px; }
   .product { grid-template-columns: minmax(0, 1fr); gap: 7px; }
-  .product-photo { aspect-ratio: 7 / 5; max-height: 286px; border-radius: 12px; }
+  .product-photo { aspect-ratio: 3 / 2; max-height: 286px; border-radius: 12px; }
   .gallery-thumbs { display: flex; justify-content: center; gap: 1px; margin-top: 1px; }
   .gallery-thumb { display: grid; place-items: center; width: 31px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; }
   .gallery-thumb img { display: none; }

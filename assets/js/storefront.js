@@ -1,4 +1,4 @@
-import { WASHER_IMAGE, WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-3';
+import { orderTotals, WASHER_IMAGE, WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-4';
 
 const responsiveCss = document.createElement('link');
 responsiveCss.rel = 'stylesheet';
@@ -22,12 +22,10 @@ export const Storefront = (() => {
   const kitById = id => kits.find(kit => kit.id === id && kit.available);
   const unitPrice = id => kitById(id)?.price ?? 0;
   const kitQuantityFor = cart => Math.min(10, Math.max(1, Number.parseInt(cart?.kitQuantity, 10) || 1));
-  const subtotalFor = cart => Number((unitPrice(cart?.id) * kitQuantityFor(cart)).toFixed(2));
   const shippingServiceFor = cart => cart?.shippingService === 'sedex' ? 'sedex' : 'standard';
   const extrasFor = cart => shippingServiceFor(cart) === 'sedex' ? SEDEX_RATE : 0;
-  const totalFor = cart => {
-    return Number((subtotalFor(cart) + extrasFor(cart)).toFixed(2));
-  };
+  const totalsFor = cart => orderTotals(unitPrice(cart?.id), kitQuantityFor(cart), extrasFor(cart));
+  const totalFor = cart => totalsFor(cart).total;
 
   const getCart = () => {
     try {
@@ -83,7 +81,7 @@ export const Storefront = (() => {
     cart = { ...cart, ...kit, image, kitQuantity: kitQuantityFor(cart), shippingService: shippingServiceFor(cart), currency: 'BRL' };
     putCart(cart);
     const totalUnits = kit.units * cart.kitQuantity;
-    const subtotal = subtotalFor(cart);
+    const { subtotal, pixTotal } = totalsFor({ ...cart, shippingService: 'standard' });
     const standardEstimate = cart.shippingService === 'standard' && cart.deliveryEstimate
       ? cart.deliveryEstimate
       : 'Entrega padrão grátis · 8 a 12 dias úteis';
@@ -94,6 +92,8 @@ export const Storefront = (() => {
     set('#subtotal', brl(subtotal));
     set('#shippingFree', 'GRÁTIS');
     set('#total', brl(subtotal));
+    set('#cartPixTotal', brl(pixTotal));
+    document.querySelector('#cartPixOffer')?.classList.remove('hidden');
     set('#chargedNote', 'Consulte e escolha o frete expresso no checkout.');
     root.querySelector('[data-remove]')?.addEventListener('click', () => {
       localStorage.removeItem(CART);
@@ -136,5 +136,5 @@ export const Storefront = (() => {
     else window.addEventListener('meta-pixel-ready', send, { once: true });
   };
 
-  return { CART, CUSTOMER, PAYMENT, PAYMENT_URL, brl, unitPrice, shippingServiceFor, extrasFor, subtotalFor, totalFor, kitQuantityFor, getCart, putCart, loadConfig, kitById, renderCart, renderThankYou, track };
+  return { CART, CUSTOMER, PAYMENT, PAYMENT_URL, brl, unitPrice, shippingServiceFor, extrasFor, totalFor, totalsFor, kitQuantityFor, getCart, putCart, loadConfig, kitById, renderCart, renderThankYou, track };
 })();

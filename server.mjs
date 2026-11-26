@@ -51,15 +51,15 @@ async function processPayment(req, res) {
     const form = body.formData || {};
     const email = String(form.payer?.email || '').trim();
     if (!form.payment_method_id || !/^\S+@\S+\.\S+$/.test(email)) return reply(res, 422, { error: 'Dados de pagamento incompletos.' });
-    const paymentType = form.payment_type_id || (form.payment_method_id === 'pix' ? 'bank_transfer' : 'credit_card');
-    if (!['credit_card', 'bank_transfer'].includes(paymentType)) return reply(res, 422, { error: 'Este meio de pagamento não está disponível.' });
+    const paymentType = form.payment_method_id === 'pix' ? 'bank_transfer' : 'credit_card';
+    if (form.payment_type_id && form.payment_type_id !== paymentType) return reply(res, 422, { error: 'Este meio de pagamento não está disponível.' });
     const installments = paymentType === 'credit_card' ? Number(form.installments ?? 1) : 1;
     if (!Number.isInteger(installments) || installments < 1 || installments > selectedProduct.maxInstallments) {
       return reply(res, 422, { error: 'Selecione uma opção válida de parcelamento.' });
     }
     const orderId = `NB-${Date.now()}-${randomUUID().slice(0, 8)}`;
     const payload = {
-      transaction_amount: paymentAmount(selectedProduct, quantity, shippingService),
+      transaction_amount: paymentAmount(selectedProduct, quantity, shippingService, form.payment_method_id),
       token: form.token,
       description: `${selectedProduct.title} × ${quantity} · ${shippingService === 'sedex' ? 'SEDEX' : 'frete grátis'}`,
       installments,

@@ -1,14 +1,17 @@
-import { Storefront } from './storefront.js?v=soarfly-4';
-import { WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-3';
+import { Storefront } from './storefront.js?v=soarfly-5';
+import { orderTotals, WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-4';
 
 const form = document.querySelector('#offer');
 const variants = document.querySelector('#variants');
 const quantity = form.elements.quantity;
 const pricePrefix = document.querySelector('.price-prefix');
 const unitPriceValue = document.querySelector('#unit-price-value');
+const unitPixOffer = document.querySelector('#unit-pix-offer');
+const unitPixPrice = document.querySelector('#unit-pix-price');
 const installmentCopy = document.querySelector('#installment-copy');
 const bivoltNote = document.querySelector('#bivolt-note');
 const total = document.querySelector('#total');
+const totalPix = document.querySelector('#total-pix');
 const status = document.querySelector('#offer-status');
 const addToCart = form.querySelector('button[type="submit"]');
 const cartCount = document.querySelector('[data-cart-count]');
@@ -78,6 +81,8 @@ function updateTotal() {
   const count = Storefront.kitQuantityFor({ kitQuantity: quantity.value });
   pricePrefix.hidden = Boolean(variant) || !offer;
   unitPriceValue.textContent = offer ? Storefront.brl(offer.price) : 'Indisponível';
+  unitPixOffer.hidden = !offer;
+  if (offer) unitPixPrice.textContent = Storefront.brl(orderTotals(offer.price, 1).pixTotal);
   const installments = offer?.maxInstallments || WASHER_VARIANTS[0].maxInstallments;
   const evenInstallments = variant && Math.round(variant.price * 100) % installments === 0;
   const installmentValue = evenInstallments ? ' de ' + Storefront.brl(variant.price / installments) : '';
@@ -85,7 +90,12 @@ function updateTotal() {
   installmentCopy.hidden = !offer;
   bivoltNote.hidden = variant?.id !== 'soarfly-bivolt';
   total.parentElement.hidden = !variant;
-  total.textContent = variant ? Storefront.brl(Storefront.subtotalFor({ ...variant, kitQuantity: count })) : '';
+  if (variant) {
+    const { subtotal, pixTotal } = orderTotals(variant.price, count);
+    total.textContent = Storefront.brl(subtotal);
+    totalPix.textContent = Storefront.brl(pixTotal) + ' no Pix';
+  }
+  totalPix.hidden = count === 1;
   addToCart.disabled = !baseOffer;
   status.textContent = '';
 }

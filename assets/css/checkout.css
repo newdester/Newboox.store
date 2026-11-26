@@ -58,6 +58,8 @@ body{font-size:16px}.field label,.section-heading span,.checkline,.payment-intro
 .checkout-header--compact .bag:hover { text-decoration: underline; }
 #checkoutLink { background: #0059d8; box-shadow: none; }
 #checkoutLink:hover { background: #0046ac; }
+.summary-row.pix-summary { color: #11633f; }
+.summary-row.pix-summary strong { font-weight: 750; }
 #zipFeedback { min-height: 0; margin: 2px 0 0; }
 #zipFeedback:empty { margin: 0; }
 body, button, input, select, textarea { font-family: var(--store-font, Helvetica, Arial, sans-serif); }

@@ -1,4 +1,4 @@
-import { Storefront } from './storefront.js?v=soarfly-4';
+import { Storefront } from './storefront.js?v=soarfly-5';
 
 const cardBrickErrors = {
   get_payment_methods_failed: 'Não foi possível consultar os cartões aceitos pelo Mercado Pago. Tente novamente.',
@@ -94,8 +94,8 @@ const cardDeclines = {
 
   function renderSummary() {
     if (!selectedProduct) return;
-    const total = Storefront.totalFor(cart);
-    const subtotal = Storefront.subtotalFor(cart);
+    const { total, subtotal, pixDiscount, pixTotal } = Storefront.totalsFor(cart);
+    const payingPix = activeMethod === 'pix';
     const shipping = Storefront.extrasFor(cart);
     const totalUnits = selectedProduct.units * quantity;
     const isSedex = Storefront.shippingServiceFor(cart) === 'sedex';
@@ -107,8 +107,15 @@ const cardDeclines = {
     const expressPrice = $('expressShippingPrice');
     expressPrice.classList.toggle('hidden', !isSedex);
     expressPrice.textContent = isSedex ? brl(shipping) : '';
-    $('checkoutTotalBottom').textContent = brl(total);
-    document.querySelectorAll('[data-payment-total]').forEach(node => { node.textContent = brl(total); });
+    $('checkoutPixDiscount').classList.toggle('hidden', !payingPix);
+    $('checkoutPixDiscountValue').textContent = '−' + brl(pixDiscount);
+    $('checkoutPixOffer').classList.toggle('hidden', payingPix);
+    $('checkoutPixTotal').textContent = brl(pixTotal);
+    $('totalLabel').textContent = payingPix ? 'Total no Pix' : 'Total';
+    $('checkoutTotalBottom').textContent = brl(payingPix ? pixTotal : total);
+    document.querySelectorAll('[data-payment-total]').forEach(node => {
+      node.textContent = brl(node.dataset.paymentTotal === 'pix' ? pixTotal : total);
+    });
     $('footerCurrency').textContent = `${deliveryText} · Pagamento em BRL`;
   }
 
