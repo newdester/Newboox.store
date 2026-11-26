@@ -1,6 +1,27 @@
 import { Storefront } from './storefront.js?v=soarfly-6';
 import { orderTotals, WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-4';
 
+const offerCountdown = document.getElementById('black-friday-countdown');
+const brasiliaClock = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: 'America/Sao_Paulo',
+  hourCycle: 'h23',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit'
+});
+
+function updateOfferCountdown() {
+  const [hour, minute, second] = brasiliaClock.format(new Date()).split(':').map(Number);
+  const secondsLeft = 24 * 3600 - (hour * 3600 + minute * 60 + second);
+  offerCountdown.textContent = [
+    Math.floor(secondsLeft / 3600), Math.floor(secondsLeft % 3600 / 60), secondsLeft % 60
+  ].map(value => String(value).padStart(2, '0')).join(':');
+}
+
+updateOfferCountdown();
+offerCountdown.hidden = false;
+setInterval(updateOfferCountdown, 1000);
+
 const form = document.querySelector('#offer');
 const variants = document.querySelector('#variants');
 const quantity = form.elements.quantity;

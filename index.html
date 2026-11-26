@@ -12,11 +12,22 @@
   <meta property="product:price:currency" content="BRL">
   <link rel="preload" as="font" href="/assets/fonts/inter-latin-variable.woff2" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/css/typography.css?v=1">
-  <link rel="stylesheet" href="/assets/css/washer.css?v=soarfly-10">
+  <link rel="stylesheet" href="/assets/css/washer.css?v=soarfly-11">
   <link rel="icon" type="image/png" sizes="128x128" href="/assets/images/trust/newboox-logo-blue.png">
   <link rel="stylesheet" href="/assets/css/store-footer.css?v=4">
 </head>
 <body>
+  <div class="black-friday-banner">
+    <div class="shell black-friday-banner__inner">
+      <div class="black-friday-banner__offer">
+        <strong>Black Friday</strong><span>Lote de 50 unidades</span>
+      </div>
+      <div class="black-friday-banner__deadline">
+        <span>Renova todo dia à meia-noite (Brasília)</span>
+        <span class="black-friday-banner__clock" id="black-friday-countdown" role="timer" aria-label="Tempo até a renovação da oferta" hidden></span>
+      </div>
+    </div>
+  </div>
   <header class="site-header">
     <div class="shell site-header__inner">
       <a class="wordmark newboox-brand-lockup" href="/"><img class="newboox-brand-mark" src="/assets/images/trust/newboox-logo-blue.png" alt="" width="32" height="32" decoding="async"><span>Newboox</span></a>
@@ -44,7 +55,10 @@
         <a class="product-reviews-link" href="#avaliacoes"><span aria-hidden="true">★</span><strong>4,8 de 5</strong> · 209 avaliações do anúncio original</a>
         <div class="price-panel">
           <div class="price-row">
-            <div class="price" id="unit-price"><span class="price-prefix">A partir de</span> <span id="unit-price-value">R$ 189,00</span></div>
+            <div class="price" id="unit-price">
+              <div class="price-context"><span class="reference-price">De <s>R$ 399,90</s></span> <span class="price-prefix">a partir de</span></div>
+              <span id="unit-price-value">R$ 189,00</span>
+            </div>
             <p class="pix-offer" id="unit-pix-offer"><strong id="unit-pix-price">R$ 170,10</strong><span>10% de desconto no Pix</span></p>
           </div>
           <div class="price-meta">
@@ -228,6 +242,6 @@
   </footer>
   <script>window.META_AUTO_PAGEVIEW = true;</script>
   <script defer src="/assets/js/meta-pixel.js?v=20261122-funnel-capi"></script>
-  <script type="module" src="/assets/js/washer-offer.js?v=soarfly-8"></script>
+  <script type="module" src="/assets/js/washer-offer.js?v=soarfly-9"></script>
 </body>
 </html>
