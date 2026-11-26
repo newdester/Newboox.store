@@ -1,7 +1,7 @@
 import { Storefront } from './storefront.js?v=editorial-3';
 import { GAME_VARIANTS } from './product-catalog.js?v=2';
 import { orderTotals, PIX_DISCOUNT_PERCENT } from './washer-catalog.js?v=soarfly-4';
-import { setupGallery } from './product-page.js?v=2';
+import { setupGallery } from './product-page.js?v=3';
 
 const gallery = setupGallery();
 const form = document.querySelector('#game-offer');
@@ -10,11 +10,10 @@ const submit = form.querySelector('button[type="submit"]');
 const status = document.querySelector('#offer-status');
 const cartCount = document.querySelector('[data-cart-count]');
 const prices = document.querySelector('#game-prices');
-const comparison = document.querySelector('#game-comparison');
+const referencePrice = document.querySelector('#game-reference-price');
+const discountPercent = Number(prices.querySelector('[data-discount-percent]').dataset.discountPercent);
 const finalPrice = document.querySelector('#game-final-price');
 const finalLink = document.querySelector('#game-final-link');
-const { pixCents, cardCents } = comparison.dataset;
-const percentage = new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const currentProduct = () => Storefront.kitById(form.elements.color?.value);
 const currentCount = () => Storefront.kitQuantityFor({ kitQuantity: form.elements.quantity.value });
 
@@ -47,25 +46,6 @@ for (const variant of GAME_VARIANTS) {
   options.append(label);
 }
 
-function updateComparison(count, subtotal, pixTotal) {
-  const pixReference = Number(pixCents) * count;
-  const cardReference = Number(cardCents) * count;
-  const pixSavings = pixReference - Math.round(pixTotal * 100);
-  const cardSavings = cardReference - Math.round(subtotal * 100);
-  comparison.hidden = !(pixSavings > 0);
-  if (comparison.hidden) return;
-  const units = `${count} ${count === 1 ? 'unidade' : 'unidades'}`;
-  document.querySelector('#game-pix-saving').textContent = `${Storefront.brl(pixSavings / 100)} a menos no Pix`;
-  document.querySelector('#game-pix-rate').textContent = `${percentage.format(pixSavings / pixReference)} menor`;
-  document.querySelector('#game-comparison-quantity').textContent = `${units} · veja a referência`;
-  const cardComparison = document.querySelector('#game-card-saving');
-  cardComparison.hidden = !(cardSavings > 0);
-  if (!cardComparison.hidden) {
-    const rate = percentage.format(cardSavings / cardReference);
-    cardComparison.textContent = `No cartão, a diferença é de ${Storefront.brl(cardSavings / 100)} (${rate}) para ${units}.`;
-  }
-}
-
 function updateOffer() {
   const product = currentProduct();
   const savedCart = Storefront.getCart();
@@ -80,6 +60,8 @@ function updateOffer() {
   const count = currentCount();
   const { subtotal, pixTotal } = orderTotals(product.price, count);
   const unitPix = Storefront.brl(orderTotals(product.price, 1).pixTotal);
+  const referenceCents = Math.round(Math.round(product.price * 100) * 100 / (100 - discountPercent));
+  referencePrice.textContent = Storefront.brl(referenceCents / 100);
   document.querySelector('#game-price').textContent = Storefront.brl(product.price);
   document.querySelector('#game-pix').textContent = unitPix;
   finalPrice.textContent = `${unitPix} por unidade no Pix.`;
@@ -88,7 +70,6 @@ function updateOffer() {
   document.querySelector('#game-total').hidden = count === 1;
   document.querySelector('#game-order-total').textContent = Storefront.brl(subtotal);
   document.querySelector('#game-order-pix').textContent = `${Storefront.brl(pixTotal)} no Pix`;
-  updateComparison(count, subtotal, pixTotal);
 }
 
 if (initialVariant) {

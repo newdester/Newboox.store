@@ -16,14 +16,14 @@
   <link rel="preload" as="font" href="/assets/fonts/inter-latin-variable.woff2" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/css/typography.css?v=1">
   <link rel="stylesheet" href="/assets/css/washer.css?v=product-2">
-  <link rel="stylesheet" href="/assets/css/store-editorial.css?v=2">
+  <link rel="stylesheet" href="/assets/css/store-editorial.css?v=3">
   <link rel="stylesheet" href="/assets/css/store-footer.css?v=4">
   <link rel="icon" type="image/png" sizes="128x128" href="/assets/images/trust/newboox-logo-blue.png">
 </head>
 <body class="store-editorial">
   <div class="editorial-deal-banner">
     <div class="shell editorial-deal-banner__inner">
-      <strong>Oferta Newboox</strong>
+      <strong>Black Friday Newboox</strong>
       <span>Game R36S · 64 GB</span>
     </div>
   </div>
@@ -46,6 +46,8 @@
       <div class="product-gallery" role="group" aria-label="Fotos do console portátil">
         <div class="product-photo">
           <img id="gallery-image" src="/assets/images/game/r36s-console.webp" alt="Vistas frontal e traseira do console Game R36S preto" width="720" height="720" fetchpriority="high">
+          <button class="gallery-arrow gallery-arrow--prev" type="button" data-gallery-step="-1" aria-label="Foto anterior" aria-controls="gallery-image" hidden></button>
+          <button class="gallery-arrow gallery-arrow--next" type="button" data-gallery-step="1" aria-label="Próxima foto" aria-controls="gallery-image" hidden></button>
           <span class="photo-counter" id="photo-counter" aria-live="polite">1 de 13</span>
         </div>
         <div class="gallery-thumbs" role="group" aria-label="Escolher foto">
@@ -70,6 +72,10 @@
         <h1 class="editorial-display" id="product-title">Game <span class="editorial-highlight">R36S</span></h1>
         <p class="product-spec">Tela IPS de 3,5″, Linux e cartão microSD de 64 GB.</p>
         <div class="price-panel editorial-price-panel" id="game-prices">
+          <p class="editorial-promotion" data-discount-percent="61">
+            <strong>61% OFF no cartão</strong>
+            <span>Referência calculada <b id="game-reference-price">R$ 201,05</b></span>
+          </p>
           <div class="editorial-price-options">
             <div class="editorial-price-method editorial-price-method--pix">
               <span class="editorial-price-method__label">No Pix</span>
@@ -82,22 +88,6 @@
               <span class="editorial-price-method__terms" id="game-installments">Até 3x sem juros</span>
             </div>
           </div>
-          <details class="editorial-comparison" id="game-comparison" data-pix-cents="17860" data-card-cents="18799">
-            <summary>
-              <span class="editorial-comparison__summary">
-                <span aria-live="polite" aria-atomic="true">
-                  <strong id="game-pix-saving">R$ 108,03 a menos no Pix</strong>
-                  <small id="game-comparison-quantity">1 unidade · veja a referência</small>
-                </span>
-                <span class="editorial-comparison__rate" id="game-pix-rate">60,5% menor</span>
-              </span>
-            </summary>
-            <div class="editorial-comparison__body">
-              <p>No anúncio de referência, o R36S custava <strong>R$ 178,60 no Pix</strong> e <strong>R$ 187,99 em outros meios de pagamento</strong>, por unidade.</p>
-              <p id="game-card-saving">No cartão, a diferença é de R$ 109,58 (58,3%) para 1 unidade.</p>
-              <p>Preços do vendedor LEO BUY SHOP no anúncio original, consultados em <time datetime="2026-11-26">26/11/2026</time>. Valores sem frete.</p>
-            </div>
-          </details>
         </div>
 
         <form id="game-offer">
@@ -209,7 +199,7 @@
       <div class="reviews-header">
         <div>
           <h2 class="editorial-display" id="reviews-title">O que dizem os compradores</h2>
-          <p>Trechos e resumos de seis avaliações do anúncio original de LEO BUY SHOP, com fotos e vídeos dos compradores.</p>
+          <p>Trechos e resumos de seis avaliações do anúncio original, com fotos e vídeos dos compradores.</p>
         </div>
         <div class="review-score">
           <strong>4,8 <small>de 5</small></strong>
@@ -348,6 +338,6 @@
   </footer>
   <script>window.META_AUTO_PAGEVIEW = true;</script>
   <script defer src="/assets/js/meta-pixel.js?v=20261126-game"></script>
-  <script type="module" src="/assets/js/game-offer.js?v=editorial-3"></script>
+  <script type="module" src="/assets/js/game-offer.js?v=black-friday-1"></script>
 </body>
 </html>

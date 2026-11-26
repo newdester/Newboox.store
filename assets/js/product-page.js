@@ -47,13 +47,22 @@ export function setupGallery() {
     }
   }
 
+  function nextIndex(index, offset) {
+    return (index + offset + photos.length) % photos.length;
+  }
+
+  frame.querySelectorAll('[data-gallery-step]').forEach(button => {
+    button.hidden = photos.length < 2;
+    button.addEventListener('click', () => show(nextIndex(active, Number(button.dataset.galleryStep))));
+  });
+
   photos.forEach((photo, index) => {
     photo.addEventListener('click', () => show(index));
     photo.addEventListener('keydown', event => {
       const offset = { ArrowLeft: -1, ArrowRight: 1 }[event.key];
       if (!offset) return;
       event.preventDefault();
-      const next = (index + offset + photos.length) % photos.length;
+      const next = nextIndex(index, offset);
       show(next);
       photos[next].focus({ preventScroll: true });
     });

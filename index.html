@@ -13,7 +13,7 @@
   <link rel="preload" as="font" href="/assets/fonts/anton-latin.woff2" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/css/typography.css?v=1">
   <link rel="stylesheet" href="/assets/css/washer.css?v=product-2">
-  <link rel="stylesheet" href="/assets/css/store-editorial.css?v=2">
+  <link rel="stylesheet" href="/assets/css/store-editorial.css?v=3">
   <link rel="icon" type="image/png" sizes="128x128" href="/assets/images/trust/newboox-logo-blue.png">
   <link rel="stylesheet" href="/assets/css/store-footer.css?v=4">
 </head>
@@ -45,6 +45,8 @@
       <div class="product-gallery" role="group" aria-label="Fotos da lavadora">
         <div class="product-photo">
           <img id="gallery-image" src="/assets/images/soarfly/lavadora.webp" alt="Lavadora SOARFLY amarela com carretel e acessórios" width="900" height="900" fetchpriority="high">
+          <button class="gallery-arrow gallery-arrow--prev" type="button" data-gallery-step="-1" aria-label="Foto anterior" aria-controls="gallery-image" hidden></button>
+          <button class="gallery-arrow gallery-arrow--next" type="button" data-gallery-step="1" aria-label="Próxima foto" aria-controls="gallery-image" hidden></button>
           <span class="photo-counter" id="photo-counter" aria-live="polite">1 de 5</span>
         </div>
         <div class="gallery-thumbs" role="group" aria-label="Escolher foto">
@@ -282,6 +284,6 @@
   </footer>
   <script>window.META_AUTO_PAGEVIEW = true;</script>
   <script defer src="/assets/js/meta-pixel.js?v=20261126-game"></script>
-  <script type="module" src="/assets/js/washer-offer.js?v=editorial-3"></script>
+  <script type="module" src="/assets/js/washer-offer.js?v=gallery-3"></script>
 </body>
 </html>
