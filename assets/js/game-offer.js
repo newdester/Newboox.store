@@ -1,7 +1,7 @@
 import { Storefront } from './storefront.js?v=product-2';
 import { GAME_VARIANTS } from './product-catalog.js?v=2';
 import { orderTotals } from './washer-catalog.js?v=soarfly-4';
-import { setupGallery, startCountdown } from './product-page.js?v=1';
+import { setupGallery, startCountdown } from './product-page.js?v=2';
 
 startCountdown();
 const gallery = setupGallery();

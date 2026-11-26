@@ -36,6 +36,15 @@ export function setupGallery() {
     photos[active].setAttribute('aria-pressed', 'false');
     photo.setAttribute('aria-pressed', 'true');
     active = index;
+    const strip = photo.parentElement;
+    if (strip.scrollWidth > strip.clientWidth) {
+      const buttonBox = photo.getBoundingClientRect();
+      const stripBox = strip.getBoundingClientRect();
+      const offset = buttonBox.left < stripBox.left
+        ? buttonBox.left - stripBox.left - 3
+        : Math.max(0, buttonBox.right - stripBox.right + 3);
+      if (offset) strip.scrollBy({ left: offset });
+    }
   }
 
   photos.forEach((photo, index) => {
@@ -46,7 +55,7 @@ export function setupGallery() {
       event.preventDefault();
       const next = (index + offset + photos.length) % photos.length;
       show(next);
-      photos[next].focus();
+      photos[next].focus({ preventScroll: true });
     });
   });
   frame.addEventListener('touchstart', event => {

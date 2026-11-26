@@ -1,2 +1,53 @@
 .game-page .product-photo { background: #fff; }
+.game-page .gallery-thumbs {
+  display: flex;
+  padding: 3px 3px 7px;
+  margin-inline: -3px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  overscroll-behavior-inline: contain;
+  scroll-padding-inline: 3px;
+}
+.game-page .gallery-thumb { flex: 0 0 64px; }
+.product-media-links { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
 .game-image-credit { margin: 8px 0 0; color: var(--muted); font-size: .8125rem; }
+
+.game-demo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  align-items: center;
+  gap: clamp(14px, 4vw, 48px);
+  padding: clamp(16px, 3.5vw, 38px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+.game-demo video {
+  display: block;
+  width: min(100%, 300px);
+  aspect-ratio: 9 / 16;
+  justify-self: center;
+  object-fit: contain;
+  background: #111b2a;
+  border-radius: var(--radius-control);
+}
+.review-identity { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.review-identity img { width: 30px; height: 30px; flex: 0 0 auto; border-radius: 50%; object-fit: cover; }
+.game-page .review-media img { width: 72px; height: 72px; }
+.game-page .review-list { margin-bottom: 0; }
+.review-video { border-bottom: 0; margin-top: 4px; }
+.review-video summary { color: var(--blue-dark); font-size: .875rem; }
+.review-video video {
+  display: block;
+  width: min(100%, 202px);
+  aspect-ratio: 9 / 16;
+  border-radius: var(--radius-control);
+  background: #111b2a;
+}
+
+@media (max-width: 760px) {
+  .game-page .gallery-thumb { flex-basis: 48px; }
+  .game-demo { grid-template-columns: minmax(0, 1fr); }
+  .game-demo video { width: min(100%, 236px); }
+  .game-page .review-media img { width: 63px; height: 63px; }
+}
