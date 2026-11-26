@@ -15,7 +15,7 @@ export default async function handler(request, response) {
   const { formData = {}, customer = {}, attribution = {} } = request.body || {};
   const quantity = quantityFrom(request.body?.quantity);
   const product = storeProduct(request.body?.productId || '');
-  if (!product) return response.status(422).json({ error: 'Selecione uma voltagem disponível antes de pagar.' });
+  if (!product) return response.status(422).json({ error: 'Selecione um produto disponível antes de pagar.' });
   const shippingService = shippingServiceFrom(request.body?.shippingService);
   const shipping = shippingAmount(product, quantity, shippingService);
   const carrier = shippingService === 'sedex' ? 'SEDEX' : 'Correios - Entrega Padrão';

@@ -35,13 +35,14 @@
     s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
   }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
   fbq('init', PIXEL_ID);
-  if (window.META_AUTO_PAGEVIEW !== false && location.pathname === '/') {
+  const pagePath = location.pathname.replace(/\/$/, '') || '/';
+  if (window.META_AUTO_PAGEVIEW !== false && ['/', '/game'].includes(pagePath)) {
     const eventId = `pv_${window.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`}`;
     const attribution = captureAttribution();
     fbq('track', 'PageView', {}, { eventID: eventId });
     const payload = {
       eventId,
-      eventSourceUrl: `${location.origin}/`,
+      eventSourceUrl: `${location.origin}${pagePath}`,
       fbp: attribution.fbp,
       fbc: attribution.fbc
     };
@@ -64,7 +65,7 @@
     const payload = {
       eventName: event,
       eventId,
-      eventSourceUrl: `${location.origin}${location.pathname}`,
+      eventSourceUrl: `${location.origin}${pagePath}`,
       parameters,
       fbp: attribution.fbp,
       fbc: attribution.fbc

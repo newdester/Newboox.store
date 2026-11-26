@@ -12,7 +12,7 @@ export default async function handler(request, response) {
   if (!process.env.MP_ACCESS_TOKEN || !publicBaseUrl()) return response.status(503).json({ error: 'Mercado Pago ainda não configurado.' });
 
   const product = storeProduct(request.body?.productId || '');
-  if (!product) return response.status(422).json({ error: 'Selecione uma voltagem disponível antes de pagar.' });
+  if (!product) return response.status(422).json({ error: 'Selecione um produto disponível antes de pagar.' });
   const quantity = quantityFrom(request.body?.quantity);
   const shippingService = shippingServiceFrom(request.body?.shippingService);
   const shipping = shippingAmount(product, quantity, shippingService);

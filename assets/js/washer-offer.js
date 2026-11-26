@@ -1,4 +1,4 @@
-import { Storefront } from './storefront.js?v=soarfly-6';
+import { Storefront } from './storefront.js?v=shop-1';
 import { orderTotals, WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-4';
 
 const offerCountdown = document.getElementById('black-friday-countdown');
@@ -140,11 +140,17 @@ form.addEventListener('submit', event => {
 });
 
 const catalog = await Storefront.loadConfig();
-const products = catalog.kits?.some(product => product.id === WASHER_VARIANTS[0].id) ? catalog.kits : WASHER_VARIANTS;
+const washerIds = new Set(WASHER_VARIANTS.map(variant => variant.id));
+const catalogWashers = catalog.kits?.filter(product => washerIds.has(product.id));
+const products = catalogWashers?.length ? catalogWashers : WASHER_VARIANTS;
 baseOffer = products.filter(product => product.available).sort((left, right) => left.price - right.price)[0];
 renderVariants(products);
 updateTotal();
-const updateCartCount = () => { cartCount.textContent = String(Storefront.getCart()?.kitQuantity || 0); };
+const updateCartCount = () => {
+  const cart = Storefront.getCart();
+  cartCount.textContent = String(cart?.kitQuantity || 0);
+  document.querySelector('#washer-cart-note').hidden = !cart || washerIds.has(cart.id);
+};
 updateCartCount();
 window.addEventListener('pageshow', event => {
   if (event.persisted) {

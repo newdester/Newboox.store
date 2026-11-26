@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { rateLimit, sendRateHeaders } from '../_lib/rate-limit.js';
 import { getFunnelData } from '../_lib/funnel-store.js';
-import { WASHER_VARIANTS } from '../../assets/js/washer-catalog.js';
+import { STORE_PRODUCTS } from '../../assets/js/product-catalog.js';
 
 const PRODUCT_ID = 'toyadent';
 const MAX_PAYMENTS = 500;
@@ -54,8 +54,8 @@ function belongsToStore(payment) {
 
 function productFor(payment) {
   const value = String(payment.metadata?.product_id || '').toLowerCase();
-  const washer = WASHER_VARIANTS.find(variant => variant.id === value);
-  if (washer) return { id: washer.id, name: washer.title };
+  const product = STORE_PRODUCTS.find(item => item.id === value);
+  if (product) return { id: product.id, name: product.title };
   const match = value.match(/^toyadent-([123])$/);
   if (match) return { id: value, name: `TOYADENT · Kit ${match[1]}` };
   if (value === 'toque-duplo' || /toque duplo/i.test(String(payment.description || ''))) return { id: 'legacy', name: 'Oferta anterior' };
@@ -131,7 +131,7 @@ function aggregate(payments, range) {
   }
   const methods = { pix: { orders: 0, revenue: 0 }, cartao: { orders: 0, revenue: 0 }, saldo_mercado_pago: { orders: 0, revenue: 0 }, outro: { orders: 0, revenue: 0 } };
   const products = Object.fromEntries([
-    ...WASHER_VARIANTS.map(variant => [variant.id, variant.title]),
+    ...STORE_PRODUCTS.map(product => [product.id, product.title]),
     ['toyadent-1', 'TOYADENT · Kit 1'],
     ['toyadent-2', 'TOYADENT · Kit 2'],
     ['toyadent-3', 'TOYADENT · Kit 3'],

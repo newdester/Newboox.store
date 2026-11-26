@@ -1,10 +1,10 @@
-# E-commerce TOYADENT
+# Newboox
 
 ## Fluxo implementado
 
-`index.html` → `/cart` → `/checkout` → `/thank-you`
+`/` ou `/game` → `/cart` → `/checkout` → `/thank-you`
 
-O kit escolhido fica salvo no navegador até a finalização. A landing page, o carrinho e o checkout compartilham o mesmo catálogo validado no servidor.
+O carrinho aceita um modelo por pedido e salva o produto e a quantidade no navegador. A vitrine, o carrinho e o checkout compartilham o mesmo catálogo validado no servidor.
 
 ## Mercado Pago — ambiente de teste
 
@@ -21,9 +21,9 @@ O checkout envia InitiateCheckout e AddPaymentInfo no primeiro pagamento iniciad
 
 ## Oferta
 
-- Preço de referência: **R$ 37,20 por unidade**.
-- Black Friday: 1 unidade por **R$ 22,90**, 2 por **R$ 39,90** ou 3 por **R$ 44,90**.
-- **Entrega padrão grátis** em todos os kits, com prazo estimado de **8 a 12 dias úteis**.
+- Lavadora SOARFLY: **R$ 189,00** em 127 V ou 220 V e **R$ 232,90** na versão bivolt, em até 12x no cartão.
+- Game R36S 64 GB: **R$ 78,41** em até 3x sem juros no cartão ou **R$ 70,57** no Pix.
+- **Entrega padrão grátis**, com prazo estimado de **8 a 12 dias úteis**.
 - **SEDEX** por **R$ 12,36**, com prazo estimado de **2 a 3 dias úteis**.
 - Ao concluir os dados, o cliente escolhe saldo Mercado Pago, Pix ou cartão de crédito. O checkout só gera um Pix após a escolha desse meio e cancela o Pix pendente antes de trocar para cartão ou saldo Mercado Pago.
 

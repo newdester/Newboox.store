@@ -23,6 +23,7 @@ button, select { font: inherit; }
 
 .site-header { border-bottom: 1px solid var(--line); }
 .site-header__inner { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 64px; }
+.product-nav-link { margin-left: auto; color: var(--blue-dark); font-size: .875rem; font-weight: 650; white-space: nowrap; text-underline-offset: 3px; }
 .wordmark { font-size: 1.25rem; font-weight: 750; letter-spacing: -.025em; text-decoration: none; }
 .wordmark.newboox-brand-lockup .newboox-brand-mark { width: 32px; height: 32px; border-radius: 7px; }
 .cart-link { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding-inline: 3px; color: var(--blue-dark); font-size: .875rem; font-weight: 650; text-decoration: none; }
@@ -75,6 +76,7 @@ legend { margin-bottom: 6px; padding: 0; font-size: .875rem; font-weight: 650; }
 .voltage-note { margin: 4px 0 0; color: var(--muted); font-size: .75rem; }
 
 .offer-order { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px 12px; margin-block: 11px; }
+.cart-replacement-note { color: var(--muted); font-size: .875rem; }
 .offer-quantity { display: inline-flex; align-items: center; gap: 7px; font-size: .875rem; font-weight: 650; }
 .offer-quantity select { min-width: 51px; min-height: 44px; padding-inline: 8px 4px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: inherit; font-size: 1rem; }
 .order-total { margin-left: auto; color: var(--muted); font-size: .75rem; text-align: right; }
@@ -152,7 +154,12 @@ details[open] p { padding-bottom: 13px; }
   .review-score { justify-self: start; }
 }
 @media (max-width: 375px) {
-  .site-header__inner { min-height: 48px; }
+  .product-nav-link { font-size: .75rem; }
+  .site-header__inner { min-height: 48px; gap: 6px; }
+  .site-header .wordmark { gap: 5px; font-size: 1rem; }
+  .site-header .wordmark .newboox-brand-mark { width: 28px; height: 28px; }
+  .site-header .cart-link { gap: 4px; padding-inline: 0; font-size: .75rem; }
+  .site-header .cart-link span { min-width: 19px; }
   .page-sections { padding-top: 8px; }
   .product-photo { aspect-ratio: 7 / 4; }
   .price-panel { margin-block: 9px; }

@@ -1,4 +1,5 @@
-import { orderTotals, WASHER_VARIANTS } from '../../assets/js/washer-catalog.js';
+import { orderTotals } from '../../assets/js/washer-catalog.js';
+import { STORE_PRODUCTS } from '../../assets/js/product-catalog.js';
 
 const SEDEX_RATE = 12.36;
 
@@ -14,7 +15,7 @@ const asProduct = variant => ({
 });
 
 export function storeProducts() {
-  return WASHER_VARIANTS.map(asProduct);
+  return STORE_PRODUCTS.map(asProduct);
 }
 
 export function storeProduct(productId = 'soarfly-127v') {

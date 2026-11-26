@@ -44,7 +44,7 @@ async function processPayment(req, res) {
     const body = await readBody(req);
     const quantity = safeQuantity(body.quantity);
     const selectedProduct = storeProduct(body.productId || '');
-    if (!selectedProduct) return reply(res, 422, { error: 'Selecione uma voltagem disponível antes de pagar.' });
+    if (!selectedProduct) return reply(res, 422, { error: 'Selecione um produto disponível antes de pagar.' });
     const shippingService = shippingServiceFrom(body.shippingService);
     const shipping = shippingAmount(selectedProduct, quantity, shippingService);
     const carrier = shippingService === 'sedex' ? 'SEDEX' : 'Correios - Entrega Padrão';
@@ -166,6 +166,8 @@ http.createServer(async (req, res) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return reply(res, 405, { error: 'Método não permitido.' });
   const routeFiles = {
     '/': '/index.html',
+    '/game': '/game/index.html',
+    '/game/': '/game/index.html',
     '/admin': '/admin.html',
     '/motorscent': '/index.html',
     '/privacy': '/privacy/index.html',

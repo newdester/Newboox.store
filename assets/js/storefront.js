@@ -1,4 +1,5 @@
-import { orderTotals, WASHER_IMAGE, WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-4';
+import { orderTotals } from './washer-catalog.js?v=soarfly-4';
+import { STORE_PRODUCTS } from './product-catalog.js?v=1';
 
 const responsiveCss = document.createElement('link');
 responsiveCss.rel = 'stylesheet';
@@ -6,7 +7,7 @@ responsiveCss.href = '/assets/css/responsive.css';
 document.head.append(responsiveCss);
 if (!window.MetaPixel && !document.querySelector('script[src*="assets/js/meta-pixel.js"]')) {
   const metaPixel = document.createElement('script');
-  metaPixel.src = '/assets/js/meta-pixel.js?v=20261122-funnel-capi';
+  metaPixel.src = '/assets/js/meta-pixel.js?v=20261126-game';
   document.head.append(metaPixel);
 }
 
@@ -16,8 +17,7 @@ export const Storefront = (() => {
   const PAYMENT = 'chefpro_payment_v1';
   const PAYMENT_URL = '/checkout';
   const SEDEX_RATE = 12.36;
-  let kits = WASHER_VARIANTS;
-  const image = WASHER_IMAGE;
+  let kits = STORE_PRODUCTS;
   const brl = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
   const kitById = id => kits.find(kit => kit.id === id && kit.available);
   const unitPrice = id => kitById(id)?.price ?? 0;
@@ -30,10 +30,10 @@ export const Storefront = (() => {
   const getCart = () => {
     try {
       const stored = JSON.parse(localStorage.getItem(CART));
-      const variant = kitById(stored?.id);
-      if (!variant) return null;
+      const product = kitById(stored?.id);
+      if (!product) return null;
       const checkoutId = /^[A-Za-z0-9-]{20,60}$/.test(stored.checkoutId || '') ? stored.checkoutId : '';
-      return { ...variant, image, checkoutId, kitQuantity: kitQuantityFor(stored), shippingService: shippingServiceFor(stored), deliveryEstimate: String(stored.deliveryEstimate || '') };
+      return { ...product, checkoutId, kitQuantity: kitQuantityFor(stored), shippingService: shippingServiceFor(stored), deliveryEstimate: String(stored.deliveryEstimate || '') };
     } catch {
       return null;
     }
@@ -50,10 +50,12 @@ export const Storefront = (() => {
       const response = await fetch('/api/config', { cache: 'no-store', signal: controller.signal });
       if (!response.ok) throw new Error('Falha ao consultar o catálogo.');
       const config = await response.json();
-      if (Array.isArray(config.kits) && config.kits.some(product => product.id === WASHER_VARIANTS[0].id)) kits = config.kits;
+      if (Array.isArray(config.kits) && config.kits.some(product => product.id === STORE_PRODUCTS[0].id)) {
+        kits = config.kits.map(product => ({ ...STORE_PRODUCTS.find(item => item.id === product.id), ...product }));
+      }
       return config;
     } catch {
-      return { product: WASHER_VARIANTS[0], kits };
+      return { product: STORE_PRODUCTS[0], kits };
     } finally {
       clearTimeout(timeout);
     }
@@ -62,7 +64,7 @@ export const Storefront = (() => {
   const renderCart = async () => {
     const root = document.querySelector('#cartItem');
     await loadConfig();
-    let cart = getCart();
+    const cart = getCart();
     const set = (selector, value) => {
       const node = document.querySelector(selector);
       if (node) node.textContent = value;
@@ -83,8 +85,9 @@ export const Storefront = (() => {
       return;
     }
     const kit = kitById(cart.id);
-    cart = { ...cart, ...kit, image, kitQuantity: kitQuantityFor(cart), shippingService: shippingServiceFor(cart), currency: 'BRL' };
     putCart(cart);
+    const continueShopping = document.querySelector('#continueShopping');
+    if (continueShopping) continueShopping.href = kit.url;
     const totalUnits = kit.units * cart.kitQuantity;
     const { subtotal, pixTotal } = totalsFor({ ...cart, shippingService: 'standard' });
     const standardEstimate = cart.shippingService === 'standard' && cart.deliveryEstimate
@@ -93,7 +96,7 @@ export const Storefront = (() => {
     set('#cartCount', String(totalUnits));
     set('#deliveryWindow', standardEstimate);
     document.querySelector('#checkoutLink')?.setAttribute('href', PAYMENT_URL);
-    root.innerHTML = `<div class="cart-line"><img src="${image}" alt="Lavadora SOARFLY"><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} · ${brl(kit.price)} por unidade</span><div class="cart-quantity" aria-label="Quantidade"><button type="button" data-decrease aria-label="Diminuir quantidade">−</button><strong>${cart.kitQuantity}</strong><button type="button" data-increase aria-label="Aumentar quantidade">+</button></div><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(subtotal)}</b></div>`;
+    root.innerHTML = `<div class="cart-line"><img src="${kit.image}" alt=""><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} · ${brl(kit.price)} por unidade</span><div class="cart-quantity" aria-label="Quantidade"><button type="button" data-decrease aria-label="Diminuir quantidade">−</button><strong>${cart.kitQuantity}</strong><button type="button" data-increase aria-label="Aumentar quantidade">+</button></div><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     set('#subtotal', brl(subtotal));
     set('#shippingFree', 'GRÁTIS');
     set('#total', brl(subtotal));

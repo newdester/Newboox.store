@@ -29,22 +29,22 @@ export default async function handler(request, response) {
 
   let sourceUrl;
   try { sourceUrl = new URL(String(request.body?.eventSourceUrl || '')); } catch {}
-  if (!sourceUrl || sourceUrl.pathname !== '/' || sourceUrl.search || sourceUrl.hash
+  if (!sourceUrl || !['/', '/game'].includes(sourceUrl.pathname) || sourceUrl.search || sourceUrl.hash
     || (!allowedOrigins().has(sourceUrl.origin) && !isLocalOrigin(sourceUrl.origin))) {
-    return response.status(400).json({ error: 'O PageView só é aceito na página principal.' });
+    return response.status(400).json({ error: 'Página de origem inválida para o PageView.' });
   }
 
   const clientIp = String(request.headers['x-forwarded-for'] || request.socket?.remoteAddress || '').split(',')[0].trim();
   const result = await sendMetaPageView({
     eventId,
-    eventSourceUrl: `${sourceUrl.origin}/`,
+    eventSourceUrl: `${sourceUrl.origin}${sourceUrl.pathname}`,
     fbp: request.body?.fbp,
     fbc: request.body?.fbc,
     clientIp,
     userAgent: request.headers['user-agent']
   });
   const analytics = await recordFunnelEvent({
-    eventName: 'PageView', eventId, eventTime: Date.now(), path: '/', value: 0, currency: 'BRL',
+    eventName: 'PageView', eventId, eventTime: Date.now(), path: sourceUrl.pathname, value: 0, currency: 'BRL',
     fbp: Boolean(request.body?.fbp), fbc: Boolean(request.body?.fbc), metaAccepted: result.sent
   });
   if (analytics.configured && !analytics.stored && !analytics.duplicate) console.error('PageView analytics storage failed', { eventId, reason: analytics.reason });

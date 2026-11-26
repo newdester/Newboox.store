@@ -1,4 +1,4 @@
-import { Storefront } from './storefront.js?v=soarfly-6';
+import { Storefront } from './storefront.js?v=shop-1';
 
 const PAYMENT_TRACKING_KEY = 'newboox_payment_tracking_v1';
 
@@ -104,7 +104,7 @@ const cardDeclines = {
     const totalUnits = selectedProduct.units * quantity;
     const isSedex = Storefront.shippingServiceFor(cart) === 'sedex';
     const deliveryText = isSedex ? 'SEDEX · 2 a 3 dias úteis' : (cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis');
-    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt="Lavadora SOARFLY"><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} · ${brl(selectedProduct.price)} por unidade</span></div><b class="cart-price">${brl(subtotal)}</b></div>`;
+    $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt=""><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} · ${brl(selectedProduct.price)} por unidade</span></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     $('productSubtotal').textContent = brl(subtotal);
     $('checkoutShipping').textContent = shipping ? brl(shipping) : 'GRÁTIS';
     $('shippingLabel').textContent = isSedex ? 'SEDEX' : 'Entrega padrão';
@@ -345,7 +345,7 @@ const cardDeclines = {
     config = await Storefront.loadConfig();
     if (!config.paymentEnabled || !config.publicKey) throw new Error('Mercado Pago ainda não está ativo neste deploy.');
     selectedProduct = config.kits?.find(product => product.id === cart.id && product.available);
-    if (!selectedProduct) throw new Error('Volte ao carrinho e escolha uma voltagem disponível.');
+    if (!selectedProduct) throw new Error('Volte ao carrinho e escolha um produto disponível.');
     document.querySelectorAll('input[name="shippingService"]').forEach(input => {
       input.checked = input.value === Storefront.shippingServiceFor(cart);
       input.closest('.delivery-choice')?.classList.toggle('selected', input.checked);

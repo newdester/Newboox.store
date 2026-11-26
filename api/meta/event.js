@@ -12,10 +12,10 @@ const isLocalOrigin = origin => process.env.VERCEL_ENV !== 'production'
   && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
 
 const allowedPaths = {
-  ViewContent: '/',
-  AddToCart: '/',
-  InitiateCheckout: '/checkout',
-  AddPaymentInfo: '/checkout'
+  ViewContent: ['/', '/game'],
+  AddToCart: ['/', '/game'],
+  InitiateCheckout: ['/checkout'],
+  AddPaymentInfo: ['/checkout']
 };
 
 function customData(value = {}) {
@@ -54,7 +54,7 @@ export default async function handler(request, response) {
 
   let sourceUrl;
   try { sourceUrl = new URL(String(request.body?.eventSourceUrl || '')); } catch {}
-  if (!sourceUrl || sourceUrl.pathname !== allowedPaths[eventName] || sourceUrl.search || sourceUrl.hash || (!origins().has(sourceUrl.origin) && !isLocalOrigin(sourceUrl.origin))) {
+  if (!sourceUrl || !allowedPaths[eventName].includes(sourceUrl.pathname) || sourceUrl.search || sourceUrl.hash || (!origins().has(sourceUrl.origin) && !isLocalOrigin(sourceUrl.origin))) {
     return response.status(400).json({ error: 'Página de origem inválida para este evento.' });
   }
 

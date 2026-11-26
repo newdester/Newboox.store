@@ -57,7 +57,7 @@
     }
     const events = funnel.current.events || {};
     const previousEvents = funnel.previous?.events || {};
-    const labels = { PageView: 'PageView · página inicial', ViewContent: 'ViewContent · produto', AddToCart: 'AddToCart · carrinho', InitiateCheckout: 'InitiateCheckout · início do pagamento', AddPaymentInfo: 'AddPaymentInfo · dados de pagamento', Purchase: 'Purchase · CAPI' };
+    const labels = { PageView: 'PageView · ofertas', ViewContent: 'ViewContent · produto', AddToCart: 'AddToCart · carrinho', InitiateCheckout: 'InitiateCheckout · início do pagamento', AddPaymentInfo: 'AddPaymentInfo · dados de pagamento', Purchase: 'Purchase · CAPI' };
     const rows = funnel.trackedEvents.map((name, index, names) => {
       const item = events[name] || {};
       const previous = previousEvents[name] || {};
