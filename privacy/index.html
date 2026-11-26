@@ -4,11 +4,15 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Política de Privacidade — Newboox</title>
   <link rel="stylesheet" href="/assets/css/typography.css?v=1">
-  <style>body{margin:0;background:#eee7f4;color:#251d2b;font:16px/1.65 var(--store-font, Arial, sans-serif)}.legal{width:min(720px,calc(100% - 32px));margin:24px auto;background:#fff;border-radius:22px;padding:28px;box-sizing:border-box}a{color:#604976}h1{font-size:2rem;line-height:1.15}h2{font-size:1.2rem;margin-top:26px}footer{margin-top:34px;border-top:1px solid #ddd;padding-top:18px;color:#6f6674}</style>
+  <link rel="stylesheet" href="/assets/css/store-editorial.css?v=2">
   <link rel="icon" type="image/png" sizes="128x128" href="/assets/images/trust/newboox-logo-blue.png">
 </head>
-<body><main class="legal">
-  <a href="/">← Voltar à loja</a>
+<body class="store-editorial editorial-policy">
+<header class="editorial-policy__header">
+  <a class="editorial-policy__brand" data-offer-home><img src="/assets/images/trust/newboox-logo-blue.png" alt="" width="32" height="32" decoding="async"><span>Newboox<span class="editorial-wordmark-dot" aria-hidden="true">.</span></span></a>
+</header>
+<main class="legal">
+  <a class="editorial-policy__back" data-offer-home>← Voltar à oferta</a>
   <h1>Política de Privacidade</h1>
   <p>Esta política explica como a Newboox trata os dados fornecidos durante a navegação e a compra dos produtos vendidos pela loja.</p>
   <h2>Dados coletados</h2><p>Podemos tratar nome, e-mail, telefone, CPF e endereço para processar o pedido, entregar a compra, prevenir fraudes e prestar atendimento. Dados completos de cartão não são armazenados pela loja; o processamento e a tokenização são realizados pelo Mercado Pago.</p>
@@ -16,4 +20,9 @@
   <h2>Segurança e direitos</h2><p>Adotamos medidas técnicas para reduzir acessos indevidos. Você pode solicitar confirmação, correção ou exclusão de dados, observados os prazos legais de retenção, pelos canais de atendimento informados após a compra.</p>
   <h2>Cookies e métricas</h2><p>Utilizamos cookies e ferramentas de medição para funcionamento do carrinho, prevenção de fraude e análise de desempenho de anúncios. Para medir compras e atribuí-las às campanhas, podemos tratar identificadores de navegador e clique, endereço IP, informações do dispositivo e dados de contato protegidos por hash, compartilhando-os com a Meta conforme suas políticas.</p>
   <footer>Última atualização: novembro de 2026 · © 2026 Newboox · CNPJ 57.025.021/0001-89</footer>
-</main></body></html>
+</main>
+<script type="module">
+  import { bindOfferLinks } from '/assets/js/offer-context.js';
+  bindOfferLinks();
+</script>
+</body></html>

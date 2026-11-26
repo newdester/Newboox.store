@@ -1,4 +1,4 @@
-import { Storefront } from './storefront.js?v=product-2';
+import { Storefront } from './storefront.js?v=editorial-2';
 import { orderTotals, WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-4';
 import { setupGallery, startCountdown } from './product-page.js?v=1';
 
@@ -58,7 +58,7 @@ function updateTotal() {
   const installments = offer?.maxInstallments || WASHER_VARIANTS[0].maxInstallments;
   const evenInstallments = variant && Math.round(variant.price * 100) % installments === 0;
   const installmentValue = evenInstallments ? ' de ' + Storefront.brl(variant.price / installments) : '';
-  installmentCopy.textContent = 'Até ' + installments + 'x' + installmentValue + ' sem juros no cartão';
+  installmentCopy.textContent = 'Até ' + installments + 'x' + installmentValue + ' sem juros';
   installmentCopy.hidden = !offer;
   bivoltNote.hidden = variant?.id !== 'soarfly-bivolt';
   total.parentElement.hidden = !variant;
@@ -70,6 +70,7 @@ function updateTotal() {
   totalPix.hidden = count === 1;
   addToCart.disabled = !baseOffer;
   status.textContent = '';
+  updateCartCount();
 }
 
 form.addEventListener('change', updateTotal);
@@ -83,7 +84,7 @@ form.addEventListener('submit', event => {
     Storefront.putCart(cart);
     addToCart.disabled = true;
     Storefront.track('AddToCart', cart, { num_items: count, contents: [{ id: variant.id, quantity: count, item_price: variant.price }] });
-    location.assign('/cart');
+    location.assign(Storefront.CART_URL);
   } catch {
     addToCart.disabled = false;
     status.textContent = 'O navegador não conseguiu salvar a seleção. Abra a loja no navegador e tente novamente.';
@@ -97,12 +98,12 @@ const products = catalogWashers?.length ? catalogWashers : WASHER_VARIANTS;
 baseOffer = products.filter(product => product.available).sort((left, right) => left.price - right.price)[0];
 renderVariants(products);
 updateTotal();
-const updateCartCount = () => {
+function updateCartCount() {
   const cart = Storefront.getCart();
   cartCount.textContent = String(cart?.kitQuantity || 0);
-  document.querySelector('#washer-cart-note').hidden = !cart || washerIds.has(cart.id);
-};
-updateCartCount();
+  const selected = currentVariant();
+  document.querySelector('#washer-cart-note').hidden = !cart || !selected || cart.id === selected.id;
+}
 window.addEventListener('pageshow', event => {
   if (event.persisted) {
     updateCartCount();

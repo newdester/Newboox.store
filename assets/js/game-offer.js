@@ -1,4 +1,4 @@
-import { Storefront } from './storefront.js?v=product-2';
+import { Storefront } from './storefront.js?v=editorial-2';
 import { GAME_VARIANTS } from './product-catalog.js?v=2';
 import { orderTotals, PIX_DISCOUNT_PERCENT } from './washer-catalog.js?v=soarfly-4';
 import { setupGallery } from './product-page.js?v=2';
@@ -121,7 +121,7 @@ form.addEventListener('submit', event => {
       contents: [{ id: product.id, quantity: count, item_price: product.price }]
     });
   } catch {}
-  location.assign('/cart');
+  location.assign(Storefront.CART_URL);
 });
 
 window.addEventListener('pageshow', event => {

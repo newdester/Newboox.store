@@ -6,13 +6,14 @@
   <link rel="stylesheet" href="/assets/css/checkout.css?v=soarfly-10">
   <link rel="icon" type="image/png" sizes="128x128" href="/assets/images/trust/newboox-logo-blue.png">
   <link rel="stylesheet" href="/assets/css/store-footer.css?v=4">
-</head><body>
+  <link rel="stylesheet" href="/assets/css/store-editorial.css?v=2">
+</head><body class="store-editorial editorial-purchase">
   <header class="checkout-header checkout-header--compact">
-    <a class="brand newboox-brand-lockup" href="/"><img class="newboox-brand-mark" src="/assets/images/trust/newboox-logo-blue.png" alt="" width="32" height="32" decoding="async"><span>Newboox</span></a>
-    <a class="bag" href="/cart">Carrinho <span id="cartCount">0</span></a>
+    <a class="brand newboox-brand-lockup" data-offer-home><img class="newboox-brand-mark" src="/assets/images/trust/newboox-logo-blue.png" alt="" width="32" height="32" decoding="async"><span>Newboox<span class="editorial-wordmark-dot" aria-hidden="true">.</span></span></a>
+    <a class="bag" data-offer-route="/cart">Carrinho <span id="cartCount">0</span></a>
   </header>
   <main class="checkout-shell"><section class="checkout-main">
-    <div class="eyebrow"><a href="/cart" id="backLink">Voltar ao carrinho</a><span id="secureLabel">Pagamento protegido pelo Mercado Pago</span></div>
+    <div class="eyebrow"><a data-offer-route="/cart" id="backLink">Voltar ao carrinho</a><span id="secureLabel">Pagamento protegido pelo Mercado Pago</span></div>
     <aside class="webview-notice hidden" id="webviewNotice" role="status"><strong>Você está no navegador do Instagram/Facebook.</strong><span>Esta loja funciona aqui. Se o formulário de pagamento não carregar, abra o menu ⋮ e selecione “Abrir no navegador” para concluir no Chrome ou Safari.</span></aside>
     <h1 id="pageTitle">Finalizar compra</h1>
     <ol class="checkout-progress" aria-label="Etapas da compra"><li class="active" data-progress="1"><span>1</span>Contato</li><li data-progress="2"><span>2</span>Endereço</li><li data-progress="3"><span>3</span>Entrega</li><li data-progress="4"><span>4</span>Pagamento</li></ol>
@@ -69,16 +70,16 @@
     <div class="store-footer__inner">
       <div class="store-footer__columns">
         <div>
-          <a class="store-footer__wordmark newboox-brand-lockup" href="/"><img class="newboox-brand-mark" src="/assets/images/trust/newboox-logo-blue.png" alt="" width="38" height="38" decoding="async"><span>Newboox</span></a>
+          <a class="store-footer__wordmark newboox-brand-lockup" data-offer-home><img class="newboox-brand-mark" src="/assets/images/trust/newboox-logo-blue.png" alt="" width="38" height="38" decoding="async"><span>Newboox<span class="editorial-wordmark-dot" aria-hidden="true">.</span></span></a>
           <p>CNPJ 57.025.021/0001-89</p>
         </div>
         <nav aria-label="Informações da loja">
           <h2 class="store-footer__title">Informações</h2>
           <ul>
-            <li><a href="/#entrega">Entrega e pagamento</a></li>
-            <li><a href="/#faq-title">Perguntas frequentes</a></li>
-            <li><a href="/terms">Termos de compra</a></li>
-            <li><a href="/privacy">Política de privacidade</a></li>
+            <li><a data-offer-home="#entrega">Entrega e pagamento</a></li>
+            <li><a data-offer-home="#faq-title">Perguntas frequentes</a></li>
+            <li><a data-offer-route="/terms">Termos de compra</a></li>
+            <li><a data-offer-route="/privacy">Política de privacidade</a></li>
           </ul>
         </nav>
         <div class="store-footer__payments">
@@ -99,5 +100,5 @@
       <div class="store-footer__legal">© 2026 Newboox</div>
     </div>
   </footer>
-  <script>window.META_AUTO_PAGEVIEW=false;</script><script src="/assets/js/meta-pixel.js?v=20261122-funnel-capi"></script><script src="/assets/js/webview-support.js?v=20261120-webview"></script><script src="https://sdk.mercadopago.com/js/v2"></script><script src="assets/js/i18n.js?v=20261120-payment-flow"></script><script type="module" src="/assets/js/checkout-mercadopago.js?v=product-2"></script>
+  <script>window.META_AUTO_PAGEVIEW=false;</script><script src="/assets/js/meta-pixel.js?v=20261122-funnel-capi"></script><script src="/assets/js/webview-support.js?v=20261120-webview"></script><script src="https://sdk.mercadopago.com/js/v2"></script><script src="assets/js/i18n.js?v=20261120-payment-flow"></script><script type="module" src="/assets/js/checkout-mercadopago.js?v=editorial-2"></script>
 </body></html>

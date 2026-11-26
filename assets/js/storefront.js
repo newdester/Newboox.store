@@ -1,5 +1,6 @@
 import { orderTotals } from './washer-catalog.js?v=soarfly-4';
 import { STORE_PRODUCTS } from './product-catalog.js?v=2';
+import { bindOfferLinks, currentOffer, legacyCartKey, offerForProduct, offerUrl, savedCartOffer } from './offer-context.js';
 
 const responsiveCss = document.createElement('link');
 responsiveCss.rel = 'stylesheet';
@@ -12,10 +13,14 @@ if (!window.MetaPixel && !document.querySelector('script[src*="assets/js/meta-pi
 }
 
 export const Storefront = (() => {
-  const CART = 'newboox_soarfly_cart_v1';
+  const offer = currentOffer();
+  bindOfferLinks(offer);
+  const CART = `${legacyCartKey}:${offer}`;
   const CUSTOMER = 'chefpro_customer_v1';
-  const PAYMENT = 'chefpro_payment_v1';
-  const PAYMENT_URL = '/checkout';
+  const PAYMENT = `chefpro_payment_v1:${offer}`;
+  const paymentPath = route => offerUrl(route, offer);
+  const CART_URL = paymentPath('/cart');
+  const PAYMENT_URL = paymentPath('/checkout');
   const SEDEX_RATE = 12.36;
   let kits = STORE_PRODUCTS;
   const brl = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
@@ -27,11 +32,26 @@ export const Storefront = (() => {
   const totalsFor = cart => orderTotals(unitPrice(cart?.id), kitQuantityFor(cart), extrasFor(cart));
   const totalFor = cart => totalsFor(cart).total;
 
+  const legacyCart = () => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(legacyCartKey));
+      return savedCartOffer(stored) === offer ? stored : null;
+    } catch {
+      return null;
+    }
+  };
+  const removeLegacyCart = () => {
+    if (legacyCart()) localStorage.removeItem(legacyCartKey);
+  };
+  const clearCart = () => {
+    localStorage.removeItem(CART);
+    removeLegacyCart();
+  };
   const getCart = () => {
     try {
-      const stored = JSON.parse(localStorage.getItem(CART));
+      const stored = JSON.parse(localStorage.getItem(CART)) ?? legacyCart();
       const product = kitById(stored?.id);
-      if (!product) return null;
+      if (!product || offerForProduct(product) !== offer) return null;
       const checkoutId = /^[A-Za-z0-9-]{20,60}$/.test(stored.checkoutId || '') ? stored.checkoutId : '';
       return { ...product, checkoutId, kitQuantity: kitQuantityFor(stored), shippingService: shippingServiceFor(stored), deliveryEstimate: String(stored.deliveryEstimate || '') };
     } catch {
@@ -42,6 +62,7 @@ export const Storefront = (() => {
     cart.checkoutId ||= window.crypto?.randomUUID?.()
       || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
     localStorage.setItem(CART, JSON.stringify({ ...cart, kitQuantity: kitQuantityFor(cart), shippingService: shippingServiceFor(cart) }));
+    removeLegacyCart();
   };
   async function loadConfig() {
     const controller = new AbortController();
@@ -85,12 +106,12 @@ export const Storefront = (() => {
     }
     const kit = kitById(cart.id);
     putCart(cart);
-    const continueShopping = document.querySelector('#continueShopping');
-    if (continueShopping) continueShopping.href = kit.url;
     const totalUnits = kit.units * cart.kitQuantity;
     const { subtotal, pixTotal } = totalsFor({ ...cart, shippingService: 'standard' });
     set('#cartCount', String(totalUnits));
-    document.querySelector('#checkoutLink')?.setAttribute('href', PAYMENT_URL);
+    const checkoutLink = document.querySelector('#checkoutLink');
+    checkoutLink?.setAttribute('href', PAYMENT_URL);
+    checkoutLink?.classList.remove('hidden');
     root.innerHTML = `<div class="cart-line"><img src="${kit.image}" alt=""><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} · ${brl(kit.price)} por unidade</span><div class="cart-quantity" aria-label="Quantidade"><button type="button" data-decrease aria-label="Diminuir quantidade">−</button><strong>${cart.kitQuantity}</strong><button type="button" data-increase aria-label="Aumentar quantidade">+</button></div><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     set('#subtotal', brl(subtotal));
     set('#shippingFree', 'No checkout');
@@ -99,7 +120,7 @@ export const Storefront = (() => {
     document.querySelector('#cartPixOffer')?.classList.remove('hidden');
     set('#chargedNote', 'Confira as opções de entrega após informar o CEP.');
     root.querySelector('[data-remove]')?.addEventListener('click', () => {
-      localStorage.removeItem(CART);
+      clearCart();
       location.reload();
     });
     const changeQuantity = delta => {
@@ -124,7 +145,7 @@ export const Storefront = (() => {
         if (response.ok) payment = { ...(payment || {}), ...(await response.json()) };
       } catch {}
     }
-    const status = payment?.status || query.get('status') || query.get('collection_status') || 'pending';
+    const status = payment?.status || 'pending';
     const title = document.querySelector('#thanksTitle');
     const copyNode = document.querySelector('#thanksCopy');
     if (status === 'approved' || status === 'paid') {
@@ -133,7 +154,7 @@ export const Storefront = (() => {
       document.querySelector('#orderReference')?.replaceChildren(`Pedido ${payment?.orderId || ''} · Pagamento ${payment?.paymentId || returnedId || ''}`);
       const paymentId = payment?.paymentId || returnedId;
       if (paymentId && getCart()) track('Purchase', getCart(), { value: Number(payment?.amount) || totalFor(getCart()), currency: 'BRL', order_id: payment?.orderId || '' }, `mp_payment_${paymentId}`);
-      localStorage.removeItem(CART);
+      if (paymentId) clearCart();
       return;
     }
     if (title) title.textContent = 'Pagamento em processamento';
@@ -147,5 +168,5 @@ export const Storefront = (() => {
     else window.addEventListener('meta-pixel-ready', send, { once: true });
   };
 
-  return { CART, CUSTOMER, PAYMENT, PAYMENT_URL, brl, unitPrice, shippingServiceFor, extrasFor, totalFor, totalsFor, kitQuantityFor, getCart, putCart, loadConfig, kitById, renderCart, renderThankYou, track };
+  return { CART_URL, CUSTOMER, PAYMENT, paymentPath, brl, unitPrice, shippingServiceFor, extrasFor, totalFor, totalsFor, kitQuantityFor, getCart, putCart, loadConfig, kitById, renderCart, renderThankYou, track };
 })();

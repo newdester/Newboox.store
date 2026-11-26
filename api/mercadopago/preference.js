@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { paymentAmount, quantityFrom, shippingAmount, shippingServiceFrom, storeProduct } from '../_lib/catalog.js';
 import { rateLimit, sendRateHeaders } from '../_lib/rate-limit.js';
+import { offerForProduct, offerUrl } from '../../assets/js/offer-context.js';
 
 const publicBaseUrl = () => String(process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '');
 
@@ -17,6 +18,8 @@ export default async function handler(request, response) {
   const shippingService = shippingServiceFrom(request.body?.shippingService);
   const shipping = shippingAmount(product, quantity, shippingService);
   const carrier = shippingService === 'sedex' ? 'SEDEX' : 'Correios - Entrega Padrão';
+  const offer = offerForProduct(product);
+  const confirmationUrl = publicBaseUrl() + offerUrl('/thank-you?source=mercadopago', offer);
   const reference = `NB-WALLET-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const payload = {
     purpose: 'wallet_purchase',
@@ -24,9 +27,9 @@ export default async function handler(request, response) {
     shipments: { cost: shipping, mode: 'not_specified' },
     external_reference: reference,
     back_urls: {
-      success: `${publicBaseUrl()}/thank-you?source=mercadopago`,
-      pending: `${publicBaseUrl()}/thank-you?source=mercadopago`,
-      failure: `${publicBaseUrl()}/checkout?payment=failed`
+      success: confirmationUrl,
+      pending: confirmationUrl,
+      failure: publicBaseUrl() + offerUrl('/checkout?payment=failed', offer)
     },
     auto_return: 'approved',
     notification_url: `${publicBaseUrl()}/api/mercadopago/webhook`,

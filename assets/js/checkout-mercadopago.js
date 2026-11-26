@@ -1,6 +1,6 @@
-import { Storefront } from './storefront.js?v=product-2';
+import { Storefront } from './storefront.js?v=editorial-2';
 
-const PAYMENT_TRACKING_KEY = 'newboox_payment_tracking_v1';
+const PAYMENT_TRACKING_KEY = `${Storefront.PAYMENT}:tracking`;
 
 const cardBrickErrors = {
   get_payment_methods_failed: 'Não foi possível consultar os cartões aceitos pelo Mercado Pago. Tente novamente.',
@@ -21,7 +21,7 @@ const cardDeclines = {
 
 (() => {
   const cart = Storefront.getCart();
-  if (!cart) { location.replace('/cart'); return; }
+  if (!cart) { location.replace(Storefront.CART_URL); return; }
   const $ = id => document.getElementById(id);
   const quantity = Storefront.kitQuantityFor(cart);
   const brl = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -37,7 +37,7 @@ const cardDeclines = {
   let pixCancelling = false;
   let paymentTracked = false;
 
-  const showStep = step => {
+  const showStep = (step, scroll = true) => {
     activeStep = step;
     document.querySelectorAll('[data-checkout-step]').forEach(section => section.classList.toggle('hidden', Number(section.dataset.checkoutStep) !== step));
     document.querySelectorAll('[data-progress]').forEach(item => {
@@ -46,7 +46,7 @@ const cardDeclines = {
       item.classList.toggle('complete', value < step);
     });
     renderSummary();
-    document.querySelector('[data-checkout-step]:not(.hidden)')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (scroll) document.querySelector('[data-checkout-step]:not(.hidden)')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const validateStep = step => {
@@ -158,10 +158,10 @@ const cardDeclines = {
     }
     if (result.status === 'approved') {
       Storefront.track?.('Purchase', cart, { value: result.amount, currency: 'BRL', order_id: result.orderId }, `mp_payment_${result.paymentId}`);
-      location.assign('/thank-you');
+      location.assign(Storefront.paymentPath('/thank-you'));
       return result;
     }
-    location.assign(`/thank-you?status=${encodeURIComponent(result.status || 'pending')}`);
+    location.assign(Storefront.paymentPath(`/thank-you?status=${encodeURIComponent(result.status || 'pending')}`));
     return result;
   }
 
@@ -194,7 +194,7 @@ const cardDeclines = {
           const saved = { ...JSON.parse(sessionStorage.getItem(Storefront.PAYMENT) || '{}'), ...payment, status: 'approved' };
           sessionStorage.setItem(Storefront.PAYMENT, JSON.stringify(saved));
           Storefront.track?.('Purchase', cart, { value: payment.amount, currency: 'BRL', order_id: saved.orderId }, `mp_payment_${payment.paymentId || paymentId}`);
-          location.assign('/thank-you');
+          location.assign(Storefront.paymentPath('/thank-you'));
           return;
         }
         if (['rejected', 'cancelled', 'refunded', 'charged_back'].includes(payment.status)) {
@@ -476,7 +476,7 @@ const cardDeclines = {
 
   try { const saved = JSON.parse(localStorage.getItem(Storefront.CUSTOMER) || '{}'); Object.entries(saved).forEach(([key, value]) => { if ($(key)) $(key).value = value; }); if (zipField.value) lookupZip(); } catch {}
   if (window.StoreWebview?.isEmbeddedBrowser) $('webviewNotice').classList.remove('hidden');
-  showStep(1);
+  showStep(1, false);
   $('continueButton').disabled = true;
   initialize().then(() => { $('continueButton').disabled = false; }).catch(error => { $('continueButton').disabled = true; $('checkoutStatus').textContent = error.message; $('checkoutStatus').classList.add('show'); $('checkoutStatus').dataset.error = 'true'; });
 })();

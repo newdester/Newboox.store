@@ -10,13 +10,14 @@
   <meta property="og:image" content="https://newboox.store/assets/images/soarfly/lavadora.webp">
   <meta property="product:price:amount" content="189.00">
   <meta property="product:price:currency" content="BRL">
-  <link rel="preload" as="font" href="/assets/fonts/inter-latin-variable.woff2" type="font/woff2" crossorigin>
+  <link rel="preload" as="font" href="/assets/fonts/anton-latin.woff2" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/css/typography.css?v=1">
   <link rel="stylesheet" href="/assets/css/washer.css?v=product-2">
+  <link rel="stylesheet" href="/assets/css/store-editorial.css?v=2">
   <link rel="icon" type="image/png" sizes="128x128" href="/assets/images/trust/newboox-logo-blue.png">
   <link rel="stylesheet" href="/assets/css/store-footer.css?v=4">
 </head>
-<body>
+<body class="store-editorial">
   <div class="black-friday-banner">
     <div class="shell black-friday-banner__inner">
       <div class="black-friday-banner__offer">
@@ -30,13 +31,17 @@
   </div>
   <header class="site-header">
     <div class="shell site-header__inner">
-      <a class="wordmark newboox-brand-lockup" href="/"><img class="newboox-brand-mark" src="/assets/images/trust/newboox-logo-blue.png" alt="" width="32" height="32" decoding="async"><span>Newboox</span></a>
-      <a class="product-nav-link" href="/game">Game R36S</a>
-      <a class="cart-link" href="/cart">Carrinho <span data-cart-count>0</span></a>
+      <a class="wordmark newboox-brand-lockup" href="/"><img class="newboox-brand-mark" src="/assets/images/trust/newboox-logo-blue.png" alt="" width="32" height="32" decoding="async"><span>Newboox<span class="editorial-wordmark-dot" aria-hidden="true">.</span></span></a>
+      <nav class="editorial-nav" aria-label="Explore a lavadora">
+        <a href="#descricao">Recursos</a>
+        <a href="#especificacoes">Ficha técnica</a>
+        <a href="#avaliacoes">Avaliações</a>
+      </nav>
+      <a class="cart-link" href="/cart?oferta=lavadora">Carrinho <span data-cart-count>0</span></a>
     </div>
   </header>
-  <main class="shell page-sections">
-    <section class="product" aria-labelledby="product-title">
+  <main class="page-sections store-offer">
+    <section class="product editorial-hero editorial-hero--washer" aria-labelledby="product-title">
       <div class="product-gallery" role="group" aria-label="Fotos da lavadora">
         <div class="product-photo">
           <img id="gallery-image" src="/assets/images/soarfly/lavadora.webp" alt="Lavadora SOARFLY amarela com carretel e acessórios" width="900" height="900" fetchpriority="high">
@@ -51,19 +56,22 @@
         </div>
       </div>
       <div class="product-copy" id="comprar">
-        <h1 id="product-title">Lavadora de alta pressão SOARFLY</h1>
+        <p class="editorial-eyebrow">Lavadora de alta pressão</p>
+        <h1 class="editorial-display" id="product-title">Lavadora <span class="editorial-highlight">SOARFLY</span></h1>
         <p class="product-spec">Carretel integrado e mangueira de 7 m</p>
-        <a class="product-reviews-link" href="#avaliacoes"><span aria-hidden="true">★</span><strong>4,8 de 5</strong> · 209 avaliações do anúncio original</a>
-        <div class="price-panel">
-          <div class="price-row">
-            <div class="price" id="unit-price">
-              <div class="price-context"><span class="reference-price">De <s>R$ 399,90</s></span> <span class="price-prefix">a partir de</span></div>
-              <span id="unit-price-value">R$ 189,00</span>
+        <div class="price-panel editorial-price-panel">
+          <div class="price-context"><span class="reference-price">De <s>R$ 399,90</s></span> <span class="price-prefix">a partir de</span></div>
+          <div class="editorial-price-options">
+            <div class="editorial-price-method editorial-price-method--pix" id="unit-pix-offer">
+              <span class="editorial-price-method__label">No Pix</span>
+              <strong class="price" id="unit-pix-price">R$ 170,10</strong>
+              <span class="editorial-price-method__terms">10% de desconto</span>
             </div>
-            <p class="pix-offer" id="unit-pix-offer"><strong id="unit-pix-price">R$ 170,10</strong><span>10% de desconto no Pix</span></p>
-          </div>
-          <div class="price-meta">
-            <p class="payment-copy" id="installment-copy">Até 12x sem juros no cartão</p>
+            <div class="editorial-price-method">
+              <span class="editorial-price-method__label">No cartão</span>
+              <strong class="price" id="unit-price-value">R$ 189,00</strong>
+              <span class="editorial-price-method__terms" id="installment-copy">Até 12x sem juros</span>
+            </div>
           </div>
         </div>
         <form id="offer">
@@ -81,7 +89,7 @@
             </label>
             <div class="order-total" aria-live="polite" hidden><span>Total dos produtos</span><strong id="total"></strong><span id="total-pix" hidden></span></div>
           </div>
-          <p class="cart-replacement-note" id="washer-cart-note" hidden>Adicionar a lavadora troca o produto que está no carrinho. Cada pedido aceita um modelo.</p>
+          <p class="cart-replacement-note" id="washer-cart-note" hidden>A voltagem selecionada substituirá a que está no carrinho.</p>
           <button class="add-to-cart" type="submit" disabled>Adicionar ao carrinho</button>
           <p id="offer-status" role="status"></p>
         </form>
@@ -95,10 +103,31 @@
       </div>
     </section>
 
+    <section class="editorial-proof" aria-label="Avaliações do anúncio original">
+      <div><span class="editorial-proof__stars" aria-hidden="true">★★★★★</span><strong>4,8 de 5</strong></div>
+      <p>209 avaliações do anúncio original</p>
+      <a href="#avaliacoes">Ver os relatos e fotos</a>
+    </section>
+
+    <section class="editorial-contrast editorial-wide" aria-label="Opções de limpeza">
+      <div class="shell editorial-contrast__inner">
+        <article>
+          <p class="editorial-eyebrow">Jato concentrado</p>
+          <h2 class="editorial-display">Sujeira localizada</h2>
+          <ul><li>Solte a sujeira em pontos específicos de superfícies resistentes.</li></ul>
+        </article>
+        <article>
+          <p class="editorial-eyebrow">Jato aberto</p>
+          <h2 class="editorial-display">Áreas maiores</h2>
+          <ul><li>Distribua o jato para enxaguar superfícies externas adequadas.</li></ul>
+        </article>
+      </div>
+    </section>
+
     <section class="details" id="descricao" aria-labelledby="description-title">
-      <h2 id="description-title">Descrição do produto</h2>
+      <h2 class="editorial-display" id="description-title">Por dentro da <span class="editorial-highlight">SOARFLY</span></h2>
       <p class="section-lead">A lavadora SOARFLY combina motor de indução, bico ajustável e carretel integrado. O modelo de 5.800 W de pico permite alternar entre um jato concentrado e um jato aberto para lavar superfícies externas.</p>
-      <div class="feature-grid">
+      <div class="feature-grid editorial-bento">
         <article class="feature-card">
           <img src="/assets/images/soarfly/carretel.webp" alt="Carretel e rodas da lavadora" width="900" height="900" loading="lazy" decoding="async">
           <div class="feature-card__body"><h3>Carretel e rodas</h3><p>Organize a mangueira de alta pressão de 7 m no carretel e movimente a lavadora pelas rodas.</p></div>
@@ -111,11 +140,15 @@
           <img src="/assets/images/soarfly/componentes.webp" alt="Pistola, mangueira e outros componentes da lavadora" width="900" height="900" loading="lazy" decoding="async">
           <div class="feature-card__body"><h3>Parada ao soltar o gatilho</h3><p>O motor interrompe o funcionamento quando você solta o gatilho da pistola.</p></div>
         </article>
+        <article class="feature-card editorial-bento__storage">
+          <img src="/assets/images/soarfly/aplicacoes.webp" alt="Exemplos de uso em superfícies externas" width="900" height="900" loading="lazy" decoding="async">
+          <div class="feature-card__body"><h3>Bico ajustável</h3><p>Escolha entre o jato concentrado e o aberto, seguindo as orientações do manual para cada superfície.</p></div>
+        </article>
       </div>
     </section>
 
     <section class="details" id="especificacoes" aria-labelledby="spec-title">
-      <h2 id="spec-title">Ficha técnica</h2>
+      <h2 class="editorial-display" id="spec-title">Ficha técnica</h2>
       <p class="section-lead">Dados do modelo de 5.800 W de pico no anúncio de referência.</p>
       <dl class="specs">
         <div><dt>Marca</dt><dd>SOARFLY</dd></div>
@@ -140,8 +173,8 @@
     <section class="details review-section" id="avaliacoes" aria-labelledby="reviews-title">
       <div class="reviews-header">
         <div>
-          <h2 id="reviews-title">Avaliações da lavadora</h2>
-          <p>Resumos de seis avaliações de compras feitas na Shopee. A versão comprada está indicada em cada comentário.</p>
+          <h2 class="editorial-display" id="reviews-title">Avaliações da lavadora</h2>
+          <p>Resumos de seis avaliações do anúncio original, com a versão comprada indicada em cada comentário.</p>
         </div>
         <div class="review-score">
           <strong>4,8 <small>de 5</small></strong>
@@ -189,12 +222,28 @@
       </ol>
     </section>
 
+    <section class="details editorial-steps" aria-labelledby="washer-steps-title">
+      <h2 class="editorial-display" id="washer-steps-title">Como comprar</h2>
+      <ol>
+        <li><span aria-hidden="true">01</span><div><h3>Escolha a voltagem</h3><p>Selecione 127 V, 220 V ou bivolt e adicione a quantidade ao carrinho.</p></div></li>
+        <li><span aria-hidden="true">02</span><div><h3>Informe o CEP</h3><p>Confira o frete e a previsão de entrega no checkout.</p></div></li>
+        <li><span aria-hidden="true">03</span><div><h3>Escolha como pagar</h3><p>Finalize pelo Mercado Pago com Pix, cartão de crédito ou saldo.</p></div></li>
+      </ol>
+    </section>
+
     <section class="details faq-section" aria-labelledby="faq-title">
-      <h2 id="faq-title">Perguntas frequentes</h2>
+      <h2 class="editorial-display" id="faq-title">Perguntas frequentes</h2>
       <details><summary>Qual voltagem devo escolher?</summary><p>Escolha 127 V ou 220 V de acordo com a tensão da tomada. A versão bivolt aceita as duas tensões. Confira a etiqueta e o manual antes de ligar.</p></details>
       <details><summary>Preciso conectar a uma torneira?</summary><p>O modelo aceita entrada pela torneira ou por autoaspiração em reservatório, seguindo as orientações do fabricante.</p></details>
       <details><summary>De quanto é o parcelamento?</summary><p>O cartão oferece até 12 parcelas sem juros, conforme as condições que o Mercado Pago confirmar para o seu cartão. O valor final aparece antes de pagar.</p></details>
-      <details><summary>Onde encontro as condições de troca e devolução?</summary><p>Consulte os <a href="/terms">Termos de Compra</a> da Newboox.</p></details>
+      <details><summary>Onde encontro as condições de troca e devolução?</summary><p>Consulte os <a href="/terms?oferta=lavadora">Termos de Compra</a> da Newboox.</p></details>
+    </section>
+    <section class="editorial-final editorial-wide" data-product-mark="SOARFLY" aria-labelledby="washer-final-title">
+      <div class="shell editorial-final__inner">
+        <h2 class="editorial-display" id="washer-final-title">Escolha sua lavadora</h2>
+        <p>Disponível em 127 V, 220 V e bivolt.</p>
+        <a href="#comprar">Selecionar voltagem</a>
+      </div>
     </section>
   </main>
   <footer class="store-footer">
@@ -209,8 +258,8 @@
           <ul>
             <li><a href="/#entrega">Entrega e pagamento</a></li>
             <li><a href="/#faq-title">Perguntas frequentes</a></li>
-            <li><a href="/terms">Termos de compra</a></li>
-            <li><a href="/privacy">Política de privacidade</a></li>
+            <li><a href="/terms?oferta=lavadora">Termos de compra</a></li>
+            <li><a href="/privacy?oferta=lavadora">Política de privacidade</a></li>
           </ul>
         </nav>
         <div class="store-footer__payments">
@@ -233,6 +282,6 @@
   </footer>
   <script>window.META_AUTO_PAGEVIEW = true;</script>
   <script defer src="/assets/js/meta-pixel.js?v=20261126-game"></script>
-  <script type="module" src="/assets/js/washer-offer.js?v=product-2"></script>
+  <script type="module" src="/assets/js/washer-offer.js?v=editorial-2"></script>
 </body>
 </html>
