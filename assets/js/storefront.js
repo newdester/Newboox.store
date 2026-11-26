@@ -32,12 +32,17 @@ export const Storefront = (() => {
       const stored = JSON.parse(localStorage.getItem(CART));
       const variant = kitById(stored?.id);
       if (!variant) return null;
-      return { ...variant, image, kitQuantity: kitQuantityFor(stored), shippingService: shippingServiceFor(stored), deliveryEstimate: String(stored.deliveryEstimate || '') };
+      const checkoutId = /^[A-Za-z0-9-]{20,60}$/.test(stored.checkoutId || '') ? stored.checkoutId : '';
+      return { ...variant, image, checkoutId, kitQuantity: kitQuantityFor(stored), shippingService: shippingServiceFor(stored), deliveryEstimate: String(stored.deliveryEstimate || '') };
     } catch {
       return null;
     }
   };
-  const putCart = cart => localStorage.setItem(CART, JSON.stringify({ ...cart, kitQuantity: kitQuantityFor(cart), shippingService: shippingServiceFor(cart) }));
+  const putCart = cart => {
+    cart.checkoutId ||= window.crypto?.randomUUID?.()
+      || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem(CART, JSON.stringify({ ...cart, kitQuantity: kitQuantityFor(cart), shippingService: shippingServiceFor(cart) }));
+  };
   async function loadConfig() {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
@@ -99,8 +104,16 @@ export const Storefront = (() => {
       localStorage.removeItem(CART);
       location.reload();
     });
-    root.querySelector('[data-decrease]')?.addEventListener('click', () => { cart.kitQuantity = Math.max(1, cart.kitQuantity - 1); putCart(cart); renderCart(); });
-    root.querySelector('[data-increase]')?.addEventListener('click', () => { cart.kitQuantity = Math.min(10, cart.kitQuantity + 1); putCart(cart); renderCart(); });
+    const changeQuantity = delta => {
+      const next = kitQuantityFor({ kitQuantity: cart.kitQuantity + delta });
+      if (next === cart.kitQuantity) return;
+      cart.checkoutId = '';
+      cart.kitQuantity = next;
+      putCart(cart);
+      renderCart();
+    };
+    root.querySelector('[data-decrease]')?.addEventListener('click', () => changeQuantity(-1));
+    root.querySelector('[data-increase]')?.addEventListener('click', () => changeQuantity(1));
   };
 
   const renderThankYou = async () => {

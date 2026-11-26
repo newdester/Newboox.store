@@ -1,4 +1,4 @@
-import { Storefront } from './storefront.js?v=soarfly-5';
+import { Storefront } from './storefront.js?v=soarfly-6';
 import { orderTotals, WASHER_VARIANTS } from './washer-catalog.js?v=soarfly-4';
 
 const form = document.querySelector('#offer');

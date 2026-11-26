@@ -1,4 +1,6 @@
-import { Storefront } from './storefront.js?v=soarfly-5';
+import { Storefront } from './storefront.js?v=soarfly-6';
+
+const PAYMENT_TRACKING_KEY = 'newboox_payment_tracking_v1';
 
 const cardBrickErrors = {
   get_payment_methods_failed: 'Não foi possível consultar os cartões aceitos pelo Mercado Pago. Tente novamente.',
@@ -32,6 +34,7 @@ const cardDeclines = {
   let pendingPixPaymentId = null;
   let pixPollVersion = 0;
   let pixGenerating = false;
+  let paymentTracked = false;
 
   const showStep = step => {
     activeStep = step;
@@ -119,8 +122,24 @@ const cardDeclines = {
     $('footerCurrency').textContent = `${deliveryText} · Pagamento em BRL`;
   }
 
+  function trackPaymentStart(value) {
+    if (paymentTracked) return;
+    paymentTracked = true;
+    try {
+      if (!cart.checkoutId) Storefront.putCart(cart);
+      if (localStorage.getItem(PAYMENT_TRACKING_KEY) === cart.checkoutId) return;
+      localStorage.setItem(PAYMENT_TRACKING_KEY, cart.checkoutId);
+    } catch {}
+    const details = { value, currency: 'BRL', num_items: selectedProduct.units * quantity };
+    try {
+      Storefront.track('InitiateCheckout', cart, details, `evt_ic-${cart.checkoutId}`);
+      Storefront.track('AddPaymentInfo', cart, details, `evt_api-${cart.checkoutId}`);
+    } catch {}
+  }
+
   async function postPayment(formData) {
     setStatus('Processando pagamento com segurança…');
+    if (formData.payment_method_id !== 'pix' && formData.token) trackPaymentStart(Storefront.totalFor(cart));
     const response = await fetch('/api/process_payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payloadBase(formData)) });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.cause || result.error || 'Pagamento não autorizado.');
@@ -152,6 +171,9 @@ const cardDeclines = {
     $('pixCode').value = pix.qr_code || '';
     $('pixLink').href = pix.ticket_url || '#';
     setStatus('Pix gerado. Pague pelo aplicativo do seu banco.');
+    if (pendingPixPaymentId && (pix.qr_code || pix.qr_code_base64 || pix.ticket_url)) {
+      trackPaymentStart(result.amount ?? Storefront.totalsFor(cart).pixTotal);
+    }
     pollPix(result.paymentId, pollVersion);
   }
 
@@ -320,11 +342,6 @@ const cardDeclines = {
     });
     renderSummary();
     $('cartCount').textContent = String(selectedProduct.units * quantity);
-    Storefront.track?.('InitiateCheckout', cart, {
-      value: Storefront.totalFor(cart),
-      currency: 'BRL',
-      num_items: selectedProduct.units * quantity
-    });
   }
 
   $('customerForm').addEventListener('submit', async event => {
@@ -333,11 +350,6 @@ const cardDeclines = {
     if (!event.currentTarget.checkValidity()) return event.currentTarget.reportValidity();
     customer = Object.fromEntries(new FormData(event.currentTarget).entries());
     localStorage.setItem(Storefront.CUSTOMER, JSON.stringify(customer));
-    Storefront.track?.('AddPaymentInfo', cart, {
-      value: Storefront.totalFor(cart),
-      currency: 'BRL',
-      num_items: selectedProduct.units * quantity
-    });
     event.currentTarget.classList.add('hidden');
     $('paymentArea').classList.remove('hidden');
     document.querySelectorAll('[data-progress]').forEach(item => { const value = Number(item.dataset.progress); item.classList.toggle('active', value === 4); item.classList.toggle('complete', value < 4); });
@@ -370,6 +382,7 @@ const cardDeclines = {
       const response = await fetch('/api/mercadopago/preference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity, productId: selectedProduct.id, shippingService: Storefront.shippingServiceFor(cart) }) });
       const result = await response.json();
       if (!response.ok || !result.initPoint) throw new Error(result.error || 'Não foi possível abrir o Mercado Pago.');
+      trackPaymentStart(result.amount ?? Storefront.totalFor(cart));
       location.assign(result.initPoint);
     } catch (error) { setStatus(error.message, true); }
   });

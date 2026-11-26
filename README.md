@@ -17,6 +17,8 @@ O checkout usa os componentes oficiais do Mercado Pago para cartão, Pix e saldo
 
 PageView, ViewContent, AddToCart, InitiateCheckout e AddPaymentInfo são enviados pelo Pixel e pela Conversions API com o mesmo `event_id` para deduplicação. Compras aprovadas são confirmadas no servidor e enviadas à Meta. A atribuição usa `_fbp`, `_fbc`/`fbclid`, navegador e IP, além de dados normalizados disponíveis no pagamento. Não mantenha `META_TEST_EVENT_CODE` configurado no ambiente de produção.
 
+O checkout envia InitiateCheckout e AddPaymentInfo no primeiro pagamento iniciado para o carrinho, ao receber um Pix válido, enviar o cartão tokenizado para processamento ou abrir o pagamento com a conta Mercado Pago. Uma troca de método ou uma nova tentativa com o mesmo carrinho usa o mesmo registro.
+
 ## Oferta
 
 - Preço de referência: **R$ 37,20 por unidade**.
