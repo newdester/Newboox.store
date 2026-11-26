@@ -1,8 +1,2 @@
-.game-page .product-photo { background: #f5f7fb; }
-.game-page .product-photo img { object-fit: contain; }
-.game-feature-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.game-image-credit { margin: 5px 0 0; color: var(--muted); font-size: .8125rem; }
-
-@media (max-width: 740px) {
-  .game-feature-grid { grid-template-columns: minmax(0, 1fr); }
-}
+.game-page .product-photo { background: #fff; }
+.game-image-credit { margin: 8px 0 0; color: var(--muted); font-size: .8125rem; }
