@@ -174,6 +174,8 @@ http.createServer(async (req, res) => {
     '/game/': '/game/index.html',
     '/lampada': '/lampada/index.html',
     '/lampada/': '/lampada/index.html',
+    '/mel': '/mel/index.html',
+    '/mel/': '/mel/index.html',
     '/admin': '/admin.html',
     '/motorscent': '/index.html',
     '/privacy': '/privacy/index.html',

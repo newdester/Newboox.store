@@ -1,4 +1,4 @@
-const offers = { lavadora: '/', game: '/game', lampada: '/lampada' };
+const offers = { lavadora: '/', game: '/game', lampada: '/lampada', mel: '/mel' };
 const isOffer = value => Object.prototype.hasOwnProperty.call(offers, value);
 export const offerPaths = Object.freeze(Object.values(offers));
 const lastOfferKey = 'newboox_last_offer';

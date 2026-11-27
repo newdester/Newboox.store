@@ -36,7 +36,7 @@
   }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
   fbq('init', PIXEL_ID);
   const pagePath = location.pathname.replace(/\/$/, '') || '/';
-  if (window.META_AUTO_PAGEVIEW !== false && ['/', '/game', '/lampada'].includes(pagePath)) {
+  if (window.META_AUTO_PAGEVIEW !== false && ['/', '/game', '/lampada', '/mel'].includes(pagePath)) {
     const eventId = `pv_${window.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`}`;
     const attribution = captureAttribution();
     fbq('track', 'PageView', {}, { eventID: eventId });

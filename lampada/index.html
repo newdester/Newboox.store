@@ -52,27 +52,27 @@
         <p class="editorial-eyebrow">Iluminação de emergência</p>
         <h1 class="editorial-display" id="product-title">Lâmpada <span class="editorial-highlight">LED</span></h1>
         <p class="product-spec">Recarregável, bivolt e com bateria interna para quedas de energia.</p>
-        <div class="price-panel editorial-price-panel" id="lamp-prices">
+        <div class="price-panel editorial-price-panel" id="lamp-prices" data-offer-prices>
           <div class="editorial-price-options">
             <div class="editorial-price-method editorial-price-method--pix">
               <span class="editorial-price-method__label">No Pix</span>
-              <strong class="price" id="lamp-pix">R$ 17,91</strong>
+              <strong class="price" id="lamp-pix" data-unit-pix>R$ 17,91</strong>
               <span class="editorial-price-method__terms">10% de desconto</span>
             </div>
             <div class="editorial-price-method">
               <span class="editorial-price-method__label">No cartão</span>
-              <strong class="price" id="lamp-price">R$ 19,90</strong>
+              <strong class="price" id="lamp-price" data-unit-card>R$ 19,90</strong>
               <span class="editorial-price-method__terms">Valor por unidade</span>
             </div>
           </div>
         </div>
-        <form id="lamp-offer">
+        <form id="lamp-offer" data-product-offer>
           <fieldset>
             <legend>Potência</legend>
             <div class="variants">
-              <label class="variant"><input type="radio" name="power" value="lampada-led-30w" checked><span class="variant-option"><span class="variant-name">30 W</span><span class="variant-price">R$ 19,90</span></span></label>
-              <label class="variant"><input type="radio" name="power" value="lampada-led-50w"><span class="variant-option"><span class="variant-name">50 W</span><span class="variant-price">R$ 24,90</span></span></label>
-              <label class="variant"><input type="radio" name="power" value="lampada-led-60w"><span class="variant-option"><span class="variant-name">60 W</span><span class="variant-price">R$ 28,90</span></span></label>
+              <label class="variant"><input type="radio" name="variant" value="lampada-led-30w" checked><span class="variant-option"><span class="variant-name">30 W</span><span class="variant-price">R$ 19,90</span></span></label>
+              <label class="variant"><input type="radio" name="variant" value="lampada-led-50w"><span class="variant-option"><span class="variant-name">50 W</span><span class="variant-price">R$ 24,90</span></span></label>
+              <label class="variant"><input type="radio" name="variant" value="lampada-led-60w"><span class="variant-option"><span class="variant-name">60 W</span><span class="variant-price">R$ 28,90</span></span></label>
             </div>
           </fieldset>
           <div class="offer-order">
@@ -81,9 +81,9 @@
                 <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
               </select>
             </label>
-            <div class="order-total" id="lamp-total" aria-live="polite" hidden><span>Total dos produtos</span><strong id="lamp-order-total"></strong><span id="lamp-order-pix"></span></div>
+            <div class="order-total" id="lamp-total" data-order-total aria-live="polite" hidden><span>Total dos produtos</span><strong id="lamp-order-total" data-order-card></strong><span id="lamp-order-pix" data-order-pix></span></div>
           </div>
-          <p class="cart-replacement-note" id="lamp-cart-note" hidden>A potência selecionada substituirá a do item neste carrinho.</p>
+          <p class="cart-replacement-note" id="lamp-cart-note" data-cart-note hidden>A potência selecionada substituirá a do item neste carrinho.</p>
           <button class="add-to-cart" type="submit" disabled>Adicionar ao carrinho</button>
           <p id="offer-status" role="status"></p>
         </form>
@@ -253,6 +253,6 @@
   </footer>
   <script>window.META_AUTO_PAGEVIEW = true;</script>
   <script defer src="/assets/js/meta-pixel.js?v=20261127-lampada"></script>
-  <script type="module" src="/assets/js/lampada-offer.js?v=1"></script>
+  <script type="module" src="/assets/js/product-offer.js?v=1"></script>
 </body>
 </html>

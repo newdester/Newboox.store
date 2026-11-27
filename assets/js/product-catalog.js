@@ -45,5 +45,16 @@ export const STORE_PRODUCTS = [
   ...WASHER_VARIANTS.map(product => ({ ...product, url: '/', image: WASHER_IMAGE })),
   GAME_PRODUCT,
   ...GAME_VARIANTS,
-  ...LAMP_VARIANTS
+  ...LAMP_VARIANTS,
+  {
+    id: 'meleira-200ml',
+    title: 'Meleira dosadora acrílica · 200 ml',
+    image: '/assets/images/mel/meleira.webp',
+    url: '/mel',
+    price: 14.90,
+    maxInstallments: 3,
+    available: true,
+    units: 1,
+    currency: 'BRL'
+  }
 ];

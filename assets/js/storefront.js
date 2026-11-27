@@ -1,6 +1,6 @@
 import { orderTotals } from './washer-catalog.js?v=soarfly-4';
-import { STORE_PRODUCTS } from './product-catalog.js?v=3';
-import { bindOfferLinks, currentOffer, legacyCartKey, offerForProduct, offerUrl, savedCartOffer } from './offer-context.js?v=2';
+import { STORE_PRODUCTS } from './product-catalog.js?v=4';
+import { bindOfferLinks, currentOffer, legacyCartKey, offerForProduct, offerUrl, savedCartOffer } from './offer-context.js?v=3';
 
 const responsiveCss = document.createElement('link');
 responsiveCss.rel = 'stylesheet';
