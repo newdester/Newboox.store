@@ -1,10 +1,11 @@
-const offers = { lavadora: '/', game: '/game' };
-const isOffer = value => value === 'lavadora' || value === 'game';
+const offers = { lavadora: '/', game: '/game', lampada: '/lampada' };
+const isOffer = value => Object.prototype.hasOwnProperty.call(offers, value);
+export const offerPaths = Object.freeze(Object.values(offers));
 const lastOfferKey = 'newboox_last_offer';
 export const legacyCartKey = 'newboox_soarfly_cart_v1';
 
 export function offerForProduct(product) {
-  return product.url === offers.game ? 'game' : 'lavadora';
+  return Object.keys(offers).find(offer => offers[offer] === product.url) || 'lavadora';
 }
 
 export function savedCartOffer(cart) {
@@ -14,9 +15,9 @@ export function savedCartOffer(cart) {
 }
 
 export function currentOffer() {
-  const path = location.pathname.replace(/\/$/, '') || '/';
-  if (path === offers.game || path === '/game/index.html') return 'game';
-  if (path === offers.lavadora || path === '/index.html') return 'lavadora';
+  const path = location.pathname.replace(/\/index\.html$/, '').replace(/\/$/, '') || '/';
+  const productOffer = Object.keys(offers).find(offer => offers[offer] === path);
+  if (productOffer) return productOffer;
 
   const requested = new URLSearchParams(location.search).get('oferta');
   if (isOffer(requested)) return requested;

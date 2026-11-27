@@ -38,6 +38,7 @@ export default async function handler(request, response) {
       product_id: product.id,
       voltage: product.voltage,
       ...(product.color ? { color: product.color } : {}),
+      ...(product.power ? { power: product.power } : {}),
       quantity: product.units * quantity,
       kit_quantity: quantity,
       shipping,

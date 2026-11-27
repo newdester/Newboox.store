@@ -329,6 +329,7 @@
   background: #111b2a;
   border-radius: var(--radius-control);
 }
+.editorial-demo--landscape video { width: 100%; aspect-ratio: 16 / 9; }
 .review-identity { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .review-identity img { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 50%; object-fit: cover; filter: grayscale(1); }
 .store-offer .review-media img { width: 72px; height: 72px; }
@@ -507,6 +508,7 @@
   .store-offer .gallery-thumb { flex-basis: 48px; }
   .editorial-demo { grid-template-columns: minmax(0, 1fr); }
   .editorial-demo video { width: min(100%, 236px); }
+  .editorial-demo--landscape video { width: 100%; }
   .store-offer .review-media img { width: 63px; height: 63px; }
   .editorial-hero--washer h1 .editorial-highlight { display: inline-block; margin-top: 0; }
   .editorial-hero--washer .product-photo { height: min(56vw, 350px); }

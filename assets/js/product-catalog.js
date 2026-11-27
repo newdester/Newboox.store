@@ -24,8 +24,26 @@ export const GAME_VARIANTS = [
   image
 }));
 
+export const LAMP_VARIANTS = [
+  { watts: 30, price: 19.90 },
+  { watts: 50, price: 24.90 },
+  { watts: 60, price: 28.90 }
+].map(({ watts, price }) => ({
+  id: `lampada-led-${watts}w`,
+  title: `Lâmpada LED de emergência · ${watts} W`,
+  image: `/assets/images/lampada/${watts}w.webp`,
+  url: '/lampada',
+  power: `${watts} W`,
+  price,
+  maxInstallments: 3,
+  available: true,
+  units: 1,
+  currency: 'BRL'
+}));
+
 export const STORE_PRODUCTS = [
   ...WASHER_VARIANTS.map(product => ({ ...product, url: '/', image: WASHER_IMAGE })),
   GAME_PRODUCT,
-  ...GAME_VARIANTS
+  ...GAME_VARIANTS,
+  ...LAMP_VARIANTS
 ];

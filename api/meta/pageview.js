@@ -1,6 +1,7 @@
 import { rateLimit, sendRateHeaders } from '../_lib/rate-limit.js';
 import { sendMetaPageView } from '../_lib/meta-capi.js';
 import { recordFunnelEvent } from '../_lib/funnel-store.js';
+import { offerPaths } from '../../assets/js/offer-context.js';
 
 const allowedOrigins = () => {
   const origins = new Set(['https://newboox.store', 'https://www.newboox.store']);
@@ -29,7 +30,7 @@ export default async function handler(request, response) {
 
   let sourceUrl;
   try { sourceUrl = new URL(String(request.body?.eventSourceUrl || '')); } catch {}
-  if (!sourceUrl || !['/', '/game'].includes(sourceUrl.pathname) || sourceUrl.search || sourceUrl.hash
+  if (!sourceUrl || !offerPaths.includes(sourceUrl.pathname) || sourceUrl.search || sourceUrl.hash
     || (!allowedOrigins().has(sourceUrl.origin) && !isLocalOrigin(sourceUrl.origin))) {
     return response.status(400).json({ error: 'Página de origem inválida para o PageView.' });
   }

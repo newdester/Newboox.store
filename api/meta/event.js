@@ -1,6 +1,7 @@
 import { rateLimit, sendRateHeaders } from '../_lib/rate-limit.js';
 import { sendMetaFunnelEvent } from '../_lib/meta-capi.js';
 import { recordFunnelEvent } from '../_lib/funnel-store.js';
+import { offerPaths } from '../../assets/js/offer-context.js';
 
 const origins = () => {
   const values = new Set(['https://newboox.store', 'https://www.newboox.store']);
@@ -12,8 +13,8 @@ const isLocalOrigin = origin => process.env.VERCEL_ENV !== 'production'
   && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
 
 const allowedPaths = {
-  ViewContent: ['/', '/game'],
-  AddToCart: ['/', '/game'],
+  ViewContent: offerPaths,
+  AddToCart: offerPaths,
   InitiateCheckout: ['/checkout'],
   AddPaymentInfo: ['/checkout']
 };
