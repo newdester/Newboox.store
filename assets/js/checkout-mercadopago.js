@@ -1,4 +1,6 @@
-import { Storefront } from './storefront.js?v=editorial-5';
+import { Storefront } from './storefront.js?v=shipping-1';
+import { SHIPPING_OPTIONS, standardDeliveryRange } from './shipping-rules.js?v=1';
+import { formatPostalCode, lookupPostalCode, postalDigits, readDeliveryPreference, saveDeliveryPreference } from './shipping-location.js?v=1';
 
 const PAYMENT_TRACKING_KEY = `${Storefront.PAYMENT}:tracking`;
 
@@ -61,7 +63,7 @@ const cardDeclines = {
       $('tax').focus();
       return false;
     }
-    if (step === 2 && $('zip').value.replace(/\D/g, '').length !== 8) {
+    if (step === 2 && postalDigits($('zip').value).length !== 8) {
       $('zipFeedback').textContent = 'Digite um CEP válido com 8 números.';
       $('zip').focus();
       return false;
@@ -106,7 +108,13 @@ const cardDeclines = {
     const shipping = Storefront.extrasFor(order);
     const totalUnits = selectedProduct.units * quantity;
     const isSedex = Storefront.shippingServiceFor(order) === 'sedex';
-    const deliveryText = isSedex ? 'SEDEX · 2 a 3 dias úteis' : (cart.deliveryEstimate || 'Entrega padrão grátis · 8 a 12 dias úteis');
+    const [start, end] = standardDeliveryRange();
+    const deliveryWindow = `Entre ${start} e ${end}`;
+    const { minDays, maxDays } = SHIPPING_OPTIONS.sedex;
+    const deliveryText = isSedex ? `SEDEX · ${minDays} a ${maxDays} dias úteis` : `Entrega padrão grátis · ${deliveryWindow}`;
+    $('standardDeliveryWindow').textContent = deliveryWindow;
+    const destination = [$('city').value.trim(), $('district').value.trim()].filter(Boolean).join(', ');
+    $('deliveryDestination').textContent = destination ? `Entrega para ${destination}` : '';
     $('checkoutItem').innerHTML = `<div class="cart-line"><img src="${cart.image}" alt=""><div><p class="cart-name">${selectedProduct.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} · ${brl(selectedProduct.price)} por unidade</span></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     $('productSubtotal').textContent = brl(subtotal);
     $('checkoutShipping').textContent = showShipping ? (shipping ? brl(shipping) : 'GRÁTIS') : 'Após o CEP';
@@ -404,26 +412,14 @@ const cardDeclines = {
   $('tax').addEventListener('input', event => { event.target.value = event.target.value.replace(/\D/g, '').slice(0, 11); });
   const zipField = $('zip');
   const zipFeedback = $('zipFeedback');
-  const zipFields = [['address', 'logradouro'], ['city', 'localidade'], ['district', 'uf']];
+  const zipFields = [['address', 'street'], ['city', 'city'], ['district', 'region']];
   const autofilled = new Map();
   let lastZip = '';
   let zipLookup;
 
-  function saveShippingEstimate(estimate) {
-    cart.deliveryEstimate = estimate;
-    Storefront.putCart(cart);
-    renderSummary();
-  }
-
-  function addressEstimate() {
-    const city = $('city').value.trim();
-    const state = $('district').value.trim();
-    return city && state ? `Entrega padrão grátis para ${city} - ${state} · 8 a 12 dias úteis` : '';
-  }
-
   async function lookupZip() {
-    const zip = zipField.value.replace(/\D/g, '').slice(0, 8);
-    const formatted = zip.length > 5 ? `${zip.slice(0, 5)}-${zip.slice(5)}` : zip;
+    const zip = postalDigits(zipField.value);
+    const formatted = formatPostalCode(zip);
     if (zipField.value !== formatted) zipField.value = formatted;
     if (zip === lastZip) return;
     zipLookup?.abort();
@@ -432,7 +428,6 @@ const cardDeclines = {
       if (field.value === value) field.value = '';
     }
     autofilled.clear();
-    if (lastZip.length === 8) saveShippingEstimate('');
     lastZip = zip;
     zipFeedback.textContent = '';
     if (zip.length !== 8) return;
@@ -443,18 +438,17 @@ const cardDeclines = {
     const fields = zipFields.map(([id, key]) => ({ field: $(id), key, before: $(id).value }));
     zipFeedback.textContent = 'Buscando endereço…';
     try {
-      const response = await fetch(`https://viacep.com.br/ws/${zip}/json/`, { signal: controller.signal });
-      if (!response.ok) throw new Error();
-      const address = await response.json();
+      const address = await lookupPostalCode(zip, controller.signal);
       if (controller !== zipLookup) return;
-      if (address.erro || !address.localidade || !address.uf) throw new Error();
+      if (!address) throw new Error();
       for (const { field, key, before } of fields) {
         if (address[key] && field.value === before) {
           field.value = address[key];
           autofilled.set(field, address[key]);
         }
       }
-      saveShippingEstimate(addressEstimate());
+      saveDeliveryPreference(address);
+      renderSummary();
       zipFeedback.textContent = $('address').value
         ? 'Confira o endereço e informe o número.'
         : 'Cidade e estado localizados. Informe a rua e o número.';
@@ -471,10 +465,22 @@ const cardDeclines = {
   document.querySelectorAll('input[name="shippingService"]').forEach(input => input.addEventListener('change', event => {
     cart.shippingService = event.target.value === 'sedex' ? 'sedex' : 'standard';
     document.querySelectorAll('.delivery-choice').forEach(label => label.classList.toggle('selected', label.contains(event.target)));
-    saveShippingEstimate(addressEstimate());
+    Storefront.putCart(cart);
+    renderSummary();
   }));
 
-  try { const saved = JSON.parse(localStorage.getItem(Storefront.CUSTOMER) || '{}'); Object.entries(saved).forEach(([key, value]) => { if ($(key)) $(key).value = value; }); if (zipField.value) lookupZip(); } catch {}
+  const delivery = readDeliveryPreference();
+  const addressFields = new Set(['zip', 'address', 'number', 'complement', 'city', 'district']);
+  try {
+    const saved = JSON.parse(localStorage.getItem(Storefront.CUSTOMER)) || {};
+    const differentPostalCode = delivery && delivery.postalCode !== postalDigits(saved.zip);
+    for (const [key, value] of Object.entries(saved)) {
+      const field = $(key);
+      if (field && !(differentPostalCode && addressFields.has(key))) field.value = value;
+    }
+  } catch {}
+  if (delivery) zipField.value = formatPostalCode(delivery.postalCode);
+  if (zipField.value) lookupZip();
   if (window.StoreWebview?.isEmbeddedBrowser) $('webviewNotice').classList.remove('hidden');
   showStep(1, false);
   $('continueButton').disabled = true;

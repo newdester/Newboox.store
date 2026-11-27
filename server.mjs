@@ -9,6 +9,8 @@ import metaPageView from './api/meta/pageview.js';
 import mercadoPagoWebhook from './api/mercadopago/webhook.js';
 import { paymentAmount, shippingAmount, shippingServiceFrom, storeProduct, storeProducts } from './api/_lib/catalog.js';
 import { sendMetaPurchase } from './api/_lib/meta-capi.js';
+import { localeFromHeaders } from './api/locale.js';
+import { SHIPPING_OPTIONS } from './assets/js/shipping-rules.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const env = Object.fromEntries((await readFile(path.join(root, '.env'), 'utf8').catch(() => '')).split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#')).map(line => { const i = line.indexOf('='); return [line.slice(0, i), line.slice(i + 1)]; }));
@@ -93,8 +95,8 @@ async function processPayment(req, res) {
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  if (req.method === 'GET' && url.pathname === '/api/config') return reply(res, 200, { publicKey: config.publicKey, paymentEnabled: Boolean(config.accessToken && config.publicKey), webhookConfigured: Boolean(config.webhookSecret), metaCapiEnabled: Boolean(env.META_PIXEL_ID && env.META_ACCESS_TOKEN), metaPixelMatchesBrowser: Boolean(env.META_PIXEL_ID === '1806290673851071'), metaTestMode: Boolean(env.META_TEST_EVENT_CODE), sedexConfigured: true, shipping: { standard: { carrier: 'Correios', price: 0, minDays: 8, maxDays: 12 }, sedex: { carrier: 'SEDEX', price: 12.36, minDays: 2, maxDays: 3 } }, product, kits: storeProducts() });
-  if (req.method === 'GET' && url.pathname === '/api/locale') return reply(res, 200, { country: 'BR', city: '', region: '' });
+  if (req.method === 'GET' && url.pathname === '/api/config') return reply(res, 200, { publicKey: config.publicKey, paymentEnabled: Boolean(config.accessToken && config.publicKey), webhookConfigured: Boolean(config.webhookSecret), metaCapiEnabled: Boolean(env.META_PIXEL_ID && env.META_ACCESS_TOKEN), metaPixelMatchesBrowser: Boolean(env.META_PIXEL_ID === '1806290673851071'), metaTestMode: Boolean(env.META_TEST_EVENT_CODE), sedexConfigured: true, shipping: SHIPPING_OPTIONS, product, kits: storeProducts() });
+  if (req.method === 'GET' && url.pathname === '/api/locale') return reply(res, 200, localeFromHeaders(req.headers, 'BR'));
   if (req.method === 'GET' && url.pathname === '/api/payment-status') {
     const quota = allowRequest(req, 'payment-status', 30, 60_000); applyRate(res, quota);
     if (!quota.allowed) return reply(res, 429, { error: 'Muitas consultas. Aguarde alguns instantes.' });

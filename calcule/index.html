@@ -11,7 +11,9 @@
   <link rel="icon" href="/assets/images/trust/newboox-logo-blue.png">
   <link rel="stylesheet" href="/assets/css/typography.css?v=1">
   <link rel="stylesheet" href="/assets/css/calcule.css?v=2">
+  <link rel="stylesheet" href="/assets/css/shipping.css?v=1">
   <script type="module" src="/assets/js/calcule.js?v=2"></script>
+  <script type="module" src="/assets/js/shipping-offer.js?v=1"></script>
 </head>
 <body>
   <header class="masthead">
@@ -91,6 +93,19 @@
           <button type="button" class="action" id="view-delivery" hidden>Ver formulario de envío <span aria-hidden="true">→</span></button>
         </div>
       </form>
+      <section class="offer-delivery offer-delivery--preview" data-offer-delivery data-locale="es" aria-label="Envío estimado en Brasil">
+        <div class="offer-delivery__head"><strong>Envío estimado en Brasil</strong><strong class="offer-delivery__free">Gratis · simulación</strong></div>
+        <p class="offer-delivery__date" data-delivery-window>5 a 7 días naturales</p>
+        <p data-delivery-place aria-live="polite">Ingresa un código postal de Brasil</p>
+        <details hidden>
+          <summary>Consultar código postal</summary>
+          <form novalidate>
+            <label for="delivery-postal-code">Código postal de Brasil</label>
+            <div class="offer-delivery__fields"><input id="delivery-postal-code" name="postalCode" autocomplete="postal-code" inputmode="numeric" maxlength="9" placeholder="00000-000"><button type="submit">Consultar</button></div>
+            <p data-delivery-status role="status"></p>
+          </form>
+        </details>
+      </section>
     </section>
 
     <section class="use-section" aria-labelledby="use-title">

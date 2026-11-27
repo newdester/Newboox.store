@@ -45,7 +45,8 @@
         <div class="step-actions"><button class="button button--secondary" type="button" data-back-step="1">Voltar</button><button class="button" type="button" data-next-step="3">Continuar para entrega</button></div>
       </section>
       <section class="checkout-section checkout-form-step hidden" data-checkout-step="3"><div class="section-heading"><h2>Escolha a entrega</h2><span class="worldwide">Etapa 3 de 4</span></div>
-        <label class="delivery-choice selected"><input type="radio" name="shippingService" value="standard" checked><span><b>Entrega padrão grátis</b><small>8 a 12 dias úteis · código de rastreio</small></span><strong>GRÁTIS</strong></label>
+        <p class="field-feedback" id="deliveryDestination"></p>
+        <label class="delivery-choice selected"><input type="radio" name="shippingService" value="standard" checked><span><b>Entrega padrão grátis</b><small id="standardDeliveryWindow">5 a 7 dias corridos</small></span><strong>GRÁTIS</strong></label>
         <label class="delivery-choice"><input type="radio" name="shippingService" value="sedex"><span><b>SEDEX</b><small>2 a 3 dias úteis · selecione para ver o valor</small></span><strong class="hidden" id="expressShippingPrice" aria-live="polite"></strong></label>
         <p class="field-feedback">O prazo começa após a confirmação do pagamento. Você poderá acompanhar o pedido pelo código de rastreio.</p>
         <section class="assurance"><b id="assuranceTitle">Checkout seguro</b><p id="assuranceBody">Dados criptografados, pagamento processado pelo Mercado Pago e pedido rastreado.</p></section>
@@ -100,5 +101,5 @@
       <div class="store-footer__legal">© 2026 Newboox</div>
     </div>
   </footer>
-  <script>window.META_AUTO_PAGEVIEW=false;</script><script src="/assets/js/meta-pixel.js?v=20261122-funnel-capi"></script><script src="/assets/js/webview-support.js?v=20261120-webview"></script><script src="https://sdk.mercadopago.com/js/v2"></script><script src="assets/js/i18n.js?v=20261120-payment-flow"></script><script type="module" src="/assets/js/checkout-mercadopago.js?v=editorial-5"></script>
+  <script>window.META_AUTO_PAGEVIEW=false;</script><script src="/assets/js/meta-pixel.js?v=20261122-funnel-capi"></script><script src="/assets/js/webview-support.js?v=20261120-webview"></script><script src="https://sdk.mercadopago.com/js/v2"></script><script src="assets/js/i18n.js?v=20261120-payment-flow"></script><script type="module" src="/assets/js/checkout-mercadopago.js?v=shipping-1"></script>
 </body></html>

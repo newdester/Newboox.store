@@ -1,4 +1,5 @@
 import { storeProduct, storeProducts } from './_lib/catalog.js';
+import { SHIPPING_OPTIONS } from '../assets/js/shipping-rules.js';
 
 const BROWSER_PIXEL_ID = '1806290673851071';
 
@@ -13,7 +14,7 @@ export default async function handler(request, response) {
     metaPixelMatchesBrowser: Boolean(process.env.META_PIXEL_ID && process.env.META_PIXEL_ID === BROWSER_PIXEL_ID),
     metaTestMode: Boolean(process.env.META_TEST_EVENT_CODE),
     sedexConfigured: true,
-    shipping: { standard: { carrier: 'Correios', price: 0, minDays: 8, maxDays: 12 }, sedex: { carrier: 'SEDEX', price: 12.36, minDays: 2, maxDays: 3 } },
+    shipping: SHIPPING_OPTIONS,
     product,
     kits: storeProducts()
   });

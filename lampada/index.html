@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="/assets/css/washer.css?v=product-2">
   <link rel="stylesheet" href="/assets/css/store-editorial.css?v=4">
   <link rel="stylesheet" href="/assets/css/store-footer.css?v=4">
+  <link rel="stylesheet" href="/assets/css/shipping.css?v=1">
   <link rel="icon" type="image/png" sizes="128x128" href="/assets/images/trust/newboox-logo-blue.png">
 </head>
 <body class="store-editorial">
@@ -88,7 +89,20 @@
           <p id="offer-status" role="status"></p>
         </form>
         <div class="purchase-info" id="entrega">
-          <p class="purchase-info__row">Informe o CEP no checkout para ver frete e prazo.</p>
+          <section class="offer-delivery" data-offer-delivery aria-label="Entrega padrão">
+            <div class="offer-delivery__head"><strong>Entrega padrão</strong><strong class="offer-delivery__free">Frete grátis</strong></div>
+            <p class="offer-delivery__date" data-delivery-window>5 a 7 dias corridos</p>
+            <p>Após a confirmação do pagamento.</p>
+            <p data-delivery-place aria-live="polite">Informe seu CEP para confirmar o destino</p>
+            <details hidden>
+              <summary>Consultar pelo CEP</summary>
+              <form novalidate>
+                <label for="delivery-postal-code">CEP de entrega</label>
+                <div class="offer-delivery__fields"><input id="delivery-postal-code" name="postalCode" autocomplete="postal-code" inputmode="numeric" maxlength="9" placeholder="00000-000"><button type="submit">Consultar</button></div>
+                <p data-delivery-status role="status"></p>
+              </form>
+            </details>
+          </section>
           <div class="purchase-info__row"><img src="/assets/images/trust/mercado-pago.png" alt="Mercado Pago" width="1049" height="426" decoding="async"><span>Pix, cartão de crédito ou saldo Mercado Pago</span></div>
         </div>
       </div>
@@ -254,5 +268,6 @@
   <script>window.META_AUTO_PAGEVIEW = true;</script>
   <script defer src="/assets/js/meta-pixel.js?v=20261127-lampada"></script>
   <script type="module" src="/assets/js/product-offer.js?v=1"></script>
+  <script type="module" src="/assets/js/shipping-offer.js?v=1"></script>
 </body>
 </html>

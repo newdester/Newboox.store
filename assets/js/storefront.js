@@ -1,6 +1,7 @@
 import { orderTotals } from './washer-catalog.js?v=soarfly-4';
 import { STORE_PRODUCTS } from './product-catalog.js?v=4';
 import { bindOfferLinks, currentOffer, legacyCartKey, offerForProduct, offerUrl, savedCartOffer } from './offer-context.js?v=3';
+import { SHIPPING_OPTIONS } from './shipping-rules.js?v=1';
 
 const responsiveCss = document.createElement('link');
 responsiveCss.rel = 'stylesheet';
@@ -22,14 +23,13 @@ export const Storefront = (() => {
   const paymentPath = route => offerUrl(route, offer);
   const CART_URL = paymentPath('/cart');
   const PAYMENT_URL = paymentPath('/checkout');
-  const SEDEX_RATE = 12.36;
   let kits = STORE_PRODUCTS;
   const brl = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
   const kitById = id => kits.find(kit => kit.id === id && kit.available);
   const unitPrice = id => kitById(id)?.price ?? 0;
   const kitQuantityFor = cart => Math.min(10, Math.max(1, Number.parseInt(cart?.kitQuantity, 10) || 1));
   const shippingServiceFor = cart => cart?.shippingService === 'sedex' ? 'sedex' : 'standard';
-  const extrasFor = cart => shippingServiceFor(cart) === 'sedex' ? SEDEX_RATE : 0;
+  const extrasFor = cart => SHIPPING_OPTIONS[shippingServiceFor(cart)].price;
   const totalsFor = cart => orderTotals(unitPrice(cart?.id), kitQuantityFor(cart), extrasFor(cart));
   const totalFor = cart => totalsFor(cart).total;
 
@@ -54,7 +54,7 @@ export const Storefront = (() => {
       const product = kitById(stored?.id);
       if (!product || offerForProduct(product) !== offer) return null;
       const checkoutId = /^[A-Za-z0-9-]{20,60}$/.test(stored.checkoutId || '') ? stored.checkoutId : '';
-      return { ...product, checkoutId, kitQuantity: kitQuantityFor(stored), shippingService: shippingServiceFor(stored), deliveryEstimate: String(stored.deliveryEstimate || '') };
+      return { ...product, checkoutId, kitQuantity: kitQuantityFor(stored), shippingService: shippingServiceFor(stored) };
     } catch {
       return null;
     }
@@ -97,7 +97,7 @@ export const Storefront = (() => {
     set('#cartTitle', 'Seu carrinho');
     set('#summaryTitle', 'Resumo do pedido');
     set('#subtotalLabel', 'Produtos');
-    set('#shippingLabel', 'Frete e prazo');
+    set('#shippingLabel', 'Entrega padrão');
     set('#totalLabel', 'Total dos produtos');
     if (!cart || !root) {
       document.querySelector('#empty')?.classList.remove('hidden');
@@ -115,11 +115,11 @@ export const Storefront = (() => {
     checkoutLink?.classList.remove('hidden');
     root.innerHTML = `<div class="cart-line"><img src="${kit.image}" alt=""><div class="cart-line__content"><p class="cart-name">${kit.title}</p><span class="cart-meta">${totalUnits} ${totalUnits === 1 ? 'unidade' : 'unidades'} · ${brl(kit.price)} por unidade</span><div class="cart-quantity" aria-label="Quantidade"><button type="button" data-decrease aria-label="Diminuir quantidade">−</button><strong>${cart.kitQuantity}</strong><button type="button" data-increase aria-label="Aumentar quantidade">+</button></div><button class="remove" data-remove>Remover</button></div><b class="cart-price">${brl(subtotal)}</b></div>`;
     set('#subtotal', brl(subtotal));
-    set('#shippingFree', 'No checkout');
+    set('#shippingFree', 'GRÁTIS');
     set('#total', brl(subtotal));
     set('#cartPixTotal', brl(pixTotal));
     document.querySelector('#cartPixOffer')?.classList.remove('hidden');
-    set('#chargedNote', 'Confira as opções de entrega após informar o CEP.');
+    set('#chargedNote', 'Previsão de 5 a 7 dias corridos após a confirmação do pagamento. SEDEX disponível no checkout.');
     root.querySelector('[data-remove]')?.addEventListener('click', () => {
       clearCart();
       location.reload();

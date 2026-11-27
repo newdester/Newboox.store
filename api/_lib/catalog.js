@@ -1,16 +1,15 @@
 import { orderTotals } from '../../assets/js/washer-catalog.js';
 import { STORE_PRODUCTS } from '../../assets/js/product-catalog.js';
-
-const SEDEX_RATE = 12.36;
+import { SHIPPING_OPTIONS } from '../../assets/js/shipping-rules.js';
 
 const asProduct = variant => ({
   ...variant,
   cardPrice: variant.price,
   cashPrice: variant.price,
-  shipping: 0,
+  shipping: SHIPPING_OPTIONS.standard.price,
   total: variant.price,
-  deliveryMinDays: 8,
-  deliveryMaxDays: 12,
+  deliveryMinDays: SHIPPING_OPTIONS.standard.minDays,
+  deliveryMaxDays: SHIPPING_OPTIONS.standard.maxDays,
   carrier: 'Correios - Entrega Padrão'
 });
 
@@ -26,8 +25,7 @@ export const quantityFrom = value => Math.min(10, Math.max(1, Number.parseInt(va
 export const shippingServiceFrom = value => String(value || '').toLowerCase() === 'sedex' ? 'sedex' : 'standard';
 
 export function shippingAmount(product, quantity = 1, shippingService = 'standard') {
-  quantityFrom(quantity);
-  return shippingServiceFrom(shippingService) === 'sedex' ? SEDEX_RATE : 0;
+  return SHIPPING_OPTIONS[shippingServiceFrom(shippingService)].price;
 }
 
 export function paymentAmount(product, quantity = 1, shippingService = 'standard', paymentMethod) {
