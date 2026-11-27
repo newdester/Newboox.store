@@ -3,6 +3,20 @@ const delivery = document.querySelector('#delivery');
 const deliveryForm = document.querySelector('#delivery-form');
 const deliveryStatus = document.querySelector('#delivery-status');
 const viewDelivery = document.querySelector('#view-delivery');
+const playDemo = document.querySelector('#demo-play');
+
+playDemo.addEventListener('click', event => {
+  if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+  event.preventDefault();
+  const player = document.createElement('iframe');
+  player.title = 'Tutorial oficial de la calculadora VovoCorp';
+  player.src = 'https://www.youtube-nocookie.com/embed/SdSwyZnkidI?autoplay=1&hl=es';
+  player.referrerPolicy = 'strict-origin-when-cross-origin';
+  player.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+  player.allowFullscreen = true;
+  playDemo.replaceWith(player);
+  player.focus();
+});
 
 if (typeof delivery.showModal === 'function') {
   viewDelivery.hidden = false;
