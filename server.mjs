@@ -167,6 +167,8 @@ http.createServer(async (req, res) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return reply(res, 405, { error: 'Método não permitido.' });
   const routeFiles = {
     '/': '/index.html',
+    '/calcule': '/calcule/index.html',
+    '/calcule/': '/calcule/index.html',
     '/game': '/game/index.html',
     '/game/': '/game/index.html',
     '/admin': '/admin.html',
